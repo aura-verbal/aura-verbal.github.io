@@ -19,89 +19,171 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Playfair+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* Layout: una sola columna centrada (app de práctica, pensada primero para celular), con el anillo dorado de la marca como único gesto visual fuerte.
-   Identidad deliberadamente única: negro y dorado en cualquier tema del sistema. */
+/* Layout: app de una columna pensada para celular, con barra inferior de 4 secciones (Inicio, Práctica, Progreso, Ajustes).
+   Identidad deliberadamente única: negro y dorado en cualquier tema del sistema. El anillo dorado es el único gesto visual fuerte. */
 :root{
   --bg:#0a0a0b; --surface:#131210; --surface-2:#1c1a16; --line:#2f2a20;
   --fg:#f4eee0; --muted:#a69f8c;
-  --accent:#d4af37; --accent-ink:#0a0a0b; --gold-dark:#8f6b1e; --gold-light:#f6e09a;
+  --accent:#d4af37; --accent-ink:#0a0a0b; --gold-dark:#8f6b1e; --gold-light:#f6e09a; --hair:#2a251b;
   --good:#8cc79a; --bad:#e08a6b; --good-soft:rgba(140,199,154,.12); --bad-soft:rgba(224,138,107,.12); --accent-soft:rgba(212,175,55,.12);
   --font-display:"Playfair Display", Georgia, "Times New Roman", serif;
   --font-body:"Atkinson Hyperlegible", "Segoe UI", Roboto, system-ui, sans-serif;
   --font-mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --r:14px; color-scheme:dark;
+  --r:14px; --nav-h:68px; color-scheme:dark;
 }
-
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
-.wrap{max-width:720px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 48px}
-h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 calc(var(--nav-h) + 40px + env(safe-area-inset-bottom, 0px))}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;letter-spacing:-.01em;color:var(--fg)}
 h1{font-size:clamp(2rem,6vw,2.75rem);font-weight:800;line-height:1.05}
+h1 em{font-style:normal;color:var(--accent)}
 h2{font-size:1.5rem;font-weight:700;line-height:1.15}
 h3{font-size:1.125rem;font-weight:700}
 p{margin:0}
 .muted{color:var(--muted)}
 .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
 .eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700}
+.lead{color:var(--muted);max-width:44ch;margin-top:10px}
 button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* Header */
 .top{position:sticky;top:env(safe-area-inset-top, 0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px}
-.brand{font-family:var(--font-display);font-weight:800;font-size:1.35rem;background:none;border:0;padding:0;display:flex;align-items:baseline;gap:8px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.35rem;background:none;border:0;padding:0;display:flex;align-items:center;gap:8px;color:var(--fg)}
 .brand small{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
-.brand{align-items:center;color:var(--fg)}
-.mark{width:34px;height:34px;border-radius:50%;display:inline-grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--accent);
-  border:2px solid var(--accent);box-shadow:0 0 12px rgba(212,175,55,.35), inset 0 0 6px rgba(212,175,55,.15)}
-h1,h2{color:var(--fg)}
-h1 em{font-style:normal;color:var(--accent)}
-.pill{font-size:.8rem;padding:4px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
-.top-right{display:flex;align-items:center;gap:8px}
-.sound-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--accent);display:inline-grid;place-items:center;padding:0}
-.sound-btn svg{width:18px;height:18px}
-.sound-btn[aria-pressed="false"]{color:var(--muted)}
+.mark{width:34px;height:34px;border-radius:50%;display:inline-grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--accent);border:2px solid var(--accent);box-shadow:0 0 12px rgba(212,175,55,.35), inset 0 0 6px rgba(212,175,55,.15)}
+.pill{font-size:.78rem;padding:4px 10px;border-radius:99px;background:var(--surface-2);color:var(--accent);border:1px solid var(--line)}
+
+/* Bottom navigation */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:10;background:color-mix(in srgb, var(--bg) 92%, transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom, 0px);padding-left:max(8px, env(safe-area-inset-left, 0px));padding-right:max(8px, env(safe-area-inset-right, 0px))}
+.nav-in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:var(--nav-h)}
+.nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);font-size:.72rem;font-weight:700;position:relative;letter-spacing:.02em}
+.nav button svg{width:22px;height:22px;transition:transform .25s ease}
+.nav button.on{color:var(--accent)}
+.nav button.on svg{transform:translateY(-1px) scale(1.08)}
+.nav button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;border-radius:0 0 2px 2px;background:var(--accent);box-shadow:0 0 10px rgba(212,175,55,.6)}
+
+/* Page transitions */
+.view.anim-up{animation:enterUp .34s cubic-bezier(.2,.8,.2,1) both}
+.view.anim-right{animation:enterRight .34s cubic-bezier(.2,.8,.2,1) both}
+.view.anim-left{animation:enterLeft .34s cubic-bezier(.2,.8,.2,1) both}
+@keyframes enterUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes enterRight{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:none}}
+@keyframes enterLeft{from{opacity:0;transform:translateX(-32px)}to{opacity:1;transform:none}}
+.stack{display:flex;flex-direction:column;gap:16px}
+.section{padding-top:20px;display:flex;flex-direction:column;gap:16px}
 
 /* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:700}
 .btn:hover{border-color:var(--muted)}
 .btn.primary{background:linear-gradient(180deg,var(--gold-light) -40%,var(--accent) 55%,var(--gold-dark) 160%);color:var(--accent-ink);border-color:var(--accent)}
-.btn.primary:hover{filter:brightness(1.06)}
+.btn.danger{color:var(--bad);border-color:color-mix(in srgb, var(--bad) 50%, var(--line))}
 .btn.ghost{background:transparent}
-.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.wide{width:100%}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.back{background:none;border:0;padding:6px 0;color:var(--muted);font-weight:700}
+.back{background:none;border:0;padding:6px 0;color:var(--muted);font-weight:700;align-self:flex-start}
+.linkish{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;text-underline-offset:3px;font-size:inherit}
 
-/* Hero + aura ring */
-.hero{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;padding-block:28px 20px}
-.hero p{margin-top:10px;max-width:42ch;color:var(--muted)}
-.ring{--p:0;--size:128px;width:var(--size);height:var(--size);border-radius:50%;position:relative;display:grid;place-items:center;
-  background:conic-gradient(from 210deg, var(--gold-dark) 0, var(--accent) calc(var(--p)*.5%), var(--gold-light) calc(var(--p)*1%), var(--surface-2) calc(var(--p)*1%));}
-.ring::before{content:"";position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, var(--accent) 28%, transparent) 0, transparent 70%);opacity:calc(.25 + var(--p)/140);z-index:-1}
-.ring::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--bg)}
-.ring span{position:relative;z-index:1;text-align:center;line-height:1.1}
-.ring b{font-family:var(--font-display);font-size:1.9rem;font-weight:800;display:block}
-.ring small{font-size:.72rem;color:var(--muted)}
-@media (max-width:520px){.hero{grid-template-columns:1fr}.hero .ring{--size:112px}}
+/* Hero illustration */
+.art{width:100%;max-width:440px;margin:0 auto;display:block}
+.art .glow{animation:breathe 5s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.75}50%{opacity:1}}
+.art .p-body{fill:var(--surface);stroke:var(--accent);stroke-width:2.5}
+.art .p-body2{fill:var(--surface-2);stroke:var(--gold-dark);stroke-width:2}
+.art .p-hair{fill:var(--hair);stroke:var(--accent);stroke-width:2}
+.art .p-hair2{fill:var(--hair);stroke:var(--gold-dark);stroke-width:2}
+.art .line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.art .bubble{fill:var(--surface);stroke:var(--accent);stroke-width:2;stroke-linejoin:round}
+.art .bubble2{fill:var(--surface-2);stroke:var(--gold-dark);stroke-width:2;stroke-linejoin:round}
+.art .aa{font-family:var(--font-display);font-weight:700;font-size:21px;fill:var(--accent)}
+.art .dot{fill:var(--gold-light)}
+.art .spark{stroke:var(--gold-light);stroke-width:1.6;stroke-linecap:round}
+.hero{display:flex;flex-direction:column;gap:6px;padding-top:12px}
 
-/* Scenario cards */
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-@media (max-width:560px){.grid{grid-template-columns:1fr}}
+/* Home */
+.greet{display:flex;align-items:center;gap:14px;padding-top:22px}
+.avatar{width:56px;height:56px;border-radius:50%;flex:none;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:var(--accent);border:2px solid var(--accent);background:var(--surface);box-shadow:0 0 18px rgba(212,175,55,.25)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:10px;text-align:left;min-width:0}
 button.card:hover{border-color:var(--accent)}
-.card .meta{font-size:.85rem;color:var(--muted)}
+.card.feature{border-color:color-mix(in srgb, var(--accent) 45%, var(--line));background:linear-gradient(160deg, color-mix(in srgb, var(--accent) 9%, var(--surface)), var(--surface) 60%)}
+.card .meta{font-size:.88rem;color:var(--muted)}
+.card-head{display:flex;align-items:center;gap:12px}
+.s-icon{width:42px;height:42px;border-radius:12px;flex:none;display:grid;place-items:center;color:var(--accent);background:var(--accent-soft);border:1px solid color-mix(in srgb, var(--accent) 30%, transparent)}
+.s-icon svg{width:22px;height:22px}
+.cta{color:var(--accent);font-weight:700;font-size:.92rem}
+.tag{display:inline-block;font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent);align-self:flex-start}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
 .bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
 .bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--gold-dark),var(--accent),var(--gold-light));transition:width .9s cubic-bezier(.2,.8,.2,1)}
-.barlabel{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted)}
+.barlabel{display:flex;justify-content:space-between;gap:8px;font-size:.8rem;color:var(--muted)}
 
-/* Stepper (secuencia real: vocabulario → práctica → simulación) */
-.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-block:16px}
+/* KPI tiles */
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kpis.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kpi{background:var(--surface-2);border-radius:12px;padding:12px;min-width:0;border:1px solid var(--line)}
+.kpi b{font-family:var(--font-mono);font-size:1.2rem;display:block;color:var(--fg);font-variant-numeric:tabular-nums}
+.kpi span{font-size:.76rem;color:var(--muted)}
+
+/* Ring */
+.ring{--p:0;--size:120px;width:var(--size);height:var(--size);border-radius:50%;position:relative;display:grid;place-items:center;flex:none;
+  background:conic-gradient(from 210deg, var(--gold-dark) 0, var(--accent) calc(var(--p)*.5%), var(--gold-light) calc(var(--p)*1%), var(--surface-2) calc(var(--p)*1%));}
+.ring::before{content:"";position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(circle, rgba(212,175,55,.28) 0, transparent 70%);opacity:calc(.25 + var(--p)/140);z-index:-1}
+.ring::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--bg)}
+.ring span{position:relative;z-index:1;text-align:center;line-height:1.1}
+.ring b{font-family:var(--font-display);font-size:1.8rem;font-weight:800;display:block}
+.ring small{font-size:.7rem;color:var(--muted)}
+.ring-row{display:flex;align-items:center;gap:20px;padding-top:22px}
+
+/* Chart */
+.chart svg{width:100%;height:auto;display:block}
+.chart .grid-l{stroke:var(--line);stroke-width:1}
+.chart .ax{fill:var(--muted);font-family:var(--font-mono);font-size:10px}
+.chart .val{fill:var(--fg);font-family:var(--font-mono);font-size:11px}
+.chart .b{fill:var(--accent)}
+.chart .b:hover{fill:var(--gold-light)}
+.empty{padding:18px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:.92rem;text-align:center}
+.srow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
+.srow .s-icon{width:36px;height:36px}
+
+/* Forms */
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.field .lbl{font-size:.85rem;font-weight:700;color:var(--fg)}
+input[type="text"]{font:inherit;color:var(--fg);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:46px;width:100%}
+input[type="text"]:focus{border-color:var(--accent);outline:none}
+input[type="range"]{width:100%;accent-color:var(--accent)}
+.chips-opt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (max-width:400px){.chips-opt{grid-template-columns:1fr}}
+.chip-opt{position:relative}
+.chip-opt input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.chip-opt span{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);font-size:.9rem;min-height:44px}
+.chip-opt input:checked + span{border-color:var(--accent);background:var(--accent-soft);color:var(--fg)}
+.chip-opt input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+.conf-out{font-size:.85rem;color:var(--accent);font-weight:700}
+.err{color:var(--bad);font-size:.85rem;min-height:1em}
+.toast{padding:10px 14px;border-radius:12px;background:var(--good-soft);border-left:3px solid var(--good);font-size:.92rem}
+
+/* Settings */
+.setting{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.setting:first-of-type{border-top:0}
+.setting p{font-size:.95rem}
+.setting small{display:block;color:var(--muted);font-size:.8rem}
+.switch{width:50px;height:30px;border-radius:99px;border:1px solid var(--line);background:var(--surface-2);position:relative;flex:none;padding:0;transition:background .2s}
+.switch .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:transform .22s cubic-bezier(.2,.8,.2,1), background .2s}
+.switch[aria-checked="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.switch[aria-checked="true"] .knob{transform:translateX(20px);background:var(--accent)}
+.switch[disabled]{opacity:.4;cursor:not-allowed}
+
+/* Stepper */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .step{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface);text-align:left;min-width:0}
 .step .n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted)}
 .step b{display:block;font-size:.95rem}
 .step.on{border-color:var(--accent);background:var(--accent-soft)}
 
-/* Vocab list */
+/* Vocab */
 .vocab{display:flex;flex-direction:column;gap:8px}
 .vrow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1.3fr) auto;gap:10px;align-items:center;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
 .vrow .from{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb, var(--bad) 60%, transparent)}
@@ -132,10 +214,9 @@ button.card:hover{border-color:var(--accent)}
 .say{display:flex;gap:10px;align-items:flex-start}
 .bubble{background:var(--surface-2);border-radius:4px 14px 14px 14px;padding:12px 14px;flex:1;min-width:0}
 .bubble .who{font-size:.78rem;color:var(--muted);font-weight:700;margin-bottom:2px}
-.icon-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:inline-grid;place-items:center;flex:none}
+.icon-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:inline-grid;place-items:center;flex:none;color:var(--fg)}
 .icon-btn svg{width:20px;height:20px}
 .icon-btn.rec{background:var(--bad);border-color:var(--bad);color:#fff}
-.tag{display:inline-block;font-size:.75rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
 textarea{width:100%;min-height:110px;resize:vertical;font:inherit;color:var(--fg);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .hint{font-size:.88rem;color:var(--muted)}
 .hint b{color:var(--fg)}
@@ -147,32 +228,33 @@ textarea{width:100%;min-height:110px;resize:vertical;font:inherit;color:var(--fg
 /* Results */
 .score{display:flex;align-items:baseline;gap:6px}
 .score b{font-family:var(--font-display);font-size:3.5rem;font-weight:800;line-height:1}
-.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.kpi{background:var(--surface-2);border-radius:12px;padding:10px 12px;min-width:0}
-.kpi b{font-family:var(--font-mono);font-size:1.15rem;display:block}
-.kpi span{font-size:.78rem;color:var(--muted)}
 .turn{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
-.turn:first-child{border-top:0;padding-top:0}
+.turn:first-of-type{border-top:0;padding-top:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font-size:.78rem;padding:2px 8px;border-radius:99px;border:1px solid var(--line)}
 .chip.ok{border-color:var(--good);color:var(--good)}
 .chip.no{border-color:var(--bad);color:var(--bad)}
 .delta{font-family:var(--font-mono);color:var(--good);font-size:.9rem}
 .recs{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
-.stack{display:flex;flex-direction:column;gap:16px}
-.foot{margin-top:28px;font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;gap:8px}
-.linkish{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;font-size:.82rem}
-.confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;border-radius:12px;background:var(--bad-soft)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <button class="brand" data-act="home" aria-label="Ir al inicio"><span class="mark" aria-hidden="true">Aa</span>Aura <small>confianza verbal</small></button>
-  <div class="top-right"><button class="sound-btn" id="soundBtn" data-act="sound" aria-pressed="true" aria-label="Sonido activado"></button><span class="pill mono" id="globalPill">0%</span></div>
+  <button class="brand" data-act="brand" aria-label="Ir al inicio"><span class="mark" aria-hidden="true">Aa</span>Aura <small>confianza verbal</small></button>
+  <span class="pill" id="levelPill">Aprendiz</span>
 </div></header>
 <main class="wrap" id="app" aria-live="polite"></main>
+<nav class="nav" aria-label="Secciones">
+  <div class="nav-in">
+    <button data-act="tab" data-tab="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>Inicio</button>
+    <button data-act="tab" data-tab="practica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-5.4A8 8 0 1 1 21 12z"/></svg>Práctica</button>
+    <button data-act="tab" data-tab="progreso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16v-4"/><path d="M11 16V7"/><path d="M16 16v-6"/><path d="M20 16V4"/></svg>Progreso</button>
+    <button data-act="tab" data-tab="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>Ajustes</button>
+  </div>
+</nav>
 
 <script>
 /* ===================== CONTENIDO (borrador v1 para revisión) ===================== */
@@ -381,36 +463,100 @@ function scenarioProgress(prog, scen){
 function globalProgress(prog, scens){ return Math.round(scens.reduce((a,s)=>a+scenarioProgress(prog,s),0)/scens.length); }
 /*LOGIC-END*/
 
-/* ===================== ESTADO Y PERSISTENCIA ===================== */
+/* ===================== ESTADO Y PERSISTENCIA (todo vive en este navegador) ===================== */
 const KEY="aura.v1";
-function load(){ try{ const raw=localStorage.getItem(KEY); return raw? Object.assign(emptyProgress(), JSON.parse(raw)) : emptyProgress(); }catch(e){ return emptyProgress(); } }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(progress)); }catch(e){} }
-let progress = load();
-let S = {view:"home"};
-const app = document.getElementById("app");
+const DEFAULT_SETTINGS={sound:true, clicks:true, autoSpeak:false};
+const TABS=["inicio","practica","progreso","ajustes"];
+const GOALS=[
+  {id:"presentacion", label:"Presentar con seguridad"},
+  {id:"entrevista", label:"Brillar en entrevistas"},
+  {id:"venta", label:"Atender y vender mejor"},
+  {id:"cita", label:"Conversar con naturalidad"}];
+const CONF_LABELS=["","Muy baja","Baja","Regular","Buena","Muy buena"];
+const LEVELS=[[0,"Aprendiz"],[20,"Comunicador"],[45,"Orador"],[70,"Persuasivo"],[90,"Maestro del Aura"]];
 
+function freshProgress(keep){
+  const p=emptyProgress();
+  p.history=[]; p.days=[];
+  p.profile = keep && keep.profile || null;
+  p.settings = Object.assign({}, DEFAULT_SETTINGS, keep && keep.settings || {});
+  return p;
+}
+function load(){
+  let raw=null; try{ raw=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
+  const p=freshProgress();
+  if(raw && typeof raw==="object") Object.assign(p, raw);
+  p.settings=Object.assign({}, DEFAULT_SETTINGS, p.settings||{});
+  try{ if(localStorage.getItem("aura.sound")==="off") p.settings.sound=false; }catch(e){}
+  p.words=p.words||{}; p.sims=p.sims||{}; p.history=p.history||[]; p.days=p.days||[];
+  return p;
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(progress)); }catch(e){} }
+let progress=load();
+let S={tab:"inicio", view:"list", anim:"up"};
+const app=document.getElementById("app");
+
+/* ===================== UTILIDADES ===================== */
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
 function cap(s){ return s.charAt(0)==="¿"||s.charAt(0)==="¡" ? s.charAt(0)+s.charAt(1).toUpperCase()+s.slice(2) : s.charAt(0).toUpperCase()+s.slice(1); }
 function atSentenceStart(tpl){ const before=tpl.slice(0,tpl.indexOf("___")).trim(); return before==="" || /[.!?¡¿:]$/.test(before); }
 function fillHTML(tpl, filled){ return esc(tpl).replace("___", `<span class="blank">${filled?esc(filled):"&nbsp;&nbsp;&nbsp;&nbsp;"}</span>`); }
 function scen(){ return SCENARIOS.find(s=>s.id===S.sid); }
+function scenById(id){ return SCENARIOS.find(s=>s.id===id); }
 function pct(x){ return Math.round(x*100); }
-
-const ICON_SPEAK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
-const ICON_MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>';
-
-/* ===================== SONIDOS (Web Audio API: se generan en el navegador, sin archivos) ===================== */
-let SOUND_ON = (()=>{ try{ return localStorage.getItem("aura.sound")!=="off"; }catch(e){ return true; } })();
-let actx=null;
-const ICON_SOUND_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
-const ICON_SOUND_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>';
-function paintSoundBtn(){
-  const b=document.getElementById("soundBtn"); if(!b) return;
-  b.innerHTML = SOUND_ON?ICON_SOUND_ON:ICON_SOUND_OFF;
-  b.setAttribute("aria-pressed", String(SOUND_ON));
-  b.setAttribute("aria-label", SOUND_ON?"Sonido activado: tocar para silenciar":"Sonido silenciado: tocar para activar");
+function dayKey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function today(){ return dayKey(new Date()); }
+function markDay(){ const t=today(); if(!progress.days.includes(t)){ progress.days.push(t); if(progress.days.length>400) progress.days=progress.days.slice(-400); } }
+function streak(){
+  const set=new Set(progress.days), d=new Date(); let n=0;
+  if(!set.has(dayKey(d))) d.setDate(d.getDate()-1);
+  while(set.has(dayKey(d))){ n++; d.setDate(d.getDate()-1); }
+  return n;
 }
+function levelOf(g){ let cur=LEVELS[0], next=null; LEVELS.forEach((l,i)=>{ if(g>=l[0]){ cur=l; next=LEVELS[i+1]||null; } }); return {name:cur[1], next}; }
+function masteredCount(){ return SCENARIOS.reduce((a,s)=>a+s.words.filter(w=>(progress.words[w.id]||0)>=3).length,0); }
+function initials(n){ return (n||"").trim().split(/\s+/).slice(0,2).map(x=>x.charAt(0).toUpperCase()).join("")||"Aa"; }
+function recommend(){
+  const g=progress.profile && progress.profile.goal;
+  if(g && scenarioProgress(progress, scenById(g))<100) return scenById(g);
+  return SCENARIOS.slice().sort((a,b)=>scenarioProgress(progress,a)-scenarioProgress(progress,b))[0];
+}
+
+/* ===================== ICONOS E ILUSTRACIÓN (dibujados en código, sin archivos) ===================== */
+const SVG_ATTR='viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+const S_ICONS={
+  presentacion:`<svg ${SVG_ATTR}><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20l4-4 4 4"/><path d="M7 12l3-3 2 2 4-4"/></svg>`,
+  entrevista:`<svg ${SVG_ATTR}><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg>`,
+  venta:`<svg ${SVG_ATTR}><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>`,
+  cita:`<svg ${SVG_ATTR}><path d="M4 10h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-5z"/><path d="M16 12h2a2 2 0 0 1 0 4h-2"/><path d="M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4"/></svg>`
+};
+function heroArt(){
+  return `<svg class="art" viewBox="0 0 360 236" role="img" aria-label="Ilustración: dos personas conversando con seguridad">
+  <defs>
+    <radialGradient id="aGlow"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.26"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></radialGradient>
+    <linearGradient id="aGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--gold-light)"/><stop offset=".55" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--gold-dark)"/></linearGradient>
+  </defs>
+  <circle class="glow" cx="128" cy="134" r="104" fill="url(#aGlow)"/>
+  <circle class="glow" cx="128" cy="134" r="80" fill="none" stroke="url(#aGold)" stroke-width="2" opacity=".6"/>
+  <path class="p-hair2" d="M222 118 C220 86 274 86 272 118 L274 156 C262 148 232 148 220 156 Z"/>
+  <path class="p-body2" d="M198 236 C198 184 220 160 247 160 C274 160 296 184 296 236 Z"/>
+  <circle class="p-body2" cx="247" cy="118" r="21"/>
+  <path class="p-body" d="M72 236 C72 176 97 150 128 150 C159 150 184 176 184 236 Z"/>
+  <path class="line" d="M114 151 L128 170 L142 151"/>
+  <path class="line" d="M114 151 L104 200 M142 151 L152 200"/>
+  <circle class="p-body" cx="128" cy="110" r="25"/>
+  <path class="p-hair" d="M104 100 C102 78 154 78 152 100 C143 91 113 90 104 100 Z"/>
+  <path class="bubble" d="M160 26 h74 a14 14 0 0 1 14 14 v14 a14 14 0 0 1 -14 14 h-50 l-14 13 l2 -13 h-12 a14 14 0 0 1 -14 -14 v-14 a14 14 0 0 1 14 -14 z"/>
+  <text class="aa" x="197" y="55" text-anchor="middle">Aa</text>
+  <path class="bubble2" d="M270 52 h52 a12 12 0 0 1 12 12 v8 a12 12 0 0 1 -12 12 h-30 l-10 11 l1 -11 h-13 a12 12 0 0 1 -12 -12 v-8 a12 12 0 0 1 12 -12 z"/>
+  <circle class="dot" cx="285" cy="68" r="3"/><circle class="dot" cx="296" cy="68" r="3"/><circle class="dot" cx="307" cy="68" r="3"/>
+  <path class="spark" d="M38 58v10M33 63h10"/><path class="spark" d="M330 140v8M326 144h8"/><path class="spark" d="M58 188v6M55 191h6"/>
+</svg>`;
+}
+
+/* ===================== SONIDOS (Web Audio API) ===================== */
+let actx=null;
 function tone(freq, start, dur, vol){
   const o=actx.createOscillator(), g=actx.createGain(), o2=actx.createOscillator(), g2=actx.createGain();
   o.type="sine"; o.frequency.value=freq; o2.type="sine"; o2.frequency.value=freq*2.01;
@@ -418,8 +564,10 @@ function tone(freq, start, dur, vol){
   o.connect(g).connect(actx.destination); o2.connect(g2).connect(actx.destination);
   o.start(start); o2.start(start); o.stop(start+dur+0.05); o2.stop(start+dur+0.05);
 }
-function playNotes(notes){
-  if(!SOUND_ON) return;
+function playNotes(notes, kind){
+  const st=progress.settings;
+  if(!st.sound) return;
+  if(kind==="click" && !st.clicks) return;
   try{
     const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
     actx=actx||new AC(); if(actx.state==="suspended") actx.resume();
@@ -427,15 +575,14 @@ function playNotes(notes){
     notes.forEach(([f,dt,dur,vol])=>tone(f,t+dt,dur,vol||0.16));
   }catch(e){}
 }
-/* acierto: campanita de dos notas (Do6 → Sol6); resultado destacado: arpegio de tres notas */
-function chime(){ playNotes([[1046.5,0,.35],[1568,.09,.5]]); }
-function fanfare(){ playNotes([[784,0,.4],[1046.5,.12,.4],[1318.5,.24,.7]]); }
-/* error: dos notas graves descendentes (La4 → Fa4), más suaves y cortas que el acierto */
-function softMiss(){ playNotes([[440,0,.22,.07],[349.2,.11,.32,.07]]); }
-/* botón: "tic" neutro, muy corto y suave */
-function tick(){ playNotes([[660,0,.06,.045]]); }
+function chime(){ playNotes([[1046.5,0,.35],[1568,.09,.5]],"fx"); }
+function fanfare(){ playNotes([[784,0,.4],[1046.5,.12,.4],[1318.5,.24,.7]],"fx"); }
+function softMiss(){ playNotes([[440,0,.22,.07],[349.2,.11,.32,.07]],"fx"); }
+function tick(){ playNotes([[660,0,.06,.045]],"click"); }
 
 /* ===================== VOZ (Web Speech API, gratis en el navegador) ===================== */
+const ICON_SPEAK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const ICON_MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>';
 function speak(text){
   try{
     if(!("speechSynthesis" in window)) return;
@@ -464,7 +611,7 @@ function toggleMic(){
     };
     rec.onerror=e=>{
       st.textContent = e.error==="not-allowed"||e.error==="service-not-allowed"
-        ? "El micrófono no está disponible en esta vista. Escribe tu respuesta; en la versión publicada en Chrome la voz sí funciona."
+        ? "El micrófono no está disponible aquí. Revisa el permiso del navegador o escribe tu respuesta."
         : "No se pudo reconocer la voz ("+e.error+"). Intenta de nuevo o escribe.";
     };
     rec.onend=()=>{
@@ -475,67 +622,123 @@ function toggleMic(){
   }catch(e){ rec=null; st.textContent="No se pudo iniciar el micrófono. Escribe tu respuesta."; }
 }
 
-/* ===================== VISTAS ===================== */
+/* ===================== NAVEGACIÓN ===================== */
 function render(){
-  document.getElementById("globalPill").textContent = globalProgress(progress,SCENARIOS)+"% dominio";
-  const v=S.view;
-  app.innerHTML = v==="home"?vHome(): v==="scenario"?vScenario(): v==="practice"?vPractice(): v==="sim"?vSim(): vResults();
-  if(v==="results") requestAnimationFrame(()=>requestAnimationFrame(()=>{ const b=document.getElementById("newBar"); if(b) b.style.width=b.dataset.w+"%"; }));
-  window.scrollTo({top:0});
+  const lv=levelOf(globalProgress(progress,SCENARIOS));
+  document.getElementById("levelPill").textContent=lv.name;
+  let html;
+  if(S.tab==="inicio") html=vInicio();
+  else if(S.tab==="progreso") html=vProgreso();
+  else if(S.tab==="ajustes") html=vAjustes();
+  else html = S.view==="list"?vList(): S.view==="scenario"?vScenario(): S.view==="practice"?vPractice(): S.view==="sim"?vSim(): vResults();
+  app.innerHTML=`<div class="view${S.anim?" anim-"+S.anim:""}">${html}</div>`;
+  if(S.anim) window.scrollTo({top:0});
+  S.anim=null; S.toast=null;
+  document.querySelectorAll(".nav button").forEach(b=>{ const on=b.dataset.tab===S.tab; b.classList.toggle("on",on); if(on) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
+  if(S.tab==="practica" && S.view==="results") requestAnimationFrame(()=>requestAnimationFrame(()=>{ const b=document.getElementById("newBar"); if(b) b.style.width=b.dataset.w+"%"; }));
+}
+function go(patch, anim){ Object.assign(S, patch); S.anim=anim||"up"; render(); }
+function setTab(t){
+  if(t===S.tab){ if(t==="practica" && S.view!=="list") go({view:"list"},"left"); return; }
+  const dir = TABS.indexOf(t)>TABS.indexOf(S.tab) ? "right" : "left";
+  S.confirm=null; go({tab:t}, dir);
 }
 
-function vHome(){
-  const g=globalProgress(progress,SCENARIOS);
+/* ===================== PERFIL ===================== */
+function profileForm(p, cta){
+  const goal=p?p.goal:"", conf=p?p.confNow:3;
+  return `<div class="field"><label for="profName">¿Cómo te llamas?</label><input type="text" id="profName" maxlength="30" autocomplete="given-name" placeholder="Tu nombre" value="${p?esc(p.name):""}"></div>
+    <div class="field"><span class="lbl">¿Qué quieres mejorar primero?</span>
+      <div class="chips-opt">${GOALS.map(g=>`<label class="chip-opt"><input type="radio" name="goal" value="${g.id}" ${g.id===goal?"checked":""}><span>${S_ICONS[g.id].replace('stroke-width="1.8"','stroke-width="1.8" width="18" height="18"')}${esc(g.label)}</span></label>`).join("")}</div></div>
+    <div class="field"><label for="profConf">¿Cuánta confianza sientes hoy al hablar?</label>
+      <input type="range" id="profConf" min="1" max="5" step="1" value="${conf}">
+      <span class="conf-out" id="confOut">${conf} · ${CONF_LABELS[conf]}</span></div>
+    <p class="err" id="profErr"></p>
+    <button class="btn primary wide" data-act="saveProfile">${cta}</button>`;
+}
+function saveProfile(){
+  const name=(document.getElementById("profName").value||"").trim();
+  const g=document.querySelector('input[name="goal"]:checked');
+  const conf=+document.getElementById("profConf").value;
+  const err=document.getElementById("profErr");
+  if(!name){ err.textContent="Escribe tu nombre para continuar."; document.getElementById("profName").focus(); return; }
+  if(!g){ err.textContent="Elige qué quieres mejorar primero."; return; }
+  const isNew=!progress.profile;
+  if(isNew) progress.profile={name, goal:g.value, confStart:conf, confNow:conf, since:today()};
+  else Object.assign(progress.profile,{name, goal:g.value, confNow:conf});
+  save(); chime();
+  if(isNew) go({tab:"inicio"},"up"); else { S.toast="Perfil guardado."; render(); }
+}
+
+/* ===================== VISTA: INICIO ===================== */
+function vInicio(){
+  const p=progress.profile;
+  if(!p) return `<section class="hero">${heroArt()}
+      <h1>Entrena cómo <em>suenas</em>.</h1>
+      <p class="lead">Aprende la palabra adecuada para cada situación y ponla a prueba en conversaciones simuladas.</p></section>
+    <section class="section"><div class="panel"><div><p class="eyebrow">Paso 1</p><h2>Crea tu perfil</h2></div>${profileForm(null,"Empezar a entrenar")}
+      <p class="note">Tu perfil se guarda solo en este celular. No pedimos correo ni contraseña.</p></div></section>`;
+  const g=globalProgress(progress,SCENARIOS), lv=levelOf(g), r=recommend(), rp=scenarioProgress(progress,r);
+  const goalLbl=(GOALS.find(x=>x.id===p.goal)||{}).label||"";
+  return `<section class="greet"><div class="avatar" aria-hidden="true">${esc(initials(p.name))}</div>
+      <div><p class="eyebrow">${esc(lv.name)}</p><h1 style="font-size:clamp(1.7rem,5vw,2.2rem)">Hola, ${esc(p.name)}.</h1></div></section>
+    <section class="section">${heroArt()}
+      <div class="kpis">
+        <div class="kpi"><b>${streak()}</b><span>${streak()===1?"día seguido":"días seguidos"}</span></div>
+        <div class="kpi"><b>${masteredCount()}/40</b><span>palabras dominadas</span></div>
+        <div class="kpi"><b>${g}%</b><span>progreso total</span></div>
+      </div>
+      <button class="card feature" data-act="openScen" data-id="${r.id}">
+        <span class="tag">${r.id===p.goal?"Tu objetivo":"Recomendado"}</span>
+        <span class="card-head"><span class="s-icon">${S_ICONS[r.id]}</span><span><h3>${esc(r.name)}</h3><span class="meta">${esc(r.blurb)}</span></span></span>
+        <span class="barlabel"><span>Dominio</span><span class="mono">${rp}%</span></span>
+        <span class="bar" aria-hidden="true"><i style="width:${rp}%"></i></span>
+        <span class="cta">${rp>0?"Continuar":"Empezar"} →</span>
+      </button>
+      <p class="note">Objetivo: ${esc(goalLbl)}. <button class="linkish" data-act="tab" data-tab="ajustes">Editar perfil</button></p>
+    </section>`;
+}
+
+/* ===================== VISTA: PRÁCTICA (panel de acción) ===================== */
+function vList(){
+  const r=recommend();
   const cards=SCENARIOS.map(s=>{
     const p=scenarioProgress(progress,s), mastered=s.words.filter(w=>(progress.words[w.id]||0)>=3).length;
     const best=(progress.sims[s.id]&&progress.sims[s.id].best)||0;
     return `<button class="card" data-act="open" data-id="${s.id}">
-      <span class="eyebrow">${esc(s.who)}</span>
-      <h3>${esc(s.name)}</h3>
+      <span class="card-head"><span class="s-icon">${S_ICONS[s.id]}</span><span><span class="eyebrow">${esc(s.who)}</span><h3>${esc(s.name)}</h3></span></span>
       <span class="meta">${esc(s.blurb)}</span>
+      ${s.id===r.id?'<span class="tag">Recomendado</span>':""}
       <span class="barlabel"><span>${mastered}/10 palabras dominadas</span><span class="mono">${best?"mejor: "+best:"sin simular"}</span></span>
       <span class="bar" aria-hidden="true"><i style="width:${p}%"></i></span>
     </button>`;}).join("");
-  return `<section class="hero">
-      <div><h1>Entrena cómo <em>suenas</em>.</h1>
-      <p>Aprende la palabra adecuada para cada contexto y ponla a prueba en una conversación simulada.</p></div>
-      <div class="ring" style="--p:${g}" role="img" aria-label="Progreso total ${g}%"><span><b class="mono">${g}%</b><small>progreso total</small></span></div>
-    </section>
-    <section class="stack"><p class="eyebrow">Elige un escenario</p><div class="grid">${cards}</div></section>
-    <div class="foot">
-      <p>Voz: el reconocimiento funciona en Chrome. Si no está disponible, puedes responder escribiendo.</p>
-      <p>Tu progreso se guarda solo en este navegador.</p>
-      ${S.confirmReset ? `<div class="confirm"><span>¿Borrar todo el progreso?</span><button class="btn" data-act="resetYes">Sí, borrar</button><button class="btn ghost" data-act="resetNo">Cancelar</button></div>` : `<button class="linkish" data-act="reset">Reiniciar progreso</button>`}
-    </div>`;
+  return `<section class="section"><div><p class="eyebrow">Panel de práctica</p><h2>Elige un escenario</h2>
+      <p class="lead">Cada escenario tiene 3 pasos: vocabulario, práctica y simulación.</p></div>
+    <div class="grid">${cards}</div></section>`;
 }
-
 function stepper(active){
-  const st=[["1","Vocabulario","scenario"],["2","Práctica","practice"],["3","Simulación","sim"]];
-  return `<div class="steps">${st.map(([n,l,a])=>`<button class="step ${a===active?"on":""}" data-act="${a==="scenario"?"open":a==="practice"?"startPractice":"startSim"}" data-id="${S.sid}"><span class="n">Paso ${n}</span><b>${l}</b></button>`).join("")}</div>`;
+  const st=[["1","Vocabulario","open"],["2","Práctica","startPractice"],["3","Simulación","startSim"]];
+  return `<div class="steps">${st.map(([n,l,a])=>`<button class="step ${a===active?"on":""}" data-act="${a}" data-id="${S.sid}"><span class="n">Paso ${n}</span><b>${l}</b></button>`).join("")}</div>`;
 }
-
 function vScenario(){
   const s=scen();
   const rows=s.words.map(w=>{ const b=Math.min(3,progress.words[w.id]||0);
     return `<div class="vrow"><span class="from">${esc(w.col)}</span><span class="arrow">→</span><span class="to">${esc(w.pro)}<span class="alt">también: ${esc(w.alt)}</span></span><span class="dots" title="${b} de 3 aciertos">${[0,1,2].map(i=>`<i class="${i<b?"on":""}"></i>`).join("")}</span></div>`;}).join("");
-  return `<button class="back" data-act="home">← Escenarios</button>
-    <p class="eyebrow" style="margin-top:8px">${esc(s.who)}</p>
-    <h2>${esc(s.name)}</h2>
-    ${stepper("scenario")}
-    <div class="stack">
-      <p class="crit">${esc(s.crit)}</p>
-      <div class="vhead eyebrow"><span>${esc(s.labels[0])}</span><span></span><span>${esc(s.labels[1])}</span><span class="dh">Dominio</span></div>
-      <div class="vocab">${rows}</div>
-      <p class="note">Una palabra queda dominada con 3 aciertos. Cada error resta uno.</p>
-      <div class="row"><button class="btn primary" data-act="startPractice">Empezar práctica</button><button class="btn" data-act="startSim">Ir a la simulación</button></div>
-    </div>`;
+  return `<section class="section"><button class="back" data-act="list">← Escenarios</button>
+    <div class="card-head"><span class="s-icon">${S_ICONS[s.id]}</span><div><p class="eyebrow">${esc(s.who)}</p><h2>${esc(s.name)}</h2></div></div>
+    ${stepper("open")}
+    <p class="crit">${esc(s.crit)}</p>
+    <div class="vhead eyebrow"><span>${esc(s.labels[0])}</span><span></span><span>${esc(s.labels[1])}</span><span class="dh">Dominio</span></div>
+    <div class="vocab">${rows}</div>
+    <p class="note">Una palabra queda dominada con 3 aciertos. Cada error resta uno.</p>
+    <div class="row"><button class="btn primary" data-act="startPractice">Empezar práctica</button><button class="btn" data-act="startSim">Ir a la simulación</button></div>
+  </section>`;
 }
-
 function startPractice(){
   const s=scen();
   const qs=shuffle(s.words).map((w,i)=>({w, kind: i%2===0?"context":"fill", opts: shuffle([w.pro, ...w.d])}));
   S.practice={qs, i:0, answered:null, correct:0};
-  S.view="practice"; render();
+  go({view:"practice"},"right");
 }
 function vPractice(){
   const s=scen(), P=S.practice, q=P.qs[P.i], w=q.w;
@@ -552,23 +755,23 @@ function vPractice(){
     fb=`<div class="fb ${ok?"ok":"no"}"><b>${ok?"Correcto.":"Mejor: «"+esc(w.pro)+"»."}</b> ${esc(w.why)} <span class="muted">También sirve: ${esc(w.alt)}${/[.?!]$/.test(w.alt)?"":"."}</span></div>
       <div class="row"><button class="btn primary" data-act="pNext">${P.i<P.qs.length-1?"Siguiente":"Ir a la simulación"}</button></div>`;
   }
-  return `<button class="back" data-act="open" data-id="${s.id}">← ${esc(s.name)}</button>
-    ${stepper("practice")}
+  return `<section class="section"><button class="back" data-act="open" data-id="${s.id}">← ${esc(s.name)}</button>
+    ${stepper("startPractice")}
     <div class="panel">
       <div class="qmeta"><span class="tag">${q.kind==="context"?"Sube el registro":"Completa la frase"}</span><span class="mono muted">${P.i+1} / ${P.qs.length}</span></div>
       <div class="dotsprog">${P.qs.map((_,k)=>`<i class="${k<P.i||(k===P.i&&P.answered!==null)?"done":""}"></i>`).join("")}</div>
       ${prompt}
       <div class="opts">${optsHTML}</div>
       ${fb}
-    </div>`;
+    </div></section>`;
 }
-
 function startSim(){
   const s=scen();
   S.sim={i:0, results:[], answered:null, order: s.sim.map(t=>t.type==="free"?null:shuffle(t.opts.map((_,k)=>k)))};
   S.voiceMeta=null;
-  if(!S.practice || S.practice.sid!==s.id) S.practiceDone = S.practiceDone && S.practiceDone.sid===s.id ? S.practiceDone : null;
-  S.view="sim"; render();
+  if(!(S.practiceDone && S.practiceDone.sid===s.id)) S.practiceDone=null;
+  go({view:"sim"},"right");
+  if(progress.settings.autoSpeak) speak(s.sim[0].say);
 }
 const LEVEL={choice:"Nivel 1 · Elige la mejor respuesta", fill:"Nivel 2 · Completa la frase", free:"Nivel 3 · Responde con tus palabras"};
 function vSim(){
@@ -583,10 +786,7 @@ function vSim(){
       return `<button class="${cls}" data-act="sAnswer" data-k="${k}" ${M.answered!==null?"disabled":""}>${esc(o)}</button>`;}).join("");
     const tplHTML = t.type==="fill" ? `<p style="font-size:1.1rem">${fillHTML(t.tpl, M.answered!==null? (start?cap(t.opts[0]):t.opts[0]) : null)}</p>` : "";
     let fb="";
-    if(M.answered!==null){
-      const r=M.results[M.i];
-      fb=`<div class="fb ${r.S>=1?"ok":r.S>=.4?"mid":"no"}"><b>${pct(r.S)} pts.</b> ${esc(r.fb)}</div>`;
-    }
+    if(M.answered!==null){ const r=M.results[M.i]; fb=`<div class="fb ${r.S>=1?"ok":r.S>=.4?"mid":"no"}"><b>${pct(r.S)} pts.</b> ${esc(r.fb)}</div>`; }
     body=`${tplHTML}<div class="opts">${opts}</div>${fb}`;
   } else {
     const r=M.answered!==null? M.results[M.i] : null;
@@ -599,15 +799,15 @@ function vSim(){
       <p class="note" id="micStatus"></p>`;
   }
   const next = M.answered!==null ? `<div class="row"><button class="btn primary" data-act="sNext">${M.i<s.sim.length-1?"Siguiente turno":"Ver resultados"}</button></div>` : "";
-  return `<button class="back" data-act="open" data-id="${s.id}">← ${esc(s.name)}</button>
-    ${stepper("sim")}
+  return `<section class="section"><button class="back" data-act="open" data-id="${s.id}">← ${esc(s.name)}</button>
+    ${stepper("startSim")}
     <div class="panel">
       <div class="qmeta"><span class="tag">${LEVEL[t.type]}</span><span class="mono muted">Turno ${M.i+1} / ${s.sim.length}</span></div>
       <div class="dotsprog">${s.sim.map((_,k)=>`<i class="${k<M.i||(k===M.i&&M.answered!==null)?"done":""}"></i>`).join("")}</div>
       <div class="say"><div class="bubble"><div class="who">${esc(s.who)}</div>${esc(t.say)}</div>
         <button class="icon-btn" data-act="speak" aria-label="Escuchar en voz alta">${ICON_SPEAK}</button></div>
       ${body}${next}
-    </div>`;
+    </div></section>`;
 }
 function freeFeedback(r){
   const chips=[...r.matched.map(m=>`<span class="chip ok">✓ ${esc(m)}</span>`), ...r.missing.map(m=>`<span class="chip no">falta: ${esc(m)}</span>`)].join("");
@@ -624,22 +824,23 @@ function freeFeedback(r){
     ${r.notes.map(n=>`<p class="hint">${esc(n)}</p>`).join("")}
     <div class="fb mid"><b>Respuesta modelo:</b> ${esc(r.model)}</div>`;
 }
-
 function finishSim(){
   const s=scen(), M=S.sim;
   const before=scenarioProgress(progress,s);
   const simScore=Math.round(M.results.reduce((a,r)=>a+r.S,0)/M.results.length*100);
-  const rec=progress.sims[s.id]||{best:0,attempts:0,last:0};
-  rec.attempts++; rec.last=simScore; rec.best=Math.max(rec.best,simScore); progress.sims[s.id]=rec;
-  // usar en la simulación libre una palabra objetivo también suma dominio
-  M.results.filter(r=>r.type==="free").forEach(r=>{
-    s.words.forEach(w=>{ if(hasStem(r.text, w.pro)) progress.words[w.id]=Math.min(3,(progress.words[w.id]||0)+1); });
-  });
-  save();
+  const recd=progress.sims[s.id]||{best:0,attempts:0,last:0};
+  recd.attempts++; recd.last=simScore; recd.best=Math.max(recd.best,simScore); progress.sims[s.id]=recd;
+  M.results.filter(r=>r.type==="free").forEach(r=>{ s.words.forEach(w=>{ if(hasStem(r.text, w.pro)) progress.words[w.id]=Math.min(3,(progress.words[w.id]||0)+1); }); });
+  const voiced=M.results.filter(r=>r.type==="free" && r.ppm);
+  const avgPpm = voiced.length ? Math.round(voiced.reduce((a,r)=>a+r.ppm,0)/voiced.length) : null;
+  const avgMpm = voiced.length ? +(voiced.reduce((a,r)=>a+(r.nWords? r.mul.count*r.ppm/r.nWords : 0),0)/voiced.length).toFixed(1) : null;
+  progress.history.push({d:today(), sid:s.id, score:simScore, ppm:avgPpm, mpm:avgMpm});
+  if(progress.history.length>100) progress.history=progress.history.slice(-100);
+  markDay(); save();
   const after=scenarioProgress(progress,s);
   const pr = S.practiceDone && S.practiceDone.sid===s.id ? S.practiceDone.correct : null;
-  S.result={simScore, before, after, pr, results:M.results, isBest: simScore>=rec.best};
-  S.view="results"; render();
+  S.result={simScore, before, after, pr, results:M.results};
+  go({view:"results"},"up");
   if(simScore>=75) setTimeout(fanfare, 250);
 }
 function recommendations(s, R){
@@ -647,14 +848,14 @@ function recommendations(s, R){
   const mul=free.reduce((a,r)=>a+r.mul.count,0);
   const miss=[...new Set(free.flatMap(r=>r.missing))];
   const ppms=free.filter(r=>r.ppm).map(r=>r.ppm);
-  const weakChoice=R.results.filter(r=>r.type!=="free" && r.S<1);
+  const weak=R.results.filter(r=>r.type!=="free" && r.S<1);
   if(miss.length) out.push(`Practica estas expresiones en voz alta: ${miss.map(m=>"«"+esc(m)+"»").join(", ")}.`);
   if(mul>=2) out.push(`Detectamos ${mul} muletillas. Cuando necesites pensar, haz una pausa breve en silencio: suena más seguro que «o sea» o «eh».`);
   if(ppms.length){ const avg=Math.round(ppms.reduce((a,b)=>a+b,0)/ppms.length);
     if(avg>PPM_RANGE[1]) out.push(`Hablaste a ${avg} palabras por minuto: un poco rápido. Apunta a ${PPM_RANGE[0]}–${PPM_RANGE[1]}.`);
     else if(avg<PPM_RANGE[0]) out.push(`Hablaste a ${avg} palabras por minuto: algo lento. Apunta a ${PPM_RANGE[0]}–${PPM_RANGE[1]}.`); }
   else out.push("Prueba la próxima vez respondiendo por voz para medir tu ritmo y tus muletillas al hablar.");
-  if(weakChoice.length) out.push(`Revisa ${weakChoice.length>1?"los turnos":"el turno"} ${weakChoice.map(r=>r.turn+1).join(" y ")}: había una opción más adecuada para ${esc(s.short)}.`);
+  if(weak.length) out.push(`Revisa ${weak.length>1?"los turnos":"el turno"} ${weak.map(r=>r.turn+1).join(" y ")}: había una opción más adecuada para ${esc(s.short)}.`);
   if(s.id==="cita") out.push("En una cita, devolver la pregunta («¿y tú?») vale más que cualquier palabra elegante.");
   if(!out.length) out.push("Excelente. Repite la simulación por voz para consolidar.");
   return out;
@@ -666,8 +867,7 @@ function vResults(){
   const turns=R.results.map(r=>`<div class="turn"><span class="eyebrow">Turno ${r.turn+1} · ${r.type==="free"?"libre":r.type==="fill"?"completar":"elegir"}</span>
       <span>${esc(r.text)}</span>
       <span class="chips"><span class="chip ${r.S>=.75?"ok":r.S<.45?"no":""}">${pct(r.S)} pts</span>${r.type==="free"&&r.mul.count?`<span class="chip">${r.mul.count} muletilla${r.mul.count>1?"s":""}</span>`:""}${r.ppm?`<span class="chip mono">${Math.round(r.ppm)} ppm</span>`:""}</span></div>`).join("");
-  return `<button class="back" data-act="open" data-id="${s.id}">← ${esc(s.name)}</button>
-    <div class="stack" style="margin-top:12px">
+  return `<section class="section"><button class="back" data-act="open" data-id="${s.id}">← ${esc(s.name)}</button>
       <div class="panel">
         <span class="eyebrow">Resultado · ${esc(s.name)}</span>
         <div class="score"><b class="mono">${total}</b><span class="muted">/ 100</span></div>
@@ -678,41 +878,117 @@ function vResults(){
         </div>
         <div class="barlabel"><span>Dominio del escenario</span><span class="mono">${R.after}%${delta>0?` <span class="delta">+${delta}</span>`:""}</span></div>
         <div class="bar"><i id="newBar" data-w="${R.after}" style="width:${R.before}%"></i></div>
-        ${R.pr===null?`<p class="note">El puntaje total combina práctica (40%) y simulación (60%). Hiciste solo la simulación.</p>`:`<p class="note">Total = 40% práctica + 60% simulación.</p>`}
+        <p class="note">${R.pr===null?"Hiciste solo la simulación. El total combina práctica (40%) y simulación (60%).":"Total = 40% práctica + 60% simulación."}</p>
       </div>
       <div class="panel"><h3>Qué mejorar</h3><ul class="recs">${recommendations(s,R).map(x=>`<li>${x}</li>`).join("")}</ul></div>
       <div class="panel"><h3>Detalle por turno</h3>${turns}</div>
-      <div class="row"><button class="btn primary" data-act="startSim">Repetir simulación</button><button class="btn" data-act="startPractice">Practicar vocabulario</button><button class="btn ghost" data-act="home">Otros escenarios</button></div>
-    </div>`;
+      <div class="row"><button class="btn primary" data-act="startSim">Repetir simulación</button><button class="btn" data-act="startPractice">Practicar vocabulario</button><button class="btn ghost" data-act="tab" data-tab="progreso">Ver mi progreso</button></div>
+    </section>`;
+}
+
+/* ===================== VISTA: PROGRESO (dashboard) ===================== */
+function scoresChart(){
+  const h=progress.history.slice(-10);
+  if(!h.length) return `<p class="empty">Aún no hay simulaciones. Completa una y aquí verás cómo evolucionan tus puntajes.</p>`;
+  const W=320, H=150, L=28, B=22, T=14, slot=(W-L-4)/10, bw=Math.min(18, slot*.62);
+  const y=v=>T+(H-T-B)*(1-v/100);
+  let g=[0,50,100].map(v=>`<line class="grid-l" x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text class="ax" x="${L-6}" y="${y(v)+3}" text-anchor="end">${v}</text>`).join("");
+  const bars=h.map((e,i)=>{
+    const x=L+slot*i+(slot-bw)/2, top=y(e.score), base=y(0), r=Math.min(4,(base-top)/2);
+    const d = e.score>0 ? `M${x},${base} V${top+r} Q${x},${top} ${x+r},${top} H${x+bw-r} Q${x+bw},${top} ${x+bw},${top+r} V${base} Z` : "";
+    const sc=scenById(e.sid);
+    return `<g><title>Intento ${progress.history.length-h.length+i+1} · ${esc(sc?sc.name:"")} · ${e.score} pts</title>${d?`<path class="b" d="${d}"/>`:""}<rect x="${L+slot*i}" y="${T}" width="${slot}" height="${H-T-B}" fill="transparent"/></g>`;
+  }).join("");
+  const last=h[h.length-1], lx=L+slot*(h.length-1)+slot/2;
+  const lbl=`<text class="val" x="${lx}" y="${y(last.score)-6}" text-anchor="middle">${last.score}</text>`;
+  const ax=`<text class="ax" x="${L}" y="${H-6}">más antiguo</text><text class="ax" x="${W}" y="${H-6}" text-anchor="end">más reciente</text>`;
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Puntajes de las últimas ${h.length} simulaciones: ${h.map(e=>e.score).join(", ")}">${g}${bars}${lbl}${ax}</svg></div>`;
+}
+function vProgreso(){
+  const g=globalProgress(progress,SCENARIOS), lv=levelOf(g), p=progress.profile;
+  const sims=Object.values(progress.sims).reduce((a,x)=>a+(x.attempts||0),0);
+  const voiced=progress.history.filter(e=>e.ppm);
+  const avgPpm=voiced.length?Math.round(voiced.reduce((a,e)=>a+e.ppm,0)/voiced.length):null;
+  const avgMpm=voiced.length?(voiced.reduce((a,e)=>a+(e.mpm||0),0)/voiced.length).toFixed(1):null;
+  const rows=SCENARIOS.map(s=>{ const sp=scenarioProgress(progress,s), m=s.words.filter(w=>(progress.words[w.id]||0)>=3).length, b=(progress.sims[s.id]||{}).best||0;
+    return `<div class="srow"><span class="s-icon">${S_ICONS[s.id]}</span><div class="stack" style="gap:6px;min-width:0">
+      <span class="barlabel"><span style="color:var(--fg);font-weight:700">${esc(s.name)}</span><span class="mono">${sp}%</span></span>
+      <span class="bar" aria-hidden="true"><i style="width:${sp}%"></i></span>
+      <span class="barlabel"><span>${m}/10 palabras</span><span>${b?"mejor simulación: "+b:"sin simular"}</span></span></div></div>`; }).join("");
+  return `<section class="ring-row"><div class="ring" style="--p:${g}" role="img" aria-label="Progreso total ${g}%"><span><b class="mono">${g}%</b><small>progreso total</small></span></div>
+      <div><p class="eyebrow">Tu nivel</p><h2>${esc(lv.name)}</h2><p class="note" style="margin-top:4px">${lv.next?`Te faltan ${lv.next[0]-g} puntos para <b style="color:var(--accent)">${esc(lv.next[1])}</b>.`:"Llegaste al nivel máximo."}</p></div></section>
+    <section class="section">
+      <div class="kpis two">
+        <div class="kpi"><b>${masteredCount()}/40</b><span>palabras dominadas</span></div>
+        <div class="kpi"><b>${sims}</b><span>simulaciones completadas</span></div>
+        <div class="kpi"><b>${streak()}</b><span>${streak()===1?"día seguido practicando":"días seguidos practicando"}</span></div>
+        <div class="kpi"><b>${p?p.confStart+" → "+p.confNow:"—"}</b><span>confianza (1 a 5): inicio → hoy</span></div>
+      </div>
+      <div class="panel"><div><h3>Últimas simulaciones</h3><p class="note">Puntaje de cada intento (0 a 100).</p></div>${scoresChart()}</div>
+      <div class="panel"><h3>Por escenario</h3>${rows}</div>
+      <div class="panel"><h3>Tu voz</h3>
+        ${avgPpm?`<div class="kpis two"><div class="kpi"><b>${avgPpm}</b><span>palabras por minuto (ideal ${PPM_RANGE[0]}–${PPM_RANGE[1]})</span></div><div class="kpi"><b>${avgMpm}</b><span>muletillas por minuto</span></div></div>`
+        :`<p class="empty">Responde por voz en el Nivel 3 de una simulación para medir tu ritmo y tus muletillas.</p>`}
+      </div>
+      ${p?`<p class="note">¿Sientes que ganaste confianza? Actualízala en <button class="linkish" data-act="tab" data-tab="ajustes">Ajustes</button>.</p>`:""}
+    </section>`;
+}
+
+/* ===================== VISTA: AJUSTES ===================== */
+function sw(key, label, sub, disabled){
+  const on=!!progress.settings[key];
+  return `<div class="setting"><div><p>${label}</p>${sub?`<small>${sub}</small>`:""}</div>
+    <button class="switch" role="switch" aria-checked="${on}" aria-label="${esc(label)}" data-act="toggle" data-key="${key}" ${disabled?"disabled":""}><span class="knob"></span></button></div>`;
+}
+function vAjustes(){
+  const p=progress.profile, st=progress.settings;
+  return `<section class="section"><div><p class="eyebrow">Configuración</p><h2>Ajustes</h2></div>
+    ${S.toast?`<p class="toast">${esc(S.toast)}</p>`:""}
+    <div class="panel"><h3>${p?"Tu perfil":"Crea tu perfil"}</h3>${profileForm(p, p?"Guardar cambios":"Crear perfil")}</div>
+    <div class="panel"><h3>Sonido</h3>
+      ${sw("sound","Sonidos de acierto y error","Campanita al acertar, notas suaves al fallar.")}
+      ${sw("clicks","Sonido al tocar botones","Un tic corto y neutro.", !st.sound)}</div>
+    <div class="panel"><h3>Voz</h3>
+      ${sw("autoSpeak","Leer en voz alta a tu interlocutor","En la simulación, escucharás cada frase automáticamente.")}</div>
+    <div class="panel"><h3>Tus datos</h3>
+      <p class="note">Todo se guarda solo en este navegador. Si borras los datos del navegador o cambias de celular, se pierde.</p>
+      ${S.confirm==="reset"?`<div class="confirm"><span>¿Borrar tu progreso? Tu perfil se mantiene.</span><button class="btn danger" data-act="resetYes">Sí, borrar progreso</button><button class="btn ghost" data-act="cancelConfirm">Cancelar</button></div>`
+        :`<button class="btn" data-act="resetAsk">Reiniciar progreso</button>`}
+      ${S.confirm==="wipe"?`<div class="confirm"><span>¿Borrar perfil, progreso y ajustes? No se puede deshacer.</span><button class="btn danger" data-act="wipeYes">Sí, borrar todo</button><button class="btn ghost" data-act="cancelConfirm">Cancelar</button></div>`
+        :`<button class="btn danger" data-act="wipeAsk">Borrar todo</button>`}</div>
+    <p class="note" style="text-align:center">Aura · prototipo en validación</p>
+  </section>`;
 }
 
 /* ===================== EVENTOS ===================== */
-app.addEventListener("click", onAct);
-document.querySelector(".top").addEventListener("click", onAct);
+document.addEventListener("click", onAct);
+app.addEventListener("input", e=>{
+  if(e.target.id==="profConf"){ const v=+e.target.value; const o=document.getElementById("confOut"); if(o) o.textContent=v+" · "+CONF_LABELS[v]; }
+});
 function onAct(e){
-  const el=e.target.closest("[data-act]"); if(!el) return;
+  const el=e.target.closest("[data-act]"); if(!el || el.disabled) return;
   const a=el.dataset.act;
   // las respuestas ya tienen su propio sonido (acierto o error); el resto de los botones hace un tic neutro
-  if(!["pAnswer","sAnswer","sSubmit","sound"].includes(a)) tick();
-  if(a==="home"){ S={view:"home"}; render(); }
-  else if(a==="open"){ S.sid=el.dataset.id||S.sid; S.view="scenario"; render(); }
-  else if(a==="reset"){ S.confirmReset=true; render(); }
-  else if(a==="resetNo"){ S.confirmReset=false; render(); }
-  else if(a==="resetYes"){ progress=emptyProgress(); save(); S={view:"home"}; render(); }
+  if(!["pAnswer","sAnswer","sSubmit","toggle","saveProfile"].includes(a)) tick();
+  if(a==="tab") setTab(el.dataset.tab);
+  else if(a==="brand") setTab("inicio");
+  else if(a==="list") go({tab:"practica", view:"list"},"left");
+  else if(a==="open"){ S.sid=el.dataset.id||S.sid; const back=["practice","sim","results"].includes(S.view); go({tab:"practica", view:"scenario"}, back?"left":"right"); }
+  else if(a==="openScen"){ S.sid=el.dataset.id; go({tab:"practica", view:"scenario"},"right"); }
   else if(a==="startPractice"){ if(el.dataset.id) S.sid=el.dataset.id; startPractice(); }
   else if(a==="startSim"){ if(el.dataset.id) S.sid=el.dataset.id; startSim(); }
   else if(a==="pAnswer"){
     const P=S.practice, q=P.qs[P.i], k=+el.dataset.k; P.answered=k;
     const ok=q.opts[k]===q.w.pro, cur=progress.words[q.w.id]||0;
     progress.words[q.w.id]= ok? Math.min(3,cur+1) : Math.max(0,cur-1);
-    if(ok){ P.correct++; chime(); } else softMiss(); save(); render();
+    if(ok){ P.correct++; chime(); } else softMiss();
+    markDay(); save(); render();
   }
   else if(a==="pNext"){
     const P=S.practice;
-    if(P.i<P.qs.length-1){ P.i++; P.answered=null; render(); }
+    if(P.i<P.qs.length-1){ P.i++; P.answered=null; S.anim="right"; render(); }
     else { S.practiceDone={sid:S.sid, correct:P.correct}; startSim(); }
   }
-  else if(a==="sound"){ SOUND_ON=!SOUND_ON; try{ localStorage.setItem("aura.sound", SOUND_ON?"on":"off"); }catch(err){} paintSoundBtn(); if(SOUND_ON) chime(); }
   else if(a==="speak"){ const s=scen(); speak(s.sim[S.sim.i].say); }
   else if(a==="mic"){ toggleMic(); }
   else if(a==="sAnswer"){
@@ -721,7 +997,7 @@ function onAct(e){
       ? {type:"choice", turn:M.i, S:t.opts[k].s, fb:t.opts[k].fb, text:t.opts[k].t}
       : {type:"fill", turn:M.i, S:k===0?1:0, fb:(k===0?"Correcto. ":"Lo adecuado era «"+t.opts[0]+"». ")+t.fb, text:t.tpl.replace("___", atSentenceStart(t.tpl)?cap(t.opts[k]):t.opts[k])};
     if(M.results[M.i].S>=1) chime(); else softMiss();
-    render();
+    markDay(); save(); render();
   }
   else if(a==="sSubmit"){
     const s=scen(), M=S.sim, t=s.sim[M.i], ta=document.getElementById("answer"), text=(ta.value||"").trim();
@@ -730,15 +1006,27 @@ function onAct(e){
     const r=scoreFree(t, text, S.voiceMeta, s.weights, s);
     M.results[M.i]=Object.assign(r,{type:"free", turn:M.i, text, model:t.model}); M.answered=0; S.voiceMeta=null;
     if(r.S>=.75) chime(); else if(r.S<.45) softMiss();
-    render();
+    markDay(); save(); render();
   }
   else if(a==="sNext"){
     const s=scen(), M=S.sim;
-    if(M.i<s.sim.length-1){ M.i++; M.answered=null; S.voiceMeta=null; render(); } else finishSim();
+    if(M.i<s.sim.length-1){ M.i++; M.answered=null; S.voiceMeta=null; S.anim="right"; render(); if(progress.settings.autoSpeak) speak(s.sim[M.i].say); }
+    else finishSim();
   }
+  else if(a==="saveProfile") saveProfile();
+  else if(a==="toggle"){
+    const k=el.dataset.key; progress.settings[k]=!progress.settings[k]; save();
+    try{ localStorage.removeItem("aura.sound"); }catch(err){}
+    if(progress.settings[k] && (k==="sound"||k==="clicks")) chime();
+    render();
+  }
+  else if(a==="resetAsk"){ S.confirm="reset"; render(); }
+  else if(a==="wipeAsk"){ S.confirm="wipe"; render(); }
+  else if(a==="cancelConfirm"){ S.confirm=null; render(); }
+  else if(a==="resetYes"){ progress=freshProgress(progress); save(); S.confirm=null; S.toast="Progreso reiniciado."; S.practiceDone=null; S.view="list"; render(); }
+  else if(a==="wipeYes"){ progress=freshProgress(); save(); try{ localStorage.removeItem("aura.sound"); }catch(err){} S={tab:"inicio", view:"list", anim:"up"}; render(); }
 }
 try{ if("speechSynthesis" in window) speechSynthesis.getVoices(); }catch(e){}
-paintSoundBtn();
 render();
 </script>
 

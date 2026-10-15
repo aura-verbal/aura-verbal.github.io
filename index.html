@@ -409,6 +409,27 @@ SCENARIOS.forEach(s=>s.words.forEach((w,i)=>w.id=s.id+"-"+i));
 const MUL_PHRASES = ["o sea","como que","como onda","es que nada"];
 const MUL_TOKENS = ["osea","cachai","cachay","eh","ehh","ehhh","em","emm","mm","mmm","po","literal","basicamente"];
 const PPM_RANGE = [110,160];
+const PPM_MAX_RELIABLE = 260;   // nadie habla sostenidamente sobre ~260 palabras/min: sobre eso, el dato es un error de medición
+
+/* Chrome en Android entrega la frase ACUMULADA en cada resultado ("debería", "debería llevárselo", ...).
+   Para no duplicar, si un fragmento nuevo empieza igual que el anterior, lo REEMPLAZA en vez de sumarse. */
+function sameStart(a, b){
+  const aw=a.split(" "), bw=b.split(" ");
+  if(bw.length<aw.length) return false;
+  const k=Math.max(1, Math.floor(aw.length*0.7));
+  let same=0; for(let i=0;i<k;i++) if(aw[i]===bw[i]) same++;
+  return same >= Math.ceil(k*0.8);   // tolera que el reconocedor corrija alguna palabra
+}
+function mergePart(parts, t){
+  const last=parts[parts.length-1];
+  if(!last){ parts.push(t); return parts; }
+  const a=norm(last), b=norm(t);
+  if(!b) return parts;
+  if(b.startsWith(a) || sameStart(a,b)){ parts[parts.length-1]=t; return parts; }
+  if(a.startsWith(b) || sameStart(b,a)) return parts;   // repetición más corta de lo mismo
+  parts.push(t); return parts;
+}
+function buildTranscript(chunks){ return chunks.reduce((parts,t)=>mergePart(parts,(t||"").trim()),[]).join(" "); }
 
 function norm(s){
   return (s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
@@ -443,12 +464,18 @@ function scoreFree(turn, text, meta, weights, scen){
   const mul = countMuletillas(text);
   const nWords = tokens(text).length;
   let m, ppm=null, p=null;
-  const voice = meta && meta.voice && meta.seconds && meta.seconds>=3;
-  if(voice){ const tm = mul.count/(meta.seconds/60); m = 1-Math.min(1, tm/4); ppm = nWords/(meta.seconds/60); p = paceScore(ppm); }
+  const notes=[];
+  let voice = !!(meta && meta.voice && meta.seconds && meta.seconds>=3);
+  if(voice){
+    ppm = nWords/(meta.seconds/60);
+    if(ppm>PPM_MAX_RELIABLE){ voice=false; ppm=null; notes.push("El ritmo medido no fue confiable (posible error del micrófono), así que se evaluó sin ritmo."); }
+  }
+  if(voice){ const tm = mul.count/(meta.seconds/60); m = 1-Math.min(1, tm/4); p = paceScore(ppm); }
   else { m = 1-Math.min(1, mul.count/3); }
   let S = voice ? (weights.v*v + weights.m*m + weights.p*p) : (weights.v*v + weights.m*m)/(weights.v+weights.m);
-  const notes=[];
   if(nWords<5){ S=Math.min(S,.5); notes.push("Respuesta muy corta: intenta desarrollar la idea en una o dos frases."); }
+  const uniq=new Set(tokens(text)).size;
+  if(nWords>=20 && uniq/nWords<0.35){ S=Math.min(S,.5); notes.push("Detectamos muchas palabras repetidas. Revisa que la transcripción refleje lo que dijiste."); }
   const colloquial=[];
   if(scen) scen.words.forEach(w=>{ (w.det||[]).forEach(d=>{ if(hasStem(text,d) && !colloquial.find(c=>c.col===w.col)) colloquial.push({col:w.col, pro:w.pro}); }); });
   return {S:clamp01(S), v, m, p, ppm, nWords, mul, matched, missing, colloquial, notes, voice:!!voice};
@@ -605,9 +632,11 @@ function toggleMic(){
     rec=new SR(); rec.lang="es-CL"; rec.continuous=true; rec.interimResults=true;
     rec.onresult=e=>{
       const now=performance.now(); if(t0===null) t0=now;
-      let interim="";
-      for(let i=e.resultIndex;i<e.results.length;i++){ const r=e.results[i]; if(r.isFinal){ finalText+=r[0].transcript+" "; t1=now; } else interim+=r[0].transcript; }
-      ta.value=(base?base+" ":"")+(finalText+interim).trim();
+      const chunks=[]; let anyFinal=false;
+      for(let i=0;i<e.results.length;i++){ const r=e.results[i]; chunks.push(r[0].transcript); if(r.isFinal) anyFinal=true; }
+      if(anyFinal) t1=now;
+      finalText=buildTranscript(chunks);
+      ta.value=(base?base+" ":"")+finalText;
     };
     rec.onerror=e=>{
       st.textContent = e.error==="not-allowed"||e.error==="service-not-allowed"

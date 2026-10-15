@@ -432,6 +432,8 @@ function chime(){ playNotes([[1046.5,0,.35],[1568,.09,.5]]); }
 function fanfare(){ playNotes([[784,0,.4],[1046.5,.12,.4],[1318.5,.24,.7]]); }
 /* error: dos notas graves descendentes (La4 → Fa4), más suaves y cortas que el acierto */
 function softMiss(){ playNotes([[440,0,.22,.07],[349.2,.11,.32,.07]]); }
+/* botón: "tic" neutro, muy corto y suave */
+function tick(){ playNotes([[660,0,.06,.045]]); }
 
 /* ===================== VOZ (Web Speech API, gratis en el navegador) ===================== */
 function speak(text){
@@ -690,6 +692,8 @@ document.querySelector(".top").addEventListener("click", onAct);
 function onAct(e){
   const el=e.target.closest("[data-act]"); if(!el) return;
   const a=el.dataset.act;
+  // las respuestas ya tienen su propio sonido (acierto o error); el resto de los botones hace un tic neutro
+  if(!["pAnswer","sAnswer","sSubmit","sound"].includes(a)) tick();
   if(a==="home"){ S={view:"home"}; render(); }
   else if(a==="open"){ S.sid=el.dataset.id||S.sid; S.view="scenario"; render(); }
   else if(a==="reset"){ S.confirmReset=true; render(); }

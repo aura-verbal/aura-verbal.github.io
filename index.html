@@ -86,21 +86,15 @@ button{font:inherit;color:inherit;cursor:pointer}
 .back{background:none;border:0;padding:6px 0;color:var(--muted);font-weight:700;align-self:flex-start}
 .linkish{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;text-underline-offset:3px;font-size:inherit}
 
-/* Hero illustration */
-.art{width:100%;max-width:440px;margin:0 auto;display:block}
-.art .glow{animation:breathe 5s ease-in-out infinite}
-@keyframes breathe{0%,100%{opacity:.75}50%{opacity:1}}
-.art .p-body{fill:var(--surface);stroke:var(--accent);stroke-width:2.5}
-.art .p-body2{fill:var(--surface-2);stroke:var(--gold-dark);stroke-width:2}
-.art .p-hair{fill:var(--hair);stroke:var(--accent);stroke-width:2}
-.art .p-hair2{fill:var(--hair);stroke:var(--gold-dark);stroke-width:2}
-.art .line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.art .bubble{fill:var(--surface);stroke:var(--accent);stroke-width:2;stroke-linejoin:round}
-.art .bubble2{fill:var(--surface-2);stroke:var(--gold-dark);stroke-width:2;stroke-linejoin:round}
-.art .aa{font-family:var(--font-display);font-weight:700;font-size:21px;fill:var(--accent)}
-.art .dot{fill:var(--gold-light)}
-.art .spark{stroke:var(--gold-light);stroke-width:1.6;stroke-linecap:round}
 .hero{display:flex;flex-direction:column;gap:6px;padding-top:12px}
+.photo{position:relative;margin:0;border-radius:18px;overflow:hidden;aspect-ratio:3/2;max-width:100%;background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+.photo.sm{aspect-ratio:16/9}
+.photo img{width:100%;height:100%;object-fit:cover;object-position:50% 40%;display:block;animation:settle 1.6s cubic-bezier(.2,.8,.2,1) both}
+.photo::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 50%,var(--bg) 100%),radial-gradient(ellipse at 50% 40%,transparent 60%,rgba(10,10,11,.5) 100%)}
+@keyframes settle{from{transform:scale(1.06);opacity:.6}to{transform:none;opacity:1}}
+.hero h1.over{margin-top:-52px;position:relative;z-index:1;padding:0 4px}
+.hero .lead{padding:0 4px}
 
 /* Home */
 .greet{display:flex;align-items:center;gap:14px;padding-top:22px}
@@ -558,28 +552,8 @@ const S_ICONS={
   venta:`<svg ${SVG_ATTR}><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>`,
   cita:`<svg ${SVG_ATTR}><path d="M4 10h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-5z"/><path d="M16 12h2a2 2 0 0 1 0 4h-2"/><path d="M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4"/></svg>`
 };
-function heroArt(){
-  return `<svg class="art" viewBox="0 0 360 236" role="img" aria-label="Ilustración: dos personas conversando con seguridad">
-  <defs>
-    <radialGradient id="aGlow"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.26"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></radialGradient>
-    <linearGradient id="aGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--gold-light)"/><stop offset=".55" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--gold-dark)"/></linearGradient>
-  </defs>
-  <circle class="glow" cx="128" cy="134" r="104" fill="url(#aGlow)"/>
-  <circle class="glow" cx="128" cy="134" r="80" fill="none" stroke="url(#aGold)" stroke-width="2" opacity=".6"/>
-  <path class="p-hair2" d="M222 118 C220 86 274 86 272 118 L274 156 C262 148 232 148 220 156 Z"/>
-  <path class="p-body2" d="M198 236 C198 184 220 160 247 160 C274 160 296 184 296 236 Z"/>
-  <circle class="p-body2" cx="247" cy="118" r="21"/>
-  <path class="p-body" d="M72 236 C72 176 97 150 128 150 C159 150 184 176 184 236 Z"/>
-  <path class="line" d="M114 151 L128 170 L142 151"/>
-  <path class="line" d="M114 151 L104 200 M142 151 L152 200"/>
-  <circle class="p-body" cx="128" cy="110" r="25"/>
-  <path class="p-hair" d="M104 100 C102 78 154 78 152 100 C143 91 113 90 104 100 Z"/>
-  <path class="bubble" d="M160 26 h74 a14 14 0 0 1 14 14 v14 a14 14 0 0 1 -14 14 h-50 l-14 13 l2 -13 h-12 a14 14 0 0 1 -14 -14 v-14 a14 14 0 0 1 14 -14 z"/>
-  <text class="aa" x="197" y="55" text-anchor="middle">Aa</text>
-  <path class="bubble2" d="M270 52 h52 a12 12 0 0 1 12 12 v8 a12 12 0 0 1 -12 12 h-30 l-10 11 l1 -11 h-13 a12 12 0 0 1 -12 -12 v-8 a12 12 0 0 1 12 -12 z"/>
-  <circle class="dot" cx="285" cy="68" r="3"/><circle class="dot" cx="296" cy="68" r="3"/><circle class="dot" cx="307" cy="68" r="3"/>
-  <path class="spark" d="M38 58v10M33 63h10"/><path class="spark" d="M330 140v8M326 144h8"/><path class="spark" d="M58 188v6M55 191h6"/>
-</svg>`;
+function heroPhoto(size){
+  return `<figure class="photo${size?" "+size:""}"><picture><source srcset="hero.webp" type="image/webp"><img src="hero.jpg" width="1200" height="800" alt="Dos jóvenes conversando con confianza en un café, con luz dorada de atardecer"></picture></figure>`;
 }
 
 /* ===================== SONIDOS (Web Audio API) ===================== */
@@ -702,8 +676,8 @@ function saveProfile(){
 /* ===================== VISTA: INICIO ===================== */
 function vInicio(){
   const p=progress.profile;
-  if(!p) return `<section class="hero">${heroArt()}
-      <h1>Entrena cómo <em>suenas</em>.</h1>
+  if(!p) return `<section class="hero">${heroPhoto()}
+      <h1 class="over">Entrena cómo <em>suenas</em>.</h1>
       <p class="lead">Aprende la palabra adecuada para cada situación y ponla a prueba en conversaciones simuladas.</p></section>
     <section class="section"><div class="panel"><div><p class="eyebrow">Paso 1</p><h2>Crea tu perfil</h2></div>${profileForm(null,"Empezar a entrenar")}
       <p class="note">Tu perfil se guarda solo en este celular. No pedimos correo ni contraseña.</p></div></section>`;
@@ -711,7 +685,7 @@ function vInicio(){
   const goalLbl=(GOALS.find(x=>x.id===p.goal)||{}).label||"";
   return `<section class="greet"><div class="avatar" aria-hidden="true">${esc(initials(p.name))}</div>
       <div><p class="eyebrow">${esc(lv.name)}</p><h1 style="font-size:clamp(1.7rem,5vw,2.2rem)">Hola, ${esc(p.name)}.</h1></div></section>
-    <section class="section">${heroArt()}
+    <section class="section">${heroPhoto("sm")}
       <div class="kpis">
         <div class="kpi"><b>${streak()}</b><span>${streak()===1?"día seguido":"días seguidos"}</span></div>
         <div class="kpi"><b>${masteredCount()}/40</b><span>palabras dominadas</span></div>

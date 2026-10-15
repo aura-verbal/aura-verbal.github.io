@@ -424,12 +424,14 @@ function playNotes(notes){
     const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
     actx=actx||new AC(); if(actx.state==="suspended") actx.resume();
     const t=actx.currentTime+0.02;
-    notes.forEach(([f,dt,dur])=>tone(f,t+dt,dur,0.16));
+    notes.forEach(([f,dt,dur,vol])=>tone(f,t+dt,dur,vol||0.16));
   }catch(e){}
 }
 /* acierto: campanita de dos notas (Do6 → Sol6); resultado destacado: arpegio de tres notas */
 function chime(){ playNotes([[1046.5,0,.35],[1568,.09,.5]]); }
 function fanfare(){ playNotes([[784,0,.4],[1046.5,.12,.4],[1318.5,.24,.7]]); }
+/* error: dos notas graves descendentes (La4 → Fa4), más suaves y cortas que el acierto */
+function softMiss(){ playNotes([[440,0,.22,.07],[349.2,.11,.32,.07]]); }
 
 /* ===================== VOZ (Web Speech API, gratis en el navegador) ===================== */
 function speak(text){
@@ -699,7 +701,7 @@ function onAct(e){
     const P=S.practice, q=P.qs[P.i], k=+el.dataset.k; P.answered=k;
     const ok=q.opts[k]===q.w.pro, cur=progress.words[q.w.id]||0;
     progress.words[q.w.id]= ok? Math.min(3,cur+1) : Math.max(0,cur-1);
-    if(ok){ P.correct++; chime(); } save(); render();
+    if(ok){ P.correct++; chime(); } else softMiss(); save(); render();
   }
   else if(a==="pNext"){
     const P=S.practice;
@@ -714,7 +716,7 @@ function onAct(e){
     M.results[M.i] = t.type==="choice"
       ? {type:"choice", turn:M.i, S:t.opts[k].s, fb:t.opts[k].fb, text:t.opts[k].t}
       : {type:"fill", turn:M.i, S:k===0?1:0, fb:(k===0?"Correcto. ":"Lo adecuado era «"+t.opts[0]+"». ")+t.fb, text:t.tpl.replace("___", atSentenceStart(t.tpl)?cap(t.opts[k]):t.opts[k])};
-    if(M.results[M.i].S>=1) chime();
+    if(M.results[M.i].S>=1) chime(); else softMiss();
     render();
   }
   else if(a==="sSubmit"){
@@ -723,7 +725,7 @@ function onAct(e){
     if(!text){ document.getElementById("micStatus").textContent="Escribe o dicta una respuesta antes de evaluar."; return; }
     const r=scoreFree(t, text, S.voiceMeta, s.weights, s);
     M.results[M.i]=Object.assign(r,{type:"free", turn:M.i, text, model:t.model}); M.answered=0; S.voiceMeta=null;
-    if(r.S>=.75) chime();
+    if(r.S>=.75) chime(); else if(r.S<.45) softMiss();
     render();
   }
   else if(a==="sNext"){

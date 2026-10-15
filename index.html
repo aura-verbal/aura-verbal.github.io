@@ -2,37 +2,35 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta name="description" content="Entrena cómo suenas: vocabulario por contexto y simulaciones de conversación.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Aura">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Aura</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Playfair+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* Layout: una sola columna centrada (app de práctica, pensada primero para celular), con un "anillo de aura" como único gesto visual fuerte. */
+/* Layout: una sola columna centrada (app de práctica, pensada primero para celular), con el anillo dorado de la marca como único gesto visual fuerte.
+   Identidad deliberadamente única: negro y dorado en cualquier tema del sistema. */
 :root{
-  --bg:#13131a; --surface:#1c1c26; --surface-2:#262634; --line:#363649;
-  --fg:#eeecf4; --muted:#a6a4b8;
-  --accent:#f2b544; --accent-ink:#1b1505; --rose:#e98aaf;
-  --good:#62cba4; --bad:#f08a6b; --good-soft:rgba(98,203,164,.14); --bad-soft:rgba(240,138,107,.14); --accent-soft:rgba(242,181,68,.14);
-  --font-display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --bg:#0a0a0b; --surface:#131210; --surface-2:#1c1a16; --line:#2f2a20;
+  --fg:#f4eee0; --muted:#a69f8c;
+  --accent:#d4af37; --accent-ink:#0a0a0b; --gold-dark:#8f6b1e; --gold-light:#f6e09a;
+  --good:#8cc79a; --bad:#e08a6b; --good-soft:rgba(140,199,154,.12); --bad-soft:rgba(224,138,107,.12); --accent-soft:rgba(212,175,55,.12);
+  --font-display:"Playfair Display", Georgia, "Times New Roman", serif;
   --font-body:"Atkinson Hyperlegible", "Segoe UI", Roboto, system-ui, sans-serif;
   --font-mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --r:14px; color-scheme:dark;
 }
-@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
-  --bg:#f5f4f8; --surface:#ffffff; --surface-2:#edecf3; --line:#d9d7e5;
-  --fg:#1b1a24; --muted:#5c5a70;
-  --accent:#a86d06; --accent-ink:#ffffff; --rose:#b8406f;
-  --good:#1d8660; --bad:#c04a2a; --good-soft:rgba(29,134,96,.10); --bad-soft:rgba(192,74,42,.10); --accent-soft:rgba(168,109,6,.10);
-  color-scheme:light;}}
-:root[data-theme="light"]{
-  --bg:#f5f4f8; --surface:#ffffff; --surface-2:#edecf3; --line:#d9d7e5;
-  --fg:#1b1a24; --muted:#5c5a70;
-  --accent:#a86d06; --accent-ink:#ffffff; --rose:#b8406f;
-  --good:#1d8660; --bad:#c04a2a; --good-soft:rgba(29,134,96,.10); --bad-soft:rgba(192,74,42,.10); --accent-soft:rgba(168,109,6,.10);
-  color-scheme:light;}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
@@ -53,12 +51,17 @@ button{font:inherit;color:inherit;cursor:pointer}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px}
 .brand{font-family:var(--font-display);font-weight:800;font-size:1.35rem;background:none;border:0;padding:0;display:flex;align-items:baseline;gap:8px}
 .brand small{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.brand{align-items:center;color:var(--fg)}
+.mark{width:34px;height:34px;border-radius:50%;display:inline-grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--accent);
+  border:2px solid var(--accent);box-shadow:0 0 12px rgba(212,175,55,.35), inset 0 0 6px rgba(212,175,55,.15)}
+h1,h2{color:var(--fg)}
+h1 em{font-style:normal;color:var(--accent)}
 .pill{font-size:.8rem;padding:4px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
 
 /* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:700}
 .btn:hover{border-color:var(--muted)}
-.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary{background:linear-gradient(180deg,var(--gold-light) -40%,var(--accent) 55%,var(--gold-dark) 160%);color:var(--accent-ink);border-color:var(--accent)}
 .btn.primary:hover{filter:brightness(1.06)}
 .btn.ghost{background:transparent}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
@@ -69,7 +72,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .hero{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;padding-block:28px 20px}
 .hero p{margin-top:10px;max-width:42ch;color:var(--muted)}
 .ring{--p:0;--size:128px;width:var(--size);height:var(--size);border-radius:50%;position:relative;display:grid;place-items:center;
-  background:conic-gradient(from 210deg, var(--accent) 0, var(--rose) calc(var(--p)*1%), var(--surface-2) calc(var(--p)*1%));}
+  background:conic-gradient(from 210deg, var(--gold-dark) 0, var(--accent) calc(var(--p)*.5%), var(--gold-light) calc(var(--p)*1%), var(--surface-2) calc(var(--p)*1%));}
 .ring::before{content:"";position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, var(--accent) 28%, transparent) 0, transparent 70%);opacity:calc(.25 + var(--p)/140);z-index:-1}
 .ring::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--bg)}
 .ring span{position:relative;z-index:1;text-align:center;line-height:1.1}
@@ -84,7 +87,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 button.card:hover{border-color:var(--accent)}
 .card .meta{font-size:.85rem;color:var(--muted)}
 .bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
-.bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--rose));transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--gold-dark),var(--accent),var(--gold-light));transition:width .9s cubic-bezier(.2,.8,.2,1)}
 .barlabel{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted)}
 
 /* Stepper (secuencia real: vocabulario → práctica → simulación) */
@@ -162,7 +165,7 @@ textarea{width:100%;min-height:110px;resize:vertical;font:inherit;color:var(--fg
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <button class="brand" data-act="home" aria-label="Ir al inicio">Aura <small>confianza verbal</small></button>
+  <button class="brand" data-act="home" aria-label="Ir al inicio"><span class="mark" aria-hidden="true">Aa</span>Aura <small>confianza verbal</small></button>
   <span class="pill mono" id="globalPill">0%</span>
 </div></header>
 <main class="wrap" id="app" aria-live="polite"></main>
@@ -455,7 +458,7 @@ function vHome(){
       <span class="bar" aria-hidden="true"><i style="width:${p}%"></i></span>
     </button>`;}).join("");
   return `<section class="hero">
-      <div><h1>Entrena cómo suenas.</h1>
+      <div><h1>Entrena cómo <em>suenas</em>.</h1>
       <p>Aprende la palabra adecuada para cada contexto y ponla a prueba en una conversación simulada.</p></div>
       <div class="ring" style="--p:${g}" role="img" aria-label="Progreso total ${g}%"><span><b class="mono">${g}%</b><small>progreso total</small></span></div>
     </section>

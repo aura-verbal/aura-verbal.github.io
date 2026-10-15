@@ -57,6 +57,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 h1,h2{color:var(--fg)}
 h1 em{font-style:normal;color:var(--accent)}
 .pill{font-size:.8rem;padding:4px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
+.top-right{display:flex;align-items:center;gap:8px}
+.sound-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--accent);display:inline-grid;place-items:center;padding:0}
+.sound-btn svg{width:18px;height:18px}
+.sound-btn[aria-pressed="false"]{color:var(--muted)}
 
 /* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:700}
@@ -166,7 +170,7 @@ textarea{width:100%;min-height:110px;resize:vertical;font:inherit;color:var(--fg
 <body>
 <header class="top"><div class="wrap">
   <button class="brand" data-act="home" aria-label="Ir al inicio"><span class="mark" aria-hidden="true">Aa</span>Aura <small>confianza verbal</small></button>
-  <span class="pill mono" id="globalPill">0%</span>
+  <div class="top-right"><button class="sound-btn" id="soundBtn" data-act="sound" aria-pressed="true" aria-label="Sonido activado"></button><span class="pill mono" id="globalPill">0%</span></div>
 </div></header>
 <main class="wrap" id="app" aria-live="polite"></main>
 
@@ -396,6 +400,37 @@ function pct(x){ return Math.round(x*100); }
 const ICON_SPEAK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
 const ICON_MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>';
 
+/* ===================== SONIDOS (Web Audio API: se generan en el navegador, sin archivos) ===================== */
+let SOUND_ON = (()=>{ try{ return localStorage.getItem("aura.sound")!=="off"; }catch(e){ return true; } })();
+let actx=null;
+const ICON_SOUND_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const ICON_SOUND_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>';
+function paintSoundBtn(){
+  const b=document.getElementById("soundBtn"); if(!b) return;
+  b.innerHTML = SOUND_ON?ICON_SOUND_ON:ICON_SOUND_OFF;
+  b.setAttribute("aria-pressed", String(SOUND_ON));
+  b.setAttribute("aria-label", SOUND_ON?"Sonido activado: tocar para silenciar":"Sonido silenciado: tocar para activar");
+}
+function tone(freq, start, dur, vol){
+  const o=actx.createOscillator(), g=actx.createGain(), o2=actx.createOscillator(), g2=actx.createGain();
+  o.type="sine"; o.frequency.value=freq; o2.type="sine"; o2.frequency.value=freq*2.01;
+  [[g,vol],[g2,vol*.22]].forEach(([gn,v])=>{ gn.gain.setValueAtTime(0.0001,start); gn.gain.exponentialRampToValueAtTime(v,start+0.012); gn.gain.exponentialRampToValueAtTime(0.0001,start+dur); });
+  o.connect(g).connect(actx.destination); o2.connect(g2).connect(actx.destination);
+  o.start(start); o2.start(start); o.stop(start+dur+0.05); o2.stop(start+dur+0.05);
+}
+function playNotes(notes){
+  if(!SOUND_ON) return;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    actx=actx||new AC(); if(actx.state==="suspended") actx.resume();
+    const t=actx.currentTime+0.02;
+    notes.forEach(([f,dt,dur])=>tone(f,t+dt,dur,0.16));
+  }catch(e){}
+}
+/* acierto: campanita de dos notas (Do6 → Sol6); resultado destacado: arpegio de tres notas */
+function chime(){ playNotes([[1046.5,0,.35],[1568,.09,.5]]); }
+function fanfare(){ playNotes([[784,0,.4],[1046.5,.12,.4],[1318.5,.24,.7]]); }
+
 /* ===================== VOZ (Web Speech API, gratis en el navegador) ===================== */
 function speak(text){
   try{
@@ -510,7 +545,7 @@ function vPractice(){
   let fb="";
   if(P.answered!==null){
     const ok=q.opts[P.answered]===w.pro;
-    fb=`<div class="fb ${ok?"ok":"no"}"><b>${ok?"Correcto.":"Mejor: «"+esc(w.pro)+"»."}</b> ${esc(w.why)} <span class="muted">También sirve: ${esc(w.alt)}.</span></div>
+    fb=`<div class="fb ${ok?"ok":"no"}"><b>${ok?"Correcto.":"Mejor: «"+esc(w.pro)+"»."}</b> ${esc(w.why)} <span class="muted">También sirve: ${esc(w.alt)}${/[.?!]$/.test(w.alt)?"":"."}</span></div>
       <div class="row"><button class="btn primary" data-act="pNext">${P.i<P.qs.length-1?"Siguiente":"Ir a la simulación"}</button></div>`;
   }
   return `<button class="back" data-act="open" data-id="${s.id}">← ${esc(s.name)}</button>
@@ -601,6 +636,7 @@ function finishSim(){
   const pr = S.practiceDone && S.practiceDone.sid===s.id ? S.practiceDone.correct : null;
   S.result={simScore, before, after, pr, results:M.results, isBest: simScore>=rec.best};
   S.view="results"; render();
+  if(simScore>=75) setTimeout(fanfare, 250);
 }
 function recommendations(s, R){
   const out=[], free=R.results.filter(r=>r.type==="free");
@@ -663,13 +699,14 @@ function onAct(e){
     const P=S.practice, q=P.qs[P.i], k=+el.dataset.k; P.answered=k;
     const ok=q.opts[k]===q.w.pro, cur=progress.words[q.w.id]||0;
     progress.words[q.w.id]= ok? Math.min(3,cur+1) : Math.max(0,cur-1);
-    if(ok) P.correct++; save(); render();
+    if(ok){ P.correct++; chime(); } save(); render();
   }
   else if(a==="pNext"){
     const P=S.practice;
     if(P.i<P.qs.length-1){ P.i++; P.answered=null; render(); }
     else { S.practiceDone={sid:S.sid, correct:P.correct}; startSim(); }
   }
+  else if(a==="sound"){ SOUND_ON=!SOUND_ON; try{ localStorage.setItem("aura.sound", SOUND_ON?"on":"off"); }catch(err){} paintSoundBtn(); if(SOUND_ON) chime(); }
   else if(a==="speak"){ const s=scen(); speak(s.sim[S.sim.i].say); }
   else if(a==="mic"){ toggleMic(); }
   else if(a==="sAnswer"){
@@ -677,6 +714,7 @@ function onAct(e){
     M.results[M.i] = t.type==="choice"
       ? {type:"choice", turn:M.i, S:t.opts[k].s, fb:t.opts[k].fb, text:t.opts[k].t}
       : {type:"fill", turn:M.i, S:k===0?1:0, fb:(k===0?"Correcto. ":"Lo adecuado era «"+t.opts[0]+"». ")+t.fb, text:t.tpl.replace("___", atSentenceStart(t.tpl)?cap(t.opts[k]):t.opts[k])};
+    if(M.results[M.i].S>=1) chime();
     render();
   }
   else if(a==="sSubmit"){
@@ -684,7 +722,9 @@ function onAct(e){
     if(rec){ try{rec.stop();}catch(err){} }
     if(!text){ document.getElementById("micStatus").textContent="Escribe o dicta una respuesta antes de evaluar."; return; }
     const r=scoreFree(t, text, S.voiceMeta, s.weights, s);
-    M.results[M.i]=Object.assign(r,{type:"free", turn:M.i, text, model:t.model}); M.answered=0; S.voiceMeta=null; render();
+    M.results[M.i]=Object.assign(r,{type:"free", turn:M.i, text, model:t.model}); M.answered=0; S.voiceMeta=null;
+    if(r.S>=.75) chime();
+    render();
   }
   else if(a==="sNext"){
     const s=scen(), M=S.sim;
@@ -692,6 +732,7 @@ function onAct(e){
   }
 }
 try{ if("speechSynthesis" in window) speechSynthesis.getVoices(); }catch(e){}
+paintSoundBtn();
 render();
 </script>
 

@@ -15,16 +15,21 @@ def O(t, s, fb, nxt=None):
 
 
 def DUR(m, palabra, resto, apertura):
-    return {"v": str(m), "t": "%d min" % m, "slots": {"min": palabra, "resto": resto},
+    return {"v": str(m), "t": "%d min" % m, "slots": {"min": palabra, "resto": resto}, "palabras": m * 130, "apertura": apertura,
             "nota": "A ritmo ideal (unas 130 palabras por minuto) son cerca de %s palabras en total. Apunta a una apertura de %s." % (format(m * 130, ",").replace(",", "."), apertura)}
 
 PREP_DISERTACION = [
  {"id": "dur", "tipo": "chips", "q": loc("¿Cuántos minutos dura tu exposición?", CL="¿Cuántos minutos dura tu disertación?"), "def": "10",
+  "eco": "Para {t}: unas {palabras} palabras a ritmo ideal y una apertura de {apertura}.",
   "opts": [DUR(5, "cinco", "dos", "20 a 30 segundos"), DUR(10, "diez", "tres", "30 a 45 segundos"),
            DUR(15, "quince", "cuatro", "45 a 60 segundos"), DUR(20, "veinte", "cinco", "un minuto")]},
  {"id": "tema", "tipo": "texto", "q": "¿De qué tema es?", "slot": "tema", "def": "la moda rápida y su impacto ambiental", "modo": "propio",
   "ph": "Ej: la energía solar en Chile",
-  "ayuda": "Déjalo vacío para practicar con el ejemplo de la moda rápida. Con tu tema, Aura evalúa la estructura, las muletillas y el ritmo, no si el contenido es correcto."},
+  "ayuda": "Con tu tema, Aura evalúa la estructura, las muletillas y el ritmo, no si el contenido es correcto.",
+  "sug": ["la energía solar en Chile", "la inteligencia artificial en la universidad", "el reciclaje en mi comuna"],
+  "preview": loc("Adelante con su exposición sobre {v}.", CL="Adelante con su disertación sobre {v}."),
+  "eco": "Perfecto: armé una conversación sobre «{v}». Voy a evaluar cómo lo cuentas, no si los datos son correctos.",
+  "ecoVacio": "Usarás el ejemplo de la moda rápida. Puedes poner tu tema cuando quieras."},
  {"id": "fecha", "tipo": "fecha", "q": "¿Cuándo es?", "evento": loc("tu exposición", CL="tu disertación")},
 ]
 
@@ -79,12 +84,15 @@ SIM_PROPIO_DISERTACION = {"start": "t1", "nodes": {
 
 PREP_PRACTICA = [
  {"id": "rubro", "tipo": "chips", "q": loc("¿En qué tipo de empresa es la práctica?", MX="¿En qué tipo de empresa son las prácticas?", AR="¿En qué tipo de empresa es la pasantía?"), "def": "alimentos",
+  "eco": "Anotado: la entrevista será en {empresa}, y tu mejor argumento cambia según el rubro.",
   "opts": [{"v": "alimentos", "t": "Alimentos", "slots": {"empresa": "una empresa de alimentos", "gancho": "manejan una de las redes de distribución más grandes del país"}},
            {"v": "retail", "t": "Retail", "slots": {"empresa": "una empresa de retail", "gancho": "despachan a todo el país todos los días"}},
            {"v": "mineria", "t": "Minería", "slots": {"empresa": "una empresa minera", "gancho": "tienen una cadena de abastecimiento que no se puede detener"}},
            {"v": "ecommerce", "t": "E-commerce", "slots": {"empresa": "una empresa de comercio electrónico", "gancho": "entregan sus pedidos en menos de 48 horas"}},
            {"v": "salud", "t": "Farmacias y salud", "slots": {"empresa": "una cadena de farmacias", "gancho": "reponen a diario cientos de locales"}}]},
- {"id": "carrera", "tipo": "texto", "q": "¿Qué estudias?", "slot": "carrera", "def": "ingeniería", "ph": "Ej: Ingeniería Civil Industrial"},
+ {"id": "carrera", "tipo": "texto", "q": "¿Qué estudias?", "slot": "carrera", "def": "ingeniería", "ph": "Ej: Ingeniería Civil Industrial",
+  "sug": ["Ingeniería Civil Industrial", "Ingeniería Comercial", "Administración de Empresas"],
+  "preview": "Veo que estudia {v}.", "eco": "Listo: Andrés ya leyó tu currículum de {v}.", "ecoVacio": "Andrés dirá solo que estudias ingeniería."},
  {"id": "fecha", "tipo": "fecha", "q": "¿Cuándo es la entrevista?", "evento": "tu entrevista"},
 ]
 

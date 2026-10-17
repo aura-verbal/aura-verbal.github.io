@@ -45,6 +45,7 @@
     "CL": "¿Cuántos minutos dura tu disertación?"
    },
    "def": "10",
+   "eco": "Para {t}: unas {palabras} palabras a ritmo ideal y una apertura de {apertura}.",
    "opts": [
     {
      "v": "5",
@@ -53,6 +54,8 @@
       "min": "cinco",
       "resto": "dos"
      },
+     "palabras": 650,
+     "apertura": "20 a 30 segundos",
      "nota": "A ritmo ideal (unas 130 palabras por minuto) son cerca de 650 palabras en total. Apunta a una apertura de 20 a 30 segundos."
     },
     {
@@ -62,6 +65,8 @@
       "min": "diez",
       "resto": "tres"
      },
+     "palabras": 1300,
+     "apertura": "30 a 45 segundos",
      "nota": "A ritmo ideal (unas 130 palabras por minuto) son cerca de 1.300 palabras en total. Apunta a una apertura de 30 a 45 segundos."
     },
     {
@@ -71,6 +76,8 @@
       "min": "quince",
       "resto": "cuatro"
      },
+     "palabras": 1950,
+     "apertura": "45 a 60 segundos",
      "nota": "A ritmo ideal (unas 130 palabras por minuto) son cerca de 1.950 palabras en total. Apunta a una apertura de 45 a 60 segundos."
     },
     {
@@ -80,6 +87,8 @@
       "min": "veinte",
       "resto": "cinco"
      },
+     "palabras": 2600,
+     "apertura": "un minuto",
      "nota": "A ritmo ideal (unas 130 palabras por minuto) son cerca de 2.600 palabras en total. Apunta a una apertura de un minuto."
     }
    ]
@@ -92,7 +101,18 @@
    "def": "la moda rápida y su impacto ambiental",
    "modo": "propio",
    "ph": "Ej: la energía solar en Chile",
-   "ayuda": "Déjalo vacío para practicar con el ejemplo de la moda rápida. Con tu tema, Aura evalúa la estructura, las muletillas y el ritmo, no si el contenido es correcto."
+   "ayuda": "Con tu tema, Aura evalúa la estructura, las muletillas y el ritmo, no si el contenido es correcto.",
+   "sug": [
+    "la energía solar en Chile",
+    "la inteligencia artificial en la universidad",
+    "el reciclaje en mi comuna"
+   ],
+   "preview": {
+    "base": "Adelante con su exposición sobre {v}.",
+    "CL": "Adelante con su disertación sobre {v}."
+   },
+   "eco": "Perfecto: armé una conversación sobre «{v}». Voy a evaluar cómo lo cuentas, no si los datos son correctos.",
+   "ecoVacio": "Usarás el ejemplo de la moda rápida. Puedes poner tu tema cuando quieras."
   },
   {
    "id": "fecha",

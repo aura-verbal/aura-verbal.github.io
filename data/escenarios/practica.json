@@ -42,6 +42,7 @@
     "AR": "¿En qué tipo de empresa es la pasantía?"
    },
    "def": "alimentos",
+   "eco": "Anotado: la entrevista será en {empresa}, y tu mejor argumento cambia según el rubro.",
    "opts": [
     {
      "v": "alimentos",
@@ -91,7 +92,15 @@
    "q": "¿Qué estudias?",
    "slot": "carrera",
    "def": "ingeniería",
-   "ph": "Ej: Ingeniería Civil Industrial"
+   "ph": "Ej: Ingeniería Civil Industrial",
+   "sug": [
+    "Ingeniería Civil Industrial",
+    "Ingeniería Comercial",
+    "Administración de Empresas"
+   ],
+   "preview": "Veo que estudia {v}.",
+   "eco": "Listo: Andrés ya leyó tu currículum de {v}.",
+   "ecoVacio": "Andrés dirá solo que estudias ingeniería."
   },
   {
    "id": "fecha",

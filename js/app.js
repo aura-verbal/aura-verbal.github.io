@@ -141,7 +141,8 @@ function proximoEvento(maxDias) {
 }
 function prepResumen(s) {
   const st = progress.prep[s.id] || {}, parts = [];
-  (s.prep || []).forEach(q => {
+  if (st.skip) parts.push("Usando el ejemplo");
+  else (s.prep || []).forEach(q => {
     if (q.tipo === "chips") { const o = q.opts.find(x => x.v === String(st[q.id] != null ? st[q.id] : q.def)) || q.opts[0]; parts.push(o.t); }
     else if (q.tipo === "texto") { const v = M.cleanSlot(st[q.id]); parts.push(v ? v : (q.modo === "propio" ? "tema de ejemplo" : q.def)); }
     else if (q.tipo === "fecha") { const c = cuenta(st[q.id]); if (c) parts.push(c.charAt(0).toUpperCase() + c.slice(1)); }
@@ -149,40 +150,129 @@ function prepResumen(s) {
   const f = FOCOS.find(x => x[0] === focoOf()); if (f && f[2]) parts.push("foco: " + f[1].toLowerCase().split(":")[0]);
   return parts;
 }
-function prepCard(s) {
-  const st = progress.prep[s.id] || {}, editing = S.prepEdit === s.id || !progress.prep[s.id];
-  if (!editing) return `<div class="prep-sum"><span class="eyebrow">Tu escenario</span><span class="prep-chips">${prepResumen(s).map(x => `<span class="tag quiet">${esc(x)}</span>`).join("")}</span><button class="linkish" data-act="prepEdit">Editar</button></div>`;
-  const qs = (s.prep || []).map(q => {
-    if (q.tipo === "chips") {
-      const cur = String(st[q.id] != null ? st[q.id] : q.def);
-      const short = q.opts.every(o => o.t.length <= 8);
-      return `<div class="field"><span class="lbl">${esc(q.q)}</span><div class="chips-opt${short ? " compact" : ""}">${q.opts.map(o => `<label class="chip-opt"><input type="radio" name="prep_${q.id}" value="${esc(o.v)}" ${o.v === cur ? "checked" : ""}><span>${esc(o.t)}</span></label>`).join("")}</div></div>`;
-    }
-    if (q.tipo === "texto") return `<div class="field"><label for="prep_${q.id}">${esc(q.q)}</label><input type="text" id="prep_${q.id}" maxlength="60" placeholder="${esc(q.ph || "")}" value="${esc(st[q.id] || "")}">${q.ayuda ? `<span class="note">${esc(q.ayuda)}</span>` : ""}</div>`;
-    return `<div class="field"><label for="prep_${q.id}">${esc(q.q)} <span class="muted">(opcional)</span></label><input type="date" id="prep_${q.id}" min="${today()}" value="${esc(st[q.id] || "")}"><span class="note">Si tiene fecha, Aura te avisa en Inicio y el reto diario se enfoca en este escenario.</span></div>`;
-  }).join("");
-  const foco = `<div class="field"><span class="lbl">¿Qué te cuesta más al hablar?</span><div class="chips-opt">${FOCOS.map(f => `<label class="chip-opt"><input type="radio" name="prep_foco" value="${f[0]}" ${f[0] === (focoOf() || "ninguno") ? "checked" : ""}><span>${esc(f[1])}</span></label>`).join("")}</div><span class="note">Pesa más en tu puntaje. Vale para todos los escenarios.</span></div>`;
-  return `<div class="panel prep"><div><span class="tag">Opcional · 30 segundos</span><h3 style="margin-top:8px">Prepara tu escenario</h3><p class="note">Cuéntanos de tu situación real y la conversación se adapta a ti.</p></div>
-    ${qs}${foco}<p class="err" id="prepErr"></p>
-    <div class="row"><button class="btn primary" data-act="prepSave">Listo</button>${progress.prep[s.id] ? `<button class="btn ghost" data-act="prepCancel">Cancelar</button>` : `<button class="btn ghost" data-act="prepSkip">Usar el ejemplo</button>`}</div></div>`;
+/* Asistente conversacional: Aura pregunta de a una, el usuario toca su respuesta y Aura le contesta
+   con lo que cambia (meta de palabras, cómo lo dirá el interlocutor...). */
+const FOCO_ICON = {
+  muletillas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5z"/><path d="M10 9l4 4M14 9l-4 4"/></svg>',
+  palabras: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19l5-14 5 14M6 14h6"/><path d="M15 13.5c0-1.5 1.2-2.5 2.7-2.5s2.3.9 2.3 2.3V19M20 16c-3 0-5 .4-5 1.8 0 .9.7 1.4 1.7 1.4 1.8 0 3.3-1.3 3.3-3.2"/></svg>',
+  ritmo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/><circle cx="12" cy="18" r="1.2"/></svg>',
+  ninguno: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2L12 3z"/></svg>'
+};
+const FOCO_ECO = { muletillas: "Voy a ser más estricto con las muletillas.", palabras: "El vocabulario pesará más en tu puntaje.",
+  ritmo: "Tu ritmo pesará más cuando respondas por voz.", ninguno: "Evaluación equilibrada, entonces." };
+function addDays(n) { const d = new Date(); d.setDate(d.getDate() + n); return dayKey(d); }
+function prepSteps(s) { return (s.prep || []).map(q => ({ id: q.id, q })).concat([{ id: "foco", foco: true }]); }
+function prepStart(sid, edit) {
+  const s = scenData(sid), st = progress.prep[sid] || {}, ans = {};
+  (s.prep || []).forEach(q => { ans[q.id] = st[q.id] != null && !st.skip ? String(st[q.id]) : (q.tipo === "chips" ? q.def : ""); });
+  ans.foco = focoOf() || "ninguno";
+  S.prepW = { sid, step: edit ? 0 : -1, ans, eco: null, typing: false, otra: false, fresh: true };
 }
-function prepSave() {
-  const s = scen(), st = {};
-  for (const q of s.prep || []) {
-    if (q.tipo === "chips") { const el = document.querySelector(`input[name="prep_${q.id}"]:checked`); st[q.id] = el ? el.value : q.def; }
-    else if (q.tipo === "texto") st[q.id] = M.cleanSlot((document.getElementById("prep_" + q.id) || {}).value);
-    else if (q.tipo === "fecha") {
-      const v = (document.getElementById("prep_" + q.id) || {}).value || "";
-      if (v && daysBetween(today(), v) < 0) { document.getElementById("prepErr").textContent = "Esa fecha ya pasó. Elige una futura o déjala vacía."; return; }
-      st[q.id] = v; if (v) st.evento = q.evento;
+function prepAnswerLabel(st, W) {
+  const v = W.ans[st.id];
+  if (st.foco) return FOCOS.find(f => f[0] === v)[1];
+  const q = st.q;
+  if (q.tipo === "chips") return (q.opts.find(o => o.v === v) || q.opts[0]).t;
+  if (q.tipo === "texto") return v ? v : "Usar el ejemplo";
+  const c = cuenta(v); return c ? c.charAt(0).toUpperCase() + c.slice(1) : "Sin fecha";
+}
+function prepEco(st, W) {
+  const v = W.ans[st.id];
+  if (st.foco) return esc(FOCO_ECO[v]);
+  const q = st.q;
+  if (q.tipo === "chips") {
+    const o = q.opts.find(x => x.v === v) || q.opts[0]; if (!q.eco) return null;
+    let t = q.eco.replace("{t}", o.t).replace(/\{([a-z_]+)\}/g, (m, k) => o[k] !== undefined && typeof o[k] !== "object" ? (k === "palabras" ? "§" : o[k]) : (o.slots && o.slots[k]) || m);
+    t = esc(t);
+    if (o.palabras) t = t.replace("§", `<b class="count" data-to="${o.palabras}">${o.palabras.toLocaleString("es-CL")}</b>`);
+    return t;
+  }
+  if (q.tipo === "texto") return v ? esc((q.eco || "Anotado.").replace("{v}", v)) : (q.ecoVacio ? esc(q.ecoVacio) : null);
+  return v ? `Anotado: ${esc(cuenta(v))}. Te aviso en Inicio con una cuenta regresiva y enfoco tu reto diario en esto.` : "Sin problema: puedes agregarla después.";
+}
+function prepCard(s) {
+  if (!progress.prep[s.id] && (!S.prepW || S.prepW.sid !== s.id)) prepStart(s.id, false);
+  const W = S.prepW && S.prepW.sid === s.id ? S.prepW : null;
+  if (!W) return `<div class="prep-sum"><span class="eyebrow">Tu escenario</span><span class="prep-chips">${prepResumen(s).map(x => `<span class="tag quiet">${esc(x)}</span>`).join("")}</span><button class="linkish" data-act="prepEdit">Editar</button></div>`;
+  const steps = prepSteps(s), n = steps.length, A = W.fresh ? " a" : "";
+  const av = `<span class="pw-av" aria-hidden="true">Aa</span>`;
+  const coach = (t, cls, id) => `<div class="pw-msg${cls || ""}"${id ? ` id="${id}"` : ""}>${av}<div class="bubble">${t}</div></div>`;
+  const dots = `<span class="pw-dots" aria-label="Pregunta ${Math.min(n, Math.max(1, W.step + 1))} de ${n}">${steps.map((_, i) => `<i class="${i < W.step || W.step >= n ? "on" : i === W.step ? "cur" : ""}"></i>`).join("")}</span>`;
+  let body = "";
+  if (W.step === -1) {
+    body = coach(`Antes de empezar, cuéntame de tu situación real y adapto la conversación a ti. Son ${n} preguntas rápidas.`, A, "pwNow")
+      + `<div class="pw-opts${A}"><button class="pw-opt on" style="--i:0" data-act="pwGo" data-i="0">Vamos</button><button class="pw-opt" style="--i:1" data-act="pwSkip">Usar el ejemplo</button></div>`;
+  } else {
+    for (let i = 0; i < Math.min(W.step, n); i++) {
+      const st = steps[i], last = i === W.step - 1;
+      body += `<div class="pw-me${last && W.typing ? " a" : ""}"><small>${esc(st.foco ? "¿Qué te cuesta más al hablar?" : st.q.q)}</small><button data-act="pwGo" data-i="${i}" aria-label="Cambiar respuesta">${esc(prepAnswerLabel(st, W))}</button></div>`;
+      if (last && W.eco) body += coach(W.eco, " eco" + (W.typing ? " a" : ""));
+    }
+    if (W.typing) body += `<div class="pw-msg a" id="pwNow">${av}<div class="bubble"><span class="typing" aria-label="Aura está escribiendo"><i></i><i></i><i></i></span></div></div>`;
+    else if (W.step < n) {
+      const st = steps[W.step], v = W.ans[st.id];
+      if (st.foco) {
+        body += coach("Última: ¿qué te cuesta más al hablar? Eso pesará más en tu puntaje, en todos los escenarios.", A, "pwNow")
+          + `<div class="pw-focos${A}">${FOCOS.map((f, k) => `<button class="pw-foco${f[0] === v ? " on" : ""}" style="--i:${k}" data-act="pwPick" data-v="${f[0]}">${FOCO_ICON[f[0]]}<span>${esc(f[1])}</span></button>`).join("")}</div>`;
+      } else if (st.q.tipo === "chips") {
+        body += coach(esc(st.q.q), A, "pwNow") + `<div class="pw-opts${A}">${st.q.opts.map((o, k) => `<button class="pw-opt${o.v === v ? " on" : ""}" style="--i:${k}" data-act="pwPick" data-v="${esc(o.v)}">${esc(o.t)}</button>`).join("")}</div>`;
+      } else if (st.q.tipo === "texto") {
+        const prev = st.q.preview ? `<p class="pw-prev">${esc(s.person)} dirá: «${esc(st.q.preview).replace("{v}", `<b id="pwPrev">${esc(v || st.q.def)}</b>`)}»</p>` : "";
+        body += coach(esc(st.q.q) + (st.q.ayuda ? `<span class="pw-sub">${esc(st.q.ayuda)}</span>` : ""), A, "pwNow")
+          + `<div class="pw-input${A}"><input type="text" id="pwText" data-id="${st.id}" maxlength="60" placeholder="${esc(st.q.ph || "")}" value="${esc(v)}" enterkeyhint="next">${prev}
+            ${st.q.sug ? `<div class="pw-opts flat">${st.q.sug.map((x, k) => `<button class="pw-opt sm" style="--i:${k}" data-act="pwSug" data-v="${esc(x)}">${esc(x)}</button>`).join("")}</div>` : ""}
+            <div class="row"><button class="btn primary" data-act="pwText">Siguiente</button>${st.q.modo === "propio" || st.q.def ? `<button class="btn ghost" data-act="pwText" data-empty="1">${st.q.modo === "propio" ? "Usar el ejemplo" : "Omitir"}</button>` : ""}</div></div>`;
+      } else {
+        const quick = [["Mañana", addDays(1)], ["En una semana", addDays(7)], ["En dos semanas", addDays(14)]];
+        body += coach(esc(st.q.q), A, "pwNow")
+          + `<div class="pw-opts${A}">${quick.map(([t, d], k) => `<button class="pw-opt${v === d ? " on" : ""}" style="--i:${k}" data-act="pwPick" data-v="${d}">${t}</button>`).join("")}
+              <button class="pw-opt${W.otra ? " on" : ""}" style="--i:3" data-act="pwOtra">Otra fecha</button><button class="pw-opt" style="--i:4" data-act="pwPick" data-v="">Sin fecha</button></div>
+             ${W.otra ? `<div class="pw-input"><input type="date" id="pwDate" min="${addDays(0)}" value="${esc(v)}"><div class="row"><button class="btn primary" data-act="pwDate">Listo</button></div><p class="err" id="pwErr"></p></div>` : ""}`;
+      }
+    } else {
+      const sum = prepResumenAns(s, W);
+      body += `<div class="pw-final${A}" id="pwNow">${coach("¡Listo! Así quedó tu escenario:", "")}
+        <div class="pw-tags">${sum.map((x, k) => `<span class="tag" style="--i:${k}">${esc(x)}</span>`).join("")}</div>
+        <div class="row"><button class="btn primary" data-act="pwSave">Guardar y ver mi ficha</button><button class="btn ghost" data-act="pwGo" data-i="0">Revisar respuestas</button></div></div>`;
     }
   }
+  return `<div class="panel prep pw" aria-live="polite"><div class="pw-head"><div><span class="eyebrow">Prepara tu escenario</span>${W.step >= 0 ? dots : ""}</div>
+      ${W.step >= 0 ? `<button class="linkish" data-act="pwSkip">${progress.prep[s.id] ? "Cancelar" : "Saltar"}</button>` : ""}</div>${body}</div>`;
+}
+function prepResumenAns(s, W) {
+  return prepSteps(s).map(st => { const l = prepAnswerLabel(st, W); return st.foco ? (W.ans.foco === "ninguno" ? null : "Foco: " + l.toLowerCase().split(":")[0]) : (st.q.tipo === "texto" && !W.ans[st.id] ? (st.q.modo === "propio" ? "Tema de ejemplo" : null) : (st.q.tipo === "fecha" && !W.ans[st.id] ? null : l)); }).filter(Boolean);
+}
+let pwTimer = null;
+function pwAdvance(eco) {
+  const W = S.prepW; W.eco = eco; W.step++; W.otra = false; W.typing = true; W.fresh = true; render();
+  clearTimeout(pwTimer);
+  pwTimer = setTimeout(() => { if (S.prepW !== W) return; W.typing = false; W.fresh = true; render(); const t = document.getElementById("pwText"); if (t) t.focus({ preventScroll: true }); }, eco ? 900 : 550);
+}
+function pwAnswer(v) {
+  const W = S.prepW, s = scenData(W.sid), st = prepSteps(s)[W.step];
+  W.ans[st.id] = v; pwAdvance(prepEco(st, W));
+}
+function prepSaveW() {
+  const W = S.prepW, s = scenData(W.sid), st = {};
+  (s.prep || []).forEach(q => {
+    const v = W.ans[q.id] || "";
+    if (q.tipo === "texto") st[q.id] = M.cleanSlot(v);
+    else if (q.tipo === "fecha") { st[q.id] = v && daysBetween(today(), v) >= 0 ? v : ""; if (st[q.id]) st.evento = q.evento; }
+    else st[q.id] = v || q.def;
+  });
   const tq = (s.prep || []).find(q => q.tipo === "texto" && q.modo === "propio"); if (tq) st.tema = st[tq.id];
-  progress.prep[s.id] = st;
-  const f = document.querySelector('input[name="prep_foco"]:checked');
-  if (f && progress.profile) progress.profile.foco = f.value === "ninguno" ? null : f.value;
-  save(); delete DATA.esc[s.id]; S.prepEdit = null; chime();
+  progress.prep[W.sid] = st;
+  if (progress.profile) progress.profile.foco = W.ans.foco === "ninguno" ? null : W.ans.foco;
+  save(); delete DATA.esc[W.sid]; S.prepW = null; clearTimeout(pwTimer); fanfare();
   S.toast = "Listo: la conversación se adaptó a tu situación."; render();
+}
+function animateCounts() {
+  document.querySelectorAll(".count[data-to]:not([data-done])").forEach(el => {
+    el.dataset.done = "1"; const to = +el.dataset.to, t0 = performance.now(), dur = 900;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(to * e).toLocaleString("es-CL"); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
 }
 
 /* ===================== ICONOS ===================== */
@@ -447,6 +537,12 @@ function render() {
   if (S.tab === "practica" && S.view === "results") requestAnimationFrame(() => requestAnimationFrame(() => { const b = document.getElementById("newBar"); if (b) b.style.width = b.dataset.w + "%"; }));
   if (scrollTurn) { const el = document.getElementById("turnoActual"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
   if (S.sub === "prueba" || S.ob === "prueba") paintPrueba();
+  if (S.prepW && S.prepW.fresh) {
+    S.prepW.fresh = false;
+    const now = document.getElementById("pwNow");
+    if (now && S.prepW.step >= 0) { const r = now.getBoundingClientRect(); if (r.bottom > innerHeight - 90 || r.top < 70) now.scrollIntoView({ behavior: "smooth", block: "center" }); }
+  }
+  animateCounts();
 }
 function go(patch, anim) { Object.assign(S, patch); S.anim = anim || "up"; render(); }
 function setTab(t) {
@@ -456,7 +552,7 @@ function setTab(t) {
   if (t === "practica" && (S.view === "results" || S.view === "loading")) S.view = "list";
   go({ tab: t, sub: null }, dir);
 }
-function leaveSim() { stopDictado(); recReset(); stopPrueba(); try { speechSynthesis.cancel(); } catch (e) {} }
+function leaveSim() { clearTimeout(pwTimer); stopDictado(); recReset(); stopPrueba(); try { speechSynthesis.cancel(); } catch (e) {} }
 
 /* ===================== PERFIL ===================== */
 function profileForm(p, cta) {
@@ -1057,7 +1153,9 @@ function vAjustes() {
 
 /* ===================== EVENTOS ===================== */
 document.addEventListener("click", onAct);
+app.addEventListener("keydown", e => { if (e.target.id === "pwText" && e.key === "Enter") { e.preventDefault(); pwAnswer(M.cleanSlot(e.target.value)); } });
 app.addEventListener("input", e => {
+  if (e.target.id === "pwText" && S.prepW) { S.prepW.ans[e.target.dataset.id] = e.target.value; const pv = document.getElementById("pwPrev"); if (pv) { const st = prepSteps(scenData(S.prepW.sid))[S.prepW.step]; pv.textContent = e.target.value.trim() || st.q.def; } }
   if (e.target.id === "profConf") { const v = +e.target.value; const o = document.getElementById("confOut"); if (o) o.textContent = v + " · " + CONF_LABELS[v]; }
 });
 async function openScen(id, anim) {
@@ -1072,7 +1170,7 @@ async function openScen(id, anim) {
 function onAct(e) {
   const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
   const a = el.dataset.act;
-  if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle", "recStart", "recStop", "prepSave"].includes(a)) tick();
+  if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle", "recStart", "recStop", "pwSave"].includes(a)) tick();
   switch (a) {
     case "tab": setTab(el.dataset.tab); break;
     case "brand": if (progress.profile && !S.obPrueba) setTab("inicio"); break;
@@ -1099,10 +1197,17 @@ function onAct(e) {
       go(wasOb ? { tab: "inicio", sub: null } : { sub: null }, "up");
       break; }
     case "retoStart": leaveSim(); startReto(); break;
-    case "prepSave": prepSave(); break;
-    case "prepSkip": progress.prep[S.sid] = { skip: true }; save(); delete DATA.esc[S.sid]; S.prepEdit = null; render(); break;
-    case "prepEdit": S.prepEdit = S.sid; render(); break;
-    case "prepCancel": S.prepEdit = null; render(); break;
+    case "prepEdit": prepStart(S.sid, true); render(); break;
+    case "pwGo": { const W = S.prepW; if (!W) break; clearTimeout(pwTimer); W.step = +el.dataset.i; W.eco = null; W.typing = false; W.otra = false; W.fresh = true; render(); break; }
+    case "pwPick": pwAnswer(el.dataset.v); break;
+    case "pwSug": { const t = document.getElementById("pwText"); if (t) { t.value = el.dataset.v; S.prepW.ans[t.dataset.id] = el.dataset.v; const pv = document.getElementById("pwPrev"); if (pv) pv.textContent = el.dataset.v; } break; }
+    case "pwText": { const t = document.getElementById("pwText"); pwAnswer(el.dataset.empty ? "" : M.cleanSlot(t ? t.value : "")); break; }
+    case "pwOtra": S.prepW.otra = true; S.prepW.fresh = false; render(); { const d = document.getElementById("pwDate"); if (d) d.focus(); } break;
+    case "pwDate": { const d = document.getElementById("pwDate"), v = d ? d.value : "";
+      if (!v || daysBetween(today(), v) < 0) { document.getElementById("pwErr").textContent = "Elige una fecha de hoy en adelante."; break; }
+      pwAnswer(v); break; }
+    case "pwSave": prepSaveW(); break;
+    case "pwSkip": clearTimeout(pwTimer); if (!progress.prep[S.sid]) { progress.prep[S.sid] = { skip: true }; save(); delete DATA.esc[S.sid]; } S.prepW = null; render(); break;
     case "rAnswer": {
       const R = S.reto; if (!R || R.answered !== null) break;
       const q = R.qs[R.i], k = +el.dataset.k; R.answered = k;

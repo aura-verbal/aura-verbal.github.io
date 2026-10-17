@@ -33,6 +33,34 @@
     return v;
   }
 
+  /* ---------- preguntas previas («Prepara tu escenario») ----------
+     Cada pregunta puede ser "chips" (opciones con espacios {slot} y una nota), "texto" (el usuario
+     escribe un dato que se inserta en el guion) o "fecha". Un texto con modo "propio" cambia el guion
+     por la versión genérica (simPropio). */
+  function cleanSlot(t) { return String(t == null ? "" : t).replace(/[{}<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 60); }
+  function prepSlots(prep, st) {
+    st = st || {}; const slots = {}; let propio = false, nota = null;
+    (prep || []).forEach(q => {
+      if (q.tipo === "chips") {
+        const v = st[q.id] != null ? String(st[q.id]) : q.def;
+        const o = q.opts.find(x => x.v === v) || q.opts.find(x => x.v === q.def) || q.opts[0];
+        Object.assign(slots, o.slots || {}); if (o.nota) nota = o.nota;
+      } else if (q.tipo === "texto") {
+        const v = cleanSlot(st[q.id]); slots[q.slot] = v || q.def;
+        if (v && q.modo === "propio") propio = true;
+      }
+    });
+    return { slots, propio, nota };
+  }
+  function fillSlots(v, slots) {
+    if (typeof v === "string") return v.replace(/\{([a-z_]+)\}/g, (m, k) => slots[k] !== undefined ? slots[k] : m);
+    if (Array.isArray(v)) return v.map(x => fillSlots(x, slots));
+    if (v && typeof v === "object") { const o = {}; for (const k in v) o[k] = k === "prep" ? v[k] : fillSlots(v[k], slots); return o; }
+    return v;
+  }
+  /* Siguiente nodo: una respuesta libre con "branch" lleva a un camino u otro según su puntaje. */
+  function nextFree(node, S) { return node.branch ? (S >= node.branch.umbral ? node.branch.alto : node.branch.bajo) : node.next; }
+
   /* ---------- muletillas ----------
      Cada entrada es "palabra o frase" o un objeto con reglas:
        {w, noSigue:[...]}   no cuenta si la palabra siguiente está en la lista ("tipo de")
@@ -157,7 +185,8 @@
       if (memo[id] !== undefined) return memo[id];
       memo[id] = 0;
       const n = sim.nodes[id];
-      const nexts = new Set([n.next].concat((n.opts || []).map(o => (o && typeof o === "object" && o.next !== undefined) ? o.next : n.next)));
+      const nexts = new Set([n.next].concat((n.opts || []).map(o => (o && typeof o === "object" && o.next !== undefined) ? o.next : n.next),
+        n.branch ? [n.branch.alto, n.branch.bajo] : []));
       let best = 0; nexts.forEach(x => { best = Math.max(best, depth(x)); });
       return (memo[id] = 1 + best);
     };
@@ -179,7 +208,7 @@
 
   const API = {
     PPM_RANGE, PPM_MAX_RELIABLE, PERSONALIDAD, INTERES_INICIAL,
-    norm, tokens, hasStem, L, deepL, isLoc,
+    norm, tokens, hasStem, L, deepL, isLoc, cleanSlot, prepSlots, fillSlots, nextFree,
     mergeMuletillas, countMuletillas, sameStart, buildTranscript,
     paceScore, speechMetrics, scoreFree,
     deltaInteres, aplicarInteres, finalPorInteres, maxTurnos,

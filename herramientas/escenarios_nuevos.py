@@ -13,6 +13,81 @@ def O(t, s, fb, nxt=None):
     if nxt: o["next"] = nxt
     return o
 
+
+def DUR(m, palabra, resto, apertura):
+    return {"v": str(m), "t": "%d min" % m, "slots": {"min": palabra, "resto": resto},
+            "nota": "A ritmo ideal (unas 130 palabras por minuto) son cerca de %s palabras en total. Apunta a una apertura de %s." % (format(m * 130, ",").replace(",", "."), apertura)}
+
+PREP_DISERTACION = [
+ {"id": "dur", "tipo": "chips", "q": loc("¿Cuántos minutos dura tu exposición?", CL="¿Cuántos minutos dura tu disertación?"), "def": "10",
+  "opts": [DUR(5, "cinco", "dos", "20 a 30 segundos"), DUR(10, "diez", "tres", "30 a 45 segundos"),
+           DUR(15, "quince", "cuatro", "45 a 60 segundos"), DUR(20, "veinte", "cinco", "un minuto")]},
+ {"id": "tema", "tipo": "texto", "q": "¿De qué tema es?", "slot": "tema", "def": "la moda rápida y su impacto ambiental", "modo": "propio",
+  "ph": "Ej: la energía solar en Chile",
+  "ayuda": "Déjalo vacío para practicar con el ejemplo de la moda rápida. Con tu tema, Aura evalúa la estructura, las muletillas y el ritmo, no si el contenido es correcto."},
+ {"id": "fecha", "tipo": "fecha", "q": "¿Cuándo es?", "evento": loc("tu exposición", CL="tu disertación")},
+]
+
+# Guion genérico para el tema del usuario: evalúa estructura y forma, no el contenido.
+SIM_PROPIO_DISERTACION = {"start": "t1", "nodes": {
+  "t1": {"type": "free", "say": loc("Muy bien, silencio por favor. Adelante con su exposición sobre {tema}.", CL="Muy bien, silencio por favor. Adelante con su disertación sobre {tema}."),
+    "hint": ["una pregunta o un dato que despierte curiosidad", "anuncia de qué vas a hablar"],
+    "groups": [["sabian", "imaginen", "alguna vez", "que pasaria", "se han preguntado", "cuantos de ustedes", "un dato"],
+               ["les voy a hablar", "les vengo a hablar", "vamos a ver", "hoy les", "el tema de hoy", "de eso se trata", "les voy a contar", "les quiero mostrar"]],
+    "model": "¿Se han preguntado alguna vez cuánto influye {tema} en su día a día? Hoy les voy a hablar de eso, en tres partes.",
+    "branch": {"umbral": .7, "alto": "t2a", "bajo": "t2b"}},
+  "t2a": {"type": "choice", "next": "t3", "say": "Buen inicio. ¿Cuál es la idea central que quiere que recordemos?", "opts": [
+    O("Son varias ideas; después las voy explicando.", .3, "Postergar la idea principal hace que el curso se pierda."),
+    O("La idea central es que {tema} tiene más impacto del que creemos, y se los voy a mostrar en tres puntos.", 1,
+      "Una idea central en una frase y una estructura anunciada: el curso sabe hacia dónde vas."),
+    O("Lo que pasa es que es un tema bien amplio, entonces voy a ver qué alcanzo.", .2, "Suena a que no preparaste el recorrido.")]},
+  "t2b": {"type": "choice", "next": "t3", "say": "A ver, el curso se está quedando dormido. ¿Por qué debería importarles {tema}?", "opts": [
+    O("Porque {tema} los afecta más de lo que creen: les doy un ejemplo de su propio día a día.", 1,
+      "Conectas el tema con la vida de tu público: recuperas su atención."),
+    O("Porque es materia de prueba.", .2, "Puede ser cierto, pero no genera ningún interés."),
+    O("Porque es importante para todos.", .4, "Correcto, pero demasiado general para enganchar.")]},
+  "t3": {"type": "fill", "next": "t4", "say": "Bien. Continúe con el desarrollo.",
+    "tpl": "Este punto es clave; ___, si lo entienden, lo demás se vuelve mucho más simple.",
+    "opts": ["es decir", "o sea", "id est"],
+    "fb": "«Es decir» reformula para aclarar; «o sea» suele quedar como muletilla."},
+  "t4": {"type": "choice", "next": "t5",
+    "say": loc("Oye, pero ¿eso no es muy teórico? ¿Para qué nos sirve?", AR="Che, pero ¿eso no es muy teórico? ¿Para qué nos sirve?"), "opts": [
+    O("Es teórico, pero igual hay que saberlo.", .3, "Sincero, pero le das la razón sin aportar nada."),
+    O("Si no te interesa, no escuches.", .1, "Responder a la defensiva rompe la conexión con todo el curso."),
+    O("Buena pregunta. Te doy un caso concreto en el que {tema} cambia una decisión real.", 1,
+      "Validas la pregunta y la respondes con un ejemplo: el curso vuelve a escuchar.")]},
+  "t5": {"type": "free", "next": "t6", "say": "Muy bien. Denos un ejemplo concreto.",
+    "hint": ["un caso concreto es", "por qué importa (esto significa...)", "además"],
+    "groups": [["un caso concreto", "pensemos en", "por ejemplo", "un ejemplo", "imaginen"],
+               ["porque", "por lo tanto", "esto significa", "eso significa", "en consecuencia"], ["ademas", "a esto se suma", "tambien"]],
+    "model": "Un caso concreto: pensemos en una situación cotidiana en la que {tema} aparece sin que lo notemos. Esto significa que entenderlo nos ayuda a decidir mejor; además, nos permite anticipar problemas."},
+  "t6": {"type": "fill", "next": "t7", "say": "Le quedan {resto} minutos.",
+    "tpl": "Eso es lo central del tema. ___ Si no, paso al cierre.",
+    "opts": loc(["¿Alguna pregunta hasta aquí?", "No sé si se entendió...", "¿Existe alguna interrogante al respecto?"],
+                AR=["¿Alguna pregunta hasta acá?", "No sé si se entendió...", "¿Existe alguna interrogante al respecto?"]),
+    "fb": "Invitar a preguntar muestra seguridad; dudar de tu explicación la debilita."},
+  "t7": {"type": "choice", "next": "t8", "say": "¿Qué es lo más importante que debemos recordar?", "opts": [
+    O("Todo es importante, la verdad.", .2, "Si todo es importante, nada lo es."),
+    O("Si se quedan con una sola idea: {tema} importa porque cambia cómo tomamos decisiones todos los días.", 1, "Una sola idea, clara y fácil de recordar."),
+    O("Lo que está en las diapositivas.", .3, "Remitir a las diapositivas desaprovecha el momento.")]},
+  "t8": {"type": "free", "next": None, "say": "Muy bien. Cierre, por favor.",
+    "hint": ["para cerrar", "la idea central", "una invitación final"],
+    "groups": [["para cerrar", "como conclusion", "en resumen", "en sintesis", "para concluir"], ["la idea", "lo central", "lo mas importante", "recuerden"],
+               ["los invito", "les propongo", "la proxima vez", "preguntense", "se pregunten"]],
+    "model": "Para cerrar: la idea central es que {tema} está más cerca de nosotros de lo que parece. Los invito a fijarse en eso esta semana. Muchas gracias."},
+}}
+
+PREP_PRACTICA = [
+ {"id": "rubro", "tipo": "chips", "q": loc("¿En qué tipo de empresa es la práctica?", MX="¿En qué tipo de empresa son las prácticas?", AR="¿En qué tipo de empresa es la pasantía?"), "def": "alimentos",
+  "opts": [{"v": "alimentos", "t": "Alimentos", "slots": {"empresa": "una empresa de alimentos", "gancho": "manejan una de las redes de distribución más grandes del país"}},
+           {"v": "retail", "t": "Retail", "slots": {"empresa": "una empresa de retail", "gancho": "despachan a todo el país todos los días"}},
+           {"v": "mineria", "t": "Minería", "slots": {"empresa": "una empresa minera", "gancho": "tienen una cadena de abastecimiento que no se puede detener"}},
+           {"v": "ecommerce", "t": "E-commerce", "slots": {"empresa": "una empresa de comercio electrónico", "gancho": "entregan sus pedidos en menos de 48 horas"}},
+           {"v": "salud", "t": "Farmacias y salud", "slots": {"empresa": "una cadena de farmacias", "gancho": "reponen a diario cientos de locales"}}]},
+ {"id": "carrera", "tipo": "texto", "q": "¿Qué estudias?", "slot": "carrera", "def": "ingeniería", "ph": "Ej: Ingeniería Civil Industrial"},
+ {"id": "fecha", "tipo": "fecha", "q": "¿Cuándo es la entrevista?", "evento": "tu entrevista"},
+]
+
 # =====================================================================
 DISERTACION = {
  "id": "disertacion", "area": "Académico",
@@ -21,11 +96,9 @@ DISERTACION = {
  "who": "Curso y profesor", "person": "Profesor Fuentes",
  "blurb": "Expón un tema ante tu curso, mantén su atención y responde sus preguntas.",
  "ficha": {
-  "situacion": loc("Te toca exponer diez minutos sobre la moda rápida y su impacto ambiental en la asignatura de Sustentabilidad. Son cuarenta compañeros y es la última clase antes del almuerzo.",
-                   CL="Te toca disertar diez minutos sobre la moda rápida y su impacto ambiental en el ramo de Sustentabilidad. Son cuarenta compañeros y es la última clase antes del almuerzo.",
-                   MX="Te toca exponer diez minutos sobre la moda rápida y su impacto ambiental en la materia de Sustentabilidad. Son cuarenta compañeros y es la última clase antes de la comida.",
-                   AR="Te toca exponer diez minutos sobre la moda rápida y su impacto ambiental en la materia Sustentabilidad. Son cuarenta compañeros y es la última clase antes del almuerzo.",
-                   CO="Te toca exponer diez minutos sobre la moda rápida y su impacto ambiental en la materia de Sostenibilidad. Son cuarenta compañeros y es la última clase antes del almuerzo."),
+  "situacion": loc("Te toca exponer {min} minutos sobre {tema}. Son cuarenta compañeros y es la última clase antes del almuerzo.",
+                   CL="Te toca disertar {min} minutos sobre {tema}. Son cuarenta compañeros y es la última clase antes del almuerzo.",
+                   MX="Te toca exponer {min} minutos sobre {tema}. Son cuarenta compañeros y es la última clase antes de la comida."),
   "enJuego": loc("El 30% de la nota de la asignatura y que el curso no se desconecte a mitad de la exposición.",
                  CL="El 30% de la nota del ramo y que el curso no se desconecte a mitad de la disertación.",
                  MX="El 30% de la calificación de la materia y que el grupo no se desconecte a mitad de la exposición.",
@@ -36,6 +109,7 @@ DISERTACION = {
    "amable": "El profesor asiente y el curso participa; si te trabas, te dan tiempo.",
    "neutral": "El curso escucha, pero se distrae si la exposición se pone plana.",
    "dificil": "Hay murmullos al fondo y el profesor te corta si te pasas del tiempo."}},
+ "prep": PREP_DISERTACION,
  "labels": ["Coloquial", "Claro y atractivo"],
  "crit": "Se evalúa captar la atención, conectar las ideas y hablar con claridad ante tus pares: preciso, pero sin sonar a informe leído.",
  "weights": {"v": .5, "m": .3, "p": .2},
@@ -122,7 +196,7 @@ DISERTACION = {
     "hint": ["un caso concreto es", "tiene un impacto negativo", "además"],
     "groups": [["un caso concreto", "pensemos en", "por ejemplo", "un ejemplo"], ["impacto negativo", "perjudic", "afect", "contamin"], ["ademas", "a esto se suma", "tambien"]],
     "model": "Un caso concreto es el desierto de Atacama, donde se acumulan toneladas de ropa usada. Esa ropa tiene un impacto negativo en el suelo; además, muchas veces se quema y contamina el aire."},
-  "t6": {"type": "fill", "next": "t7", "say": "Le quedan tres minutos.",
+  "t6": {"type": "fill", "next": "t7", "say": "Le quedan {resto} minutos.",
     "tpl": "Eso es lo central del problema. ___ Si no, paso a las soluciones.",
     "opts": loc(["¿Alguna pregunta hasta aquí?", "No sé si se entendió...", "¿Existe alguna interrogante al respecto?"],
                 AR=["¿Alguna pregunta hasta acá?", "No sé si se entendió...", "¿Existe alguna interrogante al respecto?"]),
@@ -144,6 +218,7 @@ DISERTACION = {
   "alto": {"title": "Aplausos del curso", "text": "El curso te aplaude y el profesor pide usar tu exposición como ejemplo el próximo semestre."},
   "medio": {"title": "Cumpliste", "text": "La exposición se entendió, pero hubo momentos en que el curso se desconectó."},
   "bajo": {"title": "El curso se desconectó", "text": "Los murmullos ganaron. Prueba abrir con una pregunta y conectar el tema con tu público."}},
+ "simPropio": SIM_PROPIO_DISERTACION,
 }
 
 # =====================================================================
@@ -154,9 +229,9 @@ PRACTICA = {
  "who": "Jefe de logística", "person": "Andrés Muñoz",
  "blurb": "Sin experiencia laboral: convence con tus proyectos y tu actitud.",
  "ficha": {
-  "situacion": loc("Postulas a una práctica de seis meses en el área de logística de una empresa de alimentos. Nunca has trabajado formalmente, pero tienes proyectos de la universidad.",
-                   MX="Postulas a unas prácticas profesionales de seis meses en el área de logística de una empresa de alimentos. Nunca has trabajado formalmente, pero tienes proyectos de la universidad.",
-                   AR="Te postulás a una pasantía de seis meses en el área de logística de una empresa de alimentos. Nunca trabajaste formalmente, pero tenés proyectos de la facultad."),
+  "situacion": loc("Postulas a una práctica de seis meses en el área de logística de {empresa}. Nunca has trabajado formalmente, pero tienes proyectos de la universidad.",
+                   MX="Postulas a unas prácticas profesionales de seis meses en el área de logística de {empresa}. Nunca has trabajado formalmente, pero tienes proyectos de la universidad.",
+                   AR="Te postulás a una pasantía de seis meses en el área de logística de {empresa}. Nunca trabajaste formalmente, pero tenés proyectos de la facultad."),
   "enJuego": loc("Una de las dos vacantes de práctica; la otra ya tiene candidato.", MX="Uno de los dos lugares de prácticas; el otro ya tiene candidato.",
                  AR="Una de las dos vacantes de pasantía; la otra ya tiene candidato."),
   "objetivo": "Convertir tus proyectos académicos en evidencia de lo que sabes hacer y mostrar ganas de aprender sin sonar desesperado ni inventar experiencia.",
@@ -164,6 +239,7 @@ PRACTICA = {
    "amable": "Recuerda su propia práctica y te ayuda a sacar lo mejor de tus respuestas.",
    "neutral": "Sigue una pauta y anota todo lo que dices.",
    "dificil": "Desconfía de los estudiantes sin experiencia y te pide pruebas de cada cosa que dices."}},
+ "prep": PREP_PRACTICA,
  "labels": ["Coloquial", "Profesional"],
  "crit": "Se evalúa transformar la experiencia académica en logros concretos, mostrar disposición a aprender y hablar con seguridad sin inventar experiencia.",
  "weights": {"v": .55, "m": .25, "p": .2},
@@ -215,12 +291,12 @@ PRACTICA = {
  ],
  "sim": {"start": "t1", "nodes": {
   "t1": {"type": "choice",
-    "say": loc("Hola, gracias por venir. Cuénteme, ¿por qué quiere hacer su práctica con nosotros?",
-               MX="Hola, gracias por venir. Cuénteme, ¿por qué quiere hacer sus prácticas con nosotros?",
-               AR="Hola, gracias por venir. Cuénteme, ¿por qué quiere hacer su pasantía con nosotros?"), "opts": [
+    "say": loc("Hola, gracias por venir. Veo que estudia {carrera}. Cuénteme, ¿por qué quiere hacer su práctica con nosotros?",
+               MX="Hola, gracias por venir. Veo que estudia {carrera}. Cuénteme, ¿por qué quiere hacer sus prácticas con nosotros?",
+               AR="Hola, gracias por venir. Veo que estudia {carrera}. Cuénteme, ¿por qué quiere hacer su pasantía con nosotros?"), "opts": [
     O(loc("Porque necesito la práctica para titularme.", MX="Porque necesito las prácticas para titularme.", AR="Porque necesito la pasantía para recibirme."), .3,
       "Es honesto, pero habla de tu necesidad y no de lo que aportas.", "t2b"),
-    O("Me motiva trabajar en logística porque se ven los resultados en el día a día, y ustedes manejan una de las redes de distribución más grandes del país.", 1,
+    O("Me motiva trabajar en logística porque se ven los resultados en el día a día, y ustedes {gancho}.", 1,
       "Conectas tu motivación con la empresa: muestras que investigaste.", "t2a"),
     O(loc("La verdad, mandé currículum a varias partes y ustedes me llamaron.", AR="La verdad, mandé currículum a varios lados y ustedes me llamaron."), .1,
       "Confirma que te da lo mismo dónde trabajar.", "t2b")]},

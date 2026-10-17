@@ -275,8 +275,8 @@ textarea{width:100%;min-height:110px;resize:vertical;font:inherit;color:var(--fg
 /* Forms */
 .field{display:flex;flex-direction:column;gap:6px}
 .field label,.field .lbl{font-size:.85rem;font-weight:700;color:var(--fg)}
-input[type="text"]{font:inherit;color:var(--fg);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:46px;width:100%}
-input[type="text"]:focus{border-color:var(--accent);outline:none}
+input[type="text"],input[type="date"]{font:inherit;color:var(--fg);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:46px;width:100%}
+input[type="text"]:focus,input[type="date"]:focus{border-color:var(--accent);outline:none}
 input[type="range"]{width:100%;accent-color:var(--accent)}
 .chips-opt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 @media (max-width:400px){.chips-opt{grid-template-columns:1fr}}
@@ -326,6 +326,13 @@ input[type="range"]{width:100%;accent-color:var(--accent)}
 .card.reto.done{border-color:color-mix(in srgb, var(--good) 35%, var(--line))}
 .card.reto.done:hover{border-color:color-mix(in srgb, var(--good) 35%, var(--line))}
 .card.reto.done .s-icon{color:var(--good)}
+.prep-sum{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.chips-opt.compact{grid-template-columns:repeat(4,minmax(0,1fr))}
+.chips-opt.compact span{justify-content:center;padding:10px 6px}
+.prep-sum .eyebrow{flex-basis:100%}
+.prep-chips{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
+.panel.prep{border-color:color-mix(in srgb, var(--accent) 40%, var(--line))}
+.card.evento{border-color:color-mix(in srgb, var(--accent) 55%, var(--line))}
 .frase{font-weight:500;font-family:var(--font-body);font-size:1.15rem}
 </style>
 </head>

@@ -16,9 +16,9 @@
  "blurb": "Sin experiencia laboral: convence con tus proyectos y tu actitud.",
  "ficha": {
   "situacion": {
-   "base": "Postulas a una práctica de seis meses en el área de logística de una empresa de alimentos. Nunca has trabajado formalmente, pero tienes proyectos de la universidad.",
-   "MX": "Postulas a unas prácticas profesionales de seis meses en el área de logística de una empresa de alimentos. Nunca has trabajado formalmente, pero tienes proyectos de la universidad.",
-   "AR": "Te postulás a una pasantía de seis meses en el área de logística de una empresa de alimentos. Nunca trabajaste formalmente, pero tenés proyectos de la facultad."
+   "base": "Postulas a una práctica de seis meses en el área de logística de {empresa}. Nunca has trabajado formalmente, pero tienes proyectos de la universidad.",
+   "MX": "Postulas a unas prácticas profesionales de seis meses en el área de logística de {empresa}. Nunca has trabajado formalmente, pero tienes proyectos de la universidad.",
+   "AR": "Te postulás a una pasantía de seis meses en el área de logística de {empresa}. Nunca trabajaste formalmente, pero tenés proyectos de la facultad."
   },
   "enJuego": {
    "base": "Una de las dos vacantes de práctica; la otra ya tiene candidato.",
@@ -32,6 +32,74 @@
    "dificil": "Desconfía de los estudiantes sin experiencia y te pide pruebas de cada cosa que dices."
   }
  },
+ "prep": [
+  {
+   "id": "rubro",
+   "tipo": "chips",
+   "q": {
+    "base": "¿En qué tipo de empresa es la práctica?",
+    "MX": "¿En qué tipo de empresa son las prácticas?",
+    "AR": "¿En qué tipo de empresa es la pasantía?"
+   },
+   "def": "alimentos",
+   "opts": [
+    {
+     "v": "alimentos",
+     "t": "Alimentos",
+     "slots": {
+      "empresa": "una empresa de alimentos",
+      "gancho": "manejan una de las redes de distribución más grandes del país"
+     }
+    },
+    {
+     "v": "retail",
+     "t": "Retail",
+     "slots": {
+      "empresa": "una empresa de retail",
+      "gancho": "despachan a todo el país todos los días"
+     }
+    },
+    {
+     "v": "mineria",
+     "t": "Minería",
+     "slots": {
+      "empresa": "una empresa minera",
+      "gancho": "tienen una cadena de abastecimiento que no se puede detener"
+     }
+    },
+    {
+     "v": "ecommerce",
+     "t": "E-commerce",
+     "slots": {
+      "empresa": "una empresa de comercio electrónico",
+      "gancho": "entregan sus pedidos en menos de 48 horas"
+     }
+    },
+    {
+     "v": "salud",
+     "t": "Farmacias y salud",
+     "slots": {
+      "empresa": "una cadena de farmacias",
+      "gancho": "reponen a diario cientos de locales"
+     }
+    }
+   ]
+  },
+  {
+   "id": "carrera",
+   "tipo": "texto",
+   "q": "¿Qué estudias?",
+   "slot": "carrera",
+   "def": "ingeniería",
+   "ph": "Ej: Ingeniería Civil Industrial"
+  },
+  {
+   "id": "fecha",
+   "tipo": "fecha",
+   "q": "¿Cuándo es la entrevista?",
+   "evento": "tu entrevista"
+  }
+ ],
  "labels": [
   "Coloquial",
   "Profesional"
@@ -241,9 +309,9 @@
    "t1": {
     "type": "choice",
     "say": {
-     "base": "Hola, gracias por venir. Cuénteme, ¿por qué quiere hacer su práctica con nosotros?",
-     "MX": "Hola, gracias por venir. Cuénteme, ¿por qué quiere hacer sus prácticas con nosotros?",
-     "AR": "Hola, gracias por venir. Cuénteme, ¿por qué quiere hacer su pasantía con nosotros?"
+     "base": "Hola, gracias por venir. Veo que estudia {carrera}. Cuénteme, ¿por qué quiere hacer su práctica con nosotros?",
+     "MX": "Hola, gracias por venir. Veo que estudia {carrera}. Cuénteme, ¿por qué quiere hacer sus prácticas con nosotros?",
+     "AR": "Hola, gracias por venir. Veo que estudia {carrera}. Cuénteme, ¿por qué quiere hacer su pasantía con nosotros?"
     },
     "opts": [
      {
@@ -257,7 +325,7 @@
       "next": "t2b"
      },
      {
-      "t": "Me motiva trabajar en logística porque se ven los resultados en el día a día, y ustedes manejan una de las redes de distribución más grandes del país.",
+      "t": "Me motiva trabajar en logística porque se ven los resultados en el día a día, y ustedes {gancho}.",
       "s": 1,
       "fb": "Conectas tu motivación con la empresa: muestras que investigaste.",
       "next": "t2a"

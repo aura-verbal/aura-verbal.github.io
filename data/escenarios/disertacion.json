@@ -18,11 +18,9 @@
  "blurb": "Expón un tema ante tu curso, mantén su atención y responde sus preguntas.",
  "ficha": {
   "situacion": {
-   "base": "Te toca exponer diez minutos sobre la moda rápida y su impacto ambiental en la asignatura de Sustentabilidad. Son cuarenta compañeros y es la última clase antes del almuerzo.",
-   "CL": "Te toca disertar diez minutos sobre la moda rápida y su impacto ambiental en el ramo de Sustentabilidad. Son cuarenta compañeros y es la última clase antes del almuerzo.",
-   "MX": "Te toca exponer diez minutos sobre la moda rápida y su impacto ambiental en la materia de Sustentabilidad. Son cuarenta compañeros y es la última clase antes de la comida.",
-   "AR": "Te toca exponer diez minutos sobre la moda rápida y su impacto ambiental en la materia Sustentabilidad. Son cuarenta compañeros y es la última clase antes del almuerzo.",
-   "CO": "Te toca exponer diez minutos sobre la moda rápida y su impacto ambiental en la materia de Sostenibilidad. Son cuarenta compañeros y es la última clase antes del almuerzo."
+   "base": "Te toca exponer {min} minutos sobre {tema}. Son cuarenta compañeros y es la última clase antes del almuerzo.",
+   "CL": "Te toca disertar {min} minutos sobre {tema}. Son cuarenta compañeros y es la última clase antes del almuerzo.",
+   "MX": "Te toca exponer {min} minutos sobre {tema}. Son cuarenta compañeros y es la última clase antes de la comida."
   },
   "enJuego": {
    "base": "El 30% de la nota de la asignatura y que el curso no se desconecte a mitad de la exposición.",
@@ -38,6 +36,74 @@
    "dificil": "Hay murmullos al fondo y el profesor te corta si te pasas del tiempo."
   }
  },
+ "prep": [
+  {
+   "id": "dur",
+   "tipo": "chips",
+   "q": {
+    "base": "¿Cuántos minutos dura tu exposición?",
+    "CL": "¿Cuántos minutos dura tu disertación?"
+   },
+   "def": "10",
+   "opts": [
+    {
+     "v": "5",
+     "t": "5 min",
+     "slots": {
+      "min": "cinco",
+      "resto": "dos"
+     },
+     "nota": "A ritmo ideal (unas 130 palabras por minuto) son cerca de 650 palabras en total. Apunta a una apertura de 20 a 30 segundos."
+    },
+    {
+     "v": "10",
+     "t": "10 min",
+     "slots": {
+      "min": "diez",
+      "resto": "tres"
+     },
+     "nota": "A ritmo ideal (unas 130 palabras por minuto) son cerca de 1.300 palabras en total. Apunta a una apertura de 30 a 45 segundos."
+    },
+    {
+     "v": "15",
+     "t": "15 min",
+     "slots": {
+      "min": "quince",
+      "resto": "cuatro"
+     },
+     "nota": "A ritmo ideal (unas 130 palabras por minuto) son cerca de 1.950 palabras en total. Apunta a una apertura de 45 a 60 segundos."
+    },
+    {
+     "v": "20",
+     "t": "20 min",
+     "slots": {
+      "min": "veinte",
+      "resto": "cinco"
+     },
+     "nota": "A ritmo ideal (unas 130 palabras por minuto) son cerca de 2.600 palabras en total. Apunta a una apertura de un minuto."
+    }
+   ]
+  },
+  {
+   "id": "tema",
+   "tipo": "texto",
+   "q": "¿De qué tema es?",
+   "slot": "tema",
+   "def": "la moda rápida y su impacto ambiental",
+   "modo": "propio",
+   "ph": "Ej: la energía solar en Chile",
+   "ayuda": "Déjalo vacío para practicar con el ejemplo de la moda rápida. Con tu tema, Aura evalúa la estructura, las muletillas y el ritmo, no si el contenido es correcto."
+  },
+  {
+   "id": "fecha",
+   "tipo": "fecha",
+   "q": "¿Cuándo es?",
+   "evento": {
+    "base": "tu exposición",
+    "CL": "tu disertación"
+   }
+  }
+ ],
  "labels": [
   "Coloquial",
   "Claro y atractivo"
@@ -381,7 +447,7 @@
    "t6": {
     "type": "fill",
     "next": "t7",
-    "say": "Le quedan tres minutos.",
+    "say": "Le quedan {resto} minutos.",
     "tpl": "Eso es lo central del problema. ___ Si no, paso a las soluciones.",
     "opts": {
      "base": [
@@ -469,6 +535,236 @@
   "bajo": {
    "title": "El curso se desconectó",
    "text": "Los murmullos ganaron. Prueba abrir con una pregunta y conectar el tema con tu público."
+  }
+ },
+ "simPropio": {
+  "start": "t1",
+  "nodes": {
+   "t1": {
+    "type": "free",
+    "say": {
+     "base": "Muy bien, silencio por favor. Adelante con su exposición sobre {tema}.",
+     "CL": "Muy bien, silencio por favor. Adelante con su disertación sobre {tema}."
+    },
+    "hint": [
+     "una pregunta o un dato que despierte curiosidad",
+     "anuncia de qué vas a hablar"
+    ],
+    "groups": [
+     [
+      "sabian",
+      "imaginen",
+      "alguna vez",
+      "que pasaria",
+      "se han preguntado",
+      "cuantos de ustedes",
+      "un dato"
+     ],
+     [
+      "les voy a hablar",
+      "les vengo a hablar",
+      "vamos a ver",
+      "hoy les",
+      "el tema de hoy",
+      "de eso se trata",
+      "les voy a contar",
+      "les quiero mostrar"
+     ]
+    ],
+    "model": "¿Se han preguntado alguna vez cuánto influye {tema} en su día a día? Hoy les voy a hablar de eso, en tres partes.",
+    "branch": {
+     "umbral": 0.7,
+     "alto": "t2a",
+     "bajo": "t2b"
+    }
+   },
+   "t2a": {
+    "type": "choice",
+    "next": "t3",
+    "say": "Buen inicio. ¿Cuál es la idea central que quiere que recordemos?",
+    "opts": [
+     {
+      "t": "Son varias ideas; después las voy explicando.",
+      "s": 0.3,
+      "fb": "Postergar la idea principal hace que el curso se pierda."
+     },
+     {
+      "t": "La idea central es que {tema} tiene más impacto del que creemos, y se los voy a mostrar en tres puntos.",
+      "s": 1,
+      "fb": "Una idea central en una frase y una estructura anunciada: el curso sabe hacia dónde vas."
+     },
+     {
+      "t": "Lo que pasa es que es un tema bien amplio, entonces voy a ver qué alcanzo.",
+      "s": 0.2,
+      "fb": "Suena a que no preparaste el recorrido."
+     }
+    ]
+   },
+   "t2b": {
+    "type": "choice",
+    "next": "t3",
+    "say": "A ver, el curso se está quedando dormido. ¿Por qué debería importarles {tema}?",
+    "opts": [
+     {
+      "t": "Porque {tema} los afecta más de lo que creen: les doy un ejemplo de su propio día a día.",
+      "s": 1,
+      "fb": "Conectas el tema con la vida de tu público: recuperas su atención."
+     },
+     {
+      "t": "Porque es materia de prueba.",
+      "s": 0.2,
+      "fb": "Puede ser cierto, pero no genera ningún interés."
+     },
+     {
+      "t": "Porque es importante para todos.",
+      "s": 0.4,
+      "fb": "Correcto, pero demasiado general para enganchar."
+     }
+    ]
+   },
+   "t3": {
+    "type": "fill",
+    "next": "t4",
+    "say": "Bien. Continúe con el desarrollo.",
+    "tpl": "Este punto es clave; ___, si lo entienden, lo demás se vuelve mucho más simple.",
+    "opts": [
+     "es decir",
+     "o sea",
+     "id est"
+    ],
+    "fb": "«Es decir» reformula para aclarar; «o sea» suele quedar como muletilla."
+   },
+   "t4": {
+    "type": "choice",
+    "next": "t5",
+    "say": {
+     "base": "Oye, pero ¿eso no es muy teórico? ¿Para qué nos sirve?",
+     "AR": "Che, pero ¿eso no es muy teórico? ¿Para qué nos sirve?"
+    },
+    "opts": [
+     {
+      "t": "Es teórico, pero igual hay que saberlo.",
+      "s": 0.3,
+      "fb": "Sincero, pero le das la razón sin aportar nada."
+     },
+     {
+      "t": "Si no te interesa, no escuches.",
+      "s": 0.1,
+      "fb": "Responder a la defensiva rompe la conexión con todo el curso."
+     },
+     {
+      "t": "Buena pregunta. Te doy un caso concreto en el que {tema} cambia una decisión real.",
+      "s": 1,
+      "fb": "Validas la pregunta y la respondes con un ejemplo: el curso vuelve a escuchar."
+     }
+    ]
+   },
+   "t5": {
+    "type": "free",
+    "next": "t6",
+    "say": "Muy bien. Denos un ejemplo concreto.",
+    "hint": [
+     "un caso concreto es",
+     "por qué importa (esto significa...)",
+     "además"
+    ],
+    "groups": [
+     [
+      "un caso concreto",
+      "pensemos en",
+      "por ejemplo",
+      "un ejemplo",
+      "imaginen"
+     ],
+     [
+      "porque",
+      "por lo tanto",
+      "esto significa",
+      "eso significa",
+      "en consecuencia"
+     ],
+     [
+      "ademas",
+      "a esto se suma",
+      "tambien"
+     ]
+    ],
+    "model": "Un caso concreto: pensemos en una situación cotidiana en la que {tema} aparece sin que lo notemos. Esto significa que entenderlo nos ayuda a decidir mejor; además, nos permite anticipar problemas."
+   },
+   "t6": {
+    "type": "fill",
+    "next": "t7",
+    "say": "Le quedan {resto} minutos.",
+    "tpl": "Eso es lo central del tema. ___ Si no, paso al cierre.",
+    "opts": {
+     "base": [
+      "¿Alguna pregunta hasta aquí?",
+      "No sé si se entendió...",
+      "¿Existe alguna interrogante al respecto?"
+     ],
+     "AR": [
+      "¿Alguna pregunta hasta acá?",
+      "No sé si se entendió...",
+      "¿Existe alguna interrogante al respecto?"
+     ]
+    },
+    "fb": "Invitar a preguntar muestra seguridad; dudar de tu explicación la debilita."
+   },
+   "t7": {
+    "type": "choice",
+    "next": "t8",
+    "say": "¿Qué es lo más importante que debemos recordar?",
+    "opts": [
+     {
+      "t": "Todo es importante, la verdad.",
+      "s": 0.2,
+      "fb": "Si todo es importante, nada lo es."
+     },
+     {
+      "t": "Si se quedan con una sola idea: {tema} importa porque cambia cómo tomamos decisiones todos los días.",
+      "s": 1,
+      "fb": "Una sola idea, clara y fácil de recordar."
+     },
+     {
+      "t": "Lo que está en las diapositivas.",
+      "s": 0.3,
+      "fb": "Remitir a las diapositivas desaprovecha el momento."
+     }
+    ]
+   },
+   "t8": {
+    "type": "free",
+    "next": null,
+    "say": "Muy bien. Cierre, por favor.",
+    "hint": [
+     "para cerrar",
+     "la idea central",
+     "una invitación final"
+    ],
+    "groups": [
+     [
+      "para cerrar",
+      "como conclusion",
+      "en resumen",
+      "en sintesis",
+      "para concluir"
+     ],
+     [
+      "la idea",
+      "lo central",
+      "lo mas importante",
+      "recuerden"
+     ],
+     [
+      "los invito",
+      "les propongo",
+      "la proxima vez",
+      "preguntense",
+      "se pregunten"
+     ]
+    ],
+    "model": "Para cerrar: la idea central es que {tema} está más cerca de nosotros de lo que parece. Los invito a fijarse en eso esta semana. Muchas gracias."
+   }
   }
  }
 }

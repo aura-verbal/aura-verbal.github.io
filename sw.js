@@ -1,7 +1,7 @@
 /* Aura · service worker: permite abrir la app sin conexión.
    Archivos propios: primero la red (para recibir actualizaciones) y, si no hay internet, la copia guardada.
    Tipografías de Google: primero la copia guardada. */
-const VERSION = "aura-v5-1";
+const VERSION = "aura-v6";
 const CORE = [
   "./", "index.html", "js/motor.js", "js/app.js", "manifest.webmanifest",
   "data/paises.json", "data/escenarios/index.json",

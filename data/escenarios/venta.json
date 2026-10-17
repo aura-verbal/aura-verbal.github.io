@@ -1,0 +1,501 @@
+{
+ "id": "venta",
+ "area": "Ventas",
+ "name": "Cliente molesto en tienda",
+ "short": "una atención de venta",
+ "who": "Cliente",
+ "person": "Don Ricardo",
+ "blurb": "Atiende a un cliente molesto y conviértelo en una venta.",
+ "ficha": {
+  "situacion": "Trabajas en una tienda de deportes. Un cliente vuelve furioso porque las zapatillas que compró hace dos días se despegaron.",
+  "enJuego": "Que el cliente se vaya satisfecho y vuelva a comprar, en vez de dejar una mala reseña.",
+  "objetivo": "Validar su molestia, ofrecer una solución concreta y cerrar con un cambio o una venta.",
+  "pers": {
+   "amable": "Molesto, pero dispuesto a escuchar si lo tratan bien.",
+   "neutral": "Exige una solución rápida y clara.",
+   "dificil": "Levanta la voz, amenaza con reclamar y desconfía de todo lo que le ofreces."
+  }
+ },
+ "labels": [
+  "Coloquial",
+  "Profesional"
+ ],
+ "crit": "Se evalúa empatía, ofrecer soluciones y cortesía, sin sonar acartonado.",
+ "weights": {
+  "v": 0.6,
+  "m": 0.25,
+  "p": 0.15
+ },
+ "words": [
+  {
+   "col": "barato",
+   "pro": "conveniente",
+   "alt": "buena relación precio-calidad",
+   "why": "«Barato» sugiere baja calidad; «conveniente» habla de valor.",
+   "ex": "Este modelo es más ___ si considera cuánto dura.",
+   "d": [
+    "regalado",
+    "asequible a ultranza"
+   ],
+   "det": [
+    "barat"
+   ]
+  },
+  {
+   "col": "no hay",
+   "pro": "por ahora no tenemos stock",
+   "alt": "está agotado por el momento",
+   "why": "Deja abierta la posibilidad de una alternativa.",
+   "ex": "De esa talla ___, pero puedo revisar en otra tienda.",
+   "d": [
+    "no queda nada",
+    "carecemos de existencias"
+   ],
+   "det": [
+    "no hay"
+   ]
+  },
+  {
+   "col": "espere",
+   "pro": "permítame un momento",
+   "alt": "deme un minuto, por favor",
+   "why": "Pide tiempo sin sonar a orden.",
+   "ex": "___ y reviso el sistema.",
+   "d": {
+    "base": [
+     "espéreme ahí",
+     "tenga a bien aguardar"
+    ],
+    "CL": [
+     "aguante",
+     "tenga a bien aguardar"
+    ],
+    "MX": [
+     "aguánteme tantito",
+     "tenga a bien aguardar"
+    ],
+    "AR": [
+     "bancame un toque",
+     "tenga a bien aguardar"
+    ],
+    "CO": [
+     "aguánteme",
+     "tenga a bien aguardar"
+    ]
+   },
+   "det": [
+    "espere",
+    "aguante",
+    "bancame",
+    "aguanteme"
+   ]
+  },
+  {
+   "col": "no es culpa mía",
+   "pro": "entiendo su molestia",
+   "alt": "lamento la situación",
+   "why": "Valida al cliente antes de buscar la solución.",
+   "ex": "___; vamos a buscar una solución ahora.",
+   "d": [
+    "no es culpa mía",
+    "comprendo su enojo enormemente"
+   ],
+   "det": [
+    "no es mi culpa",
+    "no es culpa mia"
+   ]
+  },
+  {
+   "col": {
+    "base": "¿ok?",
+    "CL": "¿cachai?",
+    "MX": "¿sale?",
+    "AR": "¿viste?",
+    "CO": "¿sí o qué?"
+   },
+   "pro": "¿le parece bien?",
+   "alt": "¿qué le parece?",
+   "why": "Confirma el acuerdo con respeto.",
+   "ex": "Le hago el cambio hoy mismo, ___",
+   "d": {
+    "base": [
+     "¿ok?",
+     "¿ha comprendido usted?"
+    ],
+    "CL": [
+     "¿cachai?",
+     "¿ha comprendido usted?"
+    ],
+    "MX": [
+     "¿sale?",
+     "¿ha comprendido usted?"
+    ],
+    "AR": [
+     "¿viste?",
+     "¿ha comprendido usted?"
+    ],
+    "CO": [
+     "¿sí o qué?",
+     "¿ha comprendido usted?"
+    ]
+   },
+   "det": [
+    "cachai",
+    "si o que"
+   ]
+  },
+  {
+   "col": "no se puede",
+   "pro": "lo que sí puedo ofrecerle",
+   "alt": "una alternativa es",
+   "why": "Cambia el foco del «no» a lo que sí es posible.",
+   "ex": "No puedo devolverle el dinero en efectivo, pero ___ es una nota de crédito.",
+   "d": [
+    "imposible",
+    "la normativa lo prohíbe taxativamente"
+   ],
+   "det": [
+    "no se puede"
+   ]
+  },
+  {
+   "col": {
+    "base": "dura un montón",
+    "CL": "dura harto",
+    "MX": "dura un buen",
+    "CO": "dura harto"
+   },
+   "pro": "es más durable",
+   "alt": "tiene mayor vida útil",
+   "why": "Argumento concreto de valor para el cliente.",
+   "ex": "Esta zapatilla ___ porque tiene la suela reforzada.",
+   "d": {
+    "base": [
+     "dura un montón",
+     "es imperecedera"
+    ],
+    "CL": [
+     "dura caleta",
+     "es imperecedera"
+    ],
+    "MX": [
+     "dura un buen",
+     "es imperecedera"
+    ],
+    "AR": [
+     "dura una banda",
+     "es imperecedera"
+    ],
+    "CO": [
+     "dura harto",
+     "es imperecedera"
+    ]
+   },
+   "det": [
+    "harto",
+    "caleta",
+    "un monton",
+    "un buen",
+    "una banda"
+   ]
+  },
+  {
+   "col": "lléveselo",
+   "pro": "le recomiendo",
+   "alt": "le sugiero",
+   "why": "Aconseja en vez de presionar.",
+   "ex": "Para correr, ___ este modelo con amortiguación.",
+   "d": [
+    "lléveselo nomás",
+    "le conmino a adquirir"
+   ],
+   "det": [
+    "lleveselo"
+   ]
+  },
+  {
+   "col": "oferta",
+   "pro": "promoción",
+   "alt": "descuento vigente",
+   "why": "Suena a beneficio planificado, no a liquidación.",
+   "ex": "Hoy tiene una ___ de 20% con tarjeta.",
+   "d": [
+    "ofertón",
+    "rebaja sin parangón"
+   ],
+   "det": [
+    "oferton"
+   ]
+  },
+  {
+   "col": {
+    "base": "listo, chao",
+    "CL": "ya, chao",
+    "MX": "órale, bye",
+    "AR": "dale, chau"
+   },
+   "pro": "gracias por su preferencia",
+   "alt": "que tenga un buen día",
+   "why": "El cierre también es parte de la experiencia de compra.",
+   "ex": "Aquí está su comprobante. ___",
+   "d": {
+    "base": [
+     "listo, chao",
+     "ha sido un honor servirle"
+    ],
+    "CL": [
+     "ya, chao",
+     "ha sido un honor servirle"
+    ],
+    "MX": [
+     "órale, bye",
+     "ha sido un honor servirle"
+    ],
+    "AR": [
+     "dale, chau",
+     "ha sido un honor servirle"
+    ]
+   },
+   "det": [
+    "chao",
+    "chau",
+    "bye"
+   ]
+  }
+ ],
+ "sim": {
+  "start": "t1",
+  "nodes": {
+   "t1": {
+    "type": "choice",
+    "say": "¡Compré estas zapatillas hace dos días y ya se despegaron!",
+    "opts": [
+     {
+      "t": "No es culpa mía, yo solo vendo.",
+      "s": 0,
+      "fb": "Desligarte de la responsabilidad escala el conflicto.",
+      "next": "t2b"
+     },
+     {
+      "t": "Entiendo su molestia. Permítame un momento y reviso las opciones de cambio.",
+      "s": 1,
+      "fb": "Validas al cliente y pasas a la acción.",
+      "next": "t2a"
+     },
+     {
+      "t": "Comprendo su enojo enormemente y le ruego que me disculpe infinitamente.",
+      "s": 0.4,
+      "fb": "Empático, pero exagerado y sin solución.",
+      "next": "t2b"
+     }
+    ]
+   },
+   "t2a": {
+    "type": "choice",
+    "next": "t3",
+    "say": {
+     "base": "Bueno, pero yo las necesito para correr este fin de semana.",
+     "CL": "Ya, pero yo las necesito para correr este fin de semana.",
+     "AR": "Bueno, pero las necesito para correr este finde."
+    },
+    "opts": [
+     {
+      "t": "Entonces busquemos una solución hoy mismo: puedo cambiárselas por un par nuevo o por un modelo similar.",
+      "s": 1,
+      "fb": "Conectas la solución con su necesidad real."
+     },
+     {
+      "t": "Eso no depende de mí; la garantía demora siete días.",
+      "s": 0.1,
+      "fb": "Correcto en lo técnico, pésimo en el trato."
+     },
+     {
+      "t": "Voy a ver qué se puede hacer, pero no le prometo nada.",
+      "s": 0.4,
+      "fb": "Honesto, pero genera inseguridad."
+     }
+    ]
+   },
+   "t2b": {
+    "type": "choice",
+    "next": "t3",
+    "say": "¿Me va a ayudar o no?",
+    "opts": [
+     {
+      "t": "Sí, disculpe. Entiendo su molestia; revisemos ahora mismo cómo solucionarlo.",
+      "s": 1,
+      "fb": "Recuperaste la conversación pidiendo disculpas y actuando."
+     },
+     {
+      "t": "Tiene que ir a servicio al cliente, yo no veo eso.",
+      "s": 0.1,
+      "fb": "Derivar sin acompañar enoja aún más."
+     },
+     {
+      "t": "Cálmese primero, por favor.",
+      "s": 0.2,
+      "fb": "Pedir calma a alguien molesto casi siempre lo enoja más."
+     }
+    ]
+   },
+   "t3": {
+    "type": "choice",
+    "next": "t4",
+    "say": "¿Y no tienen otro par igual?",
+    "opts": [
+     {
+      "t": {
+       "base": "No hay, se acabó.",
+       "AR": "No hay, se terminó."
+      },
+      "s": 0.2,
+      "fb": "Cierra la conversación sin alternativa."
+     },
+     {
+      "t": "Por ahora no tenemos stock de ese modelo, pero lo que sí puedo ofrecerle es uno similar o una nota de crédito.",
+      "s": 1,
+      "fb": "Informas y ofreces dos alternativas."
+     },
+     {
+      "t": "Carecemos de existencias del artículo en cuestión.",
+      "s": 0.3,
+      "fb": "Correcto, pero frío y rebuscado."
+     }
+    ]
+   },
+   "t4": {
+    "type": "fill",
+    "next": "t5",
+    "say": "Mmm... ¿y cuál me recomienda?",
+    "tpl": "___ este modelo: es más durable y hoy tiene una promoción de 20%.",
+    "opts": [
+     "Le recomiendo",
+     "Lléveselo nomás",
+     "Le conmino a adquirir"
+    ],
+    "fb": "Recomendar es aconsejar; presionar espanta al cliente."
+   },
+   "t5": {
+    "type": "free",
+    "next": "t6",
+    "say": "Es que está más caro... no sé.",
+    "hint": [
+     "conveniente",
+     "durable",
+     "promoción"
+    ],
+    "groups": [
+     [
+      "conveniente",
+      "precio-calidad",
+      "precio calidad"
+     ],
+     [
+      "durable",
+      "vida util"
+     ],
+     [
+      "promocion",
+      "descuento"
+     ]
+    ],
+    "model": "Lo entiendo. Es más conveniente a largo plazo porque es más durable, y hoy tiene una promoción de 20% con tarjeta."
+   },
+   "t6": {
+    "type": "choice",
+    "next": "t7",
+    "say": "¿Y si me pasa lo mismo con este?",
+    "opts": [
+     {
+      "t": "Tiene tres meses de garantía, y si vuelve a pasar, se lo cambiamos sin costo.",
+      "s": 1,
+      "fb": "Das seguridad con un respaldo concreto."
+     },
+     {
+      "t": "No le va a pasar, se lo juro.",
+      "s": 0.3,
+      "fb": "Prometer sin respaldo no genera confianza."
+     },
+     {
+      "t": "Bueno, eso ya depende de cómo las use.",
+      "s": 0.1,
+      "fb": "Sugerir que es su culpa reabre el conflicto."
+     }
+    ]
+   },
+   "t7": {
+    "type": "fill",
+    "next": "t8",
+    "say": {
+     "base": "Bueno, me convenció. ¿Cómo pago?",
+     "CL": "Ya, me convenció. ¿Cómo pago?"
+    },
+    "tpl": "Puede pagar en caja con tarjeta o efectivo; ___ con tarjeta le suma un 20% de descuento.",
+    "opts": [
+     "la promoción vigente",
+     "el ofertón",
+     "la rebaja sin parangón"
+    ],
+    "fb": "«Promoción vigente» suena a beneficio planificado, no a liquidación."
+   },
+   "t8": {
+    "type": "free",
+    "next": null,
+    "say": {
+     "base": "Listo, aquí está mi tarjeta.",
+     "CL": "Ya, aquí está mi tarjeta.",
+     "AR": "Dale, acá está mi tarjeta."
+    },
+    "hint": [
+     {
+      "base": "comprobante o garantía",
+      "CL": "boleta o garantía",
+      "MX": "ticket o garantía",
+      "AR": "ticket o garantía",
+      "CO": "factura o garantía"
+     },
+     "gracias por su preferencia",
+     "que tenga un buen día"
+    ],
+    "groups": [
+     [
+      "boleta",
+      "garantia",
+      "ticket",
+      "factura",
+      "comprobante"
+     ],
+     [
+      "gracias"
+     ],
+     [
+      "buen dia",
+      "buena tarde",
+      "preferencia"
+     ]
+    ],
+    "model": {
+     "base": "Perfecto. Aquí está su comprobante; recuerde que tiene tres meses de garantía. Gracias por su preferencia y que tenga un buen día.",
+     "CL": "Perfecto. Aquí está su boleta; recuerde que tiene tres meses de garantía. Gracias por su preferencia y que tenga un buen día.",
+     "MX": "Perfecto. Aquí está su ticket; recuerde que tiene tres meses de garantía. Gracias por su preferencia y que tenga un buen día.",
+     "AR": "Perfecto. Acá tiene su ticket; recuerde que tiene tres meses de garantía. Gracias por su preferencia y que tenga un buen día.",
+     "CO": "Perfecto. Aquí está su factura; recuerde que tiene tres meses de garantía. Gracias por su preferencia y que tenga un buen día."
+    }
+   }
+  }
+ },
+ "endings": {
+  "alto": {
+   "title": "Cliente fiel",
+   "text": "Don Ricardo se va con zapatillas nuevas y promete volver a comprarte."
+  },
+  "medio": {
+   "title": "Problema resuelto",
+   "text": "Aceptó el cambio, pero no compró nada más."
+  },
+  "bajo": {
+   "title": "Pidió hablar con el supervisor",
+   "text": "El cliente se fue molesto y dejó una mala reseña. Prueba validar su molestia antes de explicar."
+  }
+ }
+}

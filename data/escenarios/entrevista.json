@@ -1,0 +1,603 @@
+{
+ "id": "entrevista",
+ "area": "Laboral",
+ "name": "Entrevista de trabajo",
+ "short": "una entrevista de trabajo",
+ "who": "Reclutadora",
+ "person": "Carolina",
+ "blurb": "Responde las preguntas de una entrevista para un cargo que te interesa.",
+ "ficha": {
+  "situacion": "Postulas a analista de operaciones en una empresa de retail. Es la segunda etapa del proceso y quedan tres candidatos.",
+  "enJuego": "Quedarte con el puesto: eres uno de los tres finalistas.",
+  "objetivo": "Mostrar un logro con un número concreto y cerrar con una pregunta inteligente.",
+  "pers": {
+   "amable": "Cercana y paciente; te da tiempo para pensar.",
+   "neutral": "Profesional y directa; sigue su pauta de preguntas.",
+   "dificil": "Poco paciente con respuestas largas; valora los datos y repregunta."
+  }
+ },
+ "labels": [
+  "Coloquial",
+  "Profesional"
+ ],
+ "crit": "Se evalúa claridad, logros concretos y seguridad sin sobrevenderte.",
+ "weights": {
+  "v": 0.6,
+  "m": 0.25,
+  "p": 0.15
+ },
+ "words": [
+  {
+   "col": "arreglar",
+   "pro": "resolver",
+   "alt": "solucionar",
+   "why": "Muestra que enfrentas problemas, no solo que los parchas.",
+   "ex": "En mi trabajo anterior tuve que ___ un quiebre de stock en plena temporada.",
+   "d": [
+    "parchar",
+    "subsanar ingentemente"
+   ],
+   "det": [
+    "arregl"
+   ]
+  },
+  {
+   "col": "cosas que hacía",
+   "pro": "responsabilidades",
+   "alt": "funciones, tareas",
+   "why": "Así se describen los cargos en un currículum y en una entrevista.",
+   "ex": "Entre mis ___ estaba el control de inventario.",
+   "d": {
+    "base": [
+     "tareítas",
+     "menesteres"
+    ],
+    "CL": [
+     "pegas",
+     "menesteres"
+    ],
+    "MX": [
+     "chambitas",
+     "menesteres"
+    ],
+    "AR": [
+     "laburitos",
+     "menesteres"
+    ],
+    "CO": [
+     "vueltas",
+     "menesteres"
+    ]
+   },
+   "det": [
+    "cosas",
+    "pegas",
+    "chamba",
+    "laburo",
+    "camello"
+   ]
+  },
+  {
+   "col": "soy bueno para",
+   "pro": "tengo experiencia en",
+   "alt": "me desempeño bien en",
+   "why": "Lo respalda la experiencia, no la autoevaluación.",
+   "ex": "___ análisis de datos con Excel y Python.",
+   "d": {
+    "base": [
+     "soy muy bueno para",
+     "soy un experto absoluto en"
+    ],
+    "CL": [
+     "soy seco para",
+     "soy un experto absoluto en"
+    ],
+    "MX": [
+     "soy bien bueno para",
+     "soy un experto absoluto en"
+    ],
+    "AR": [
+     "soy un crack en",
+     "soy un experto absoluto en"
+    ],
+    "CO": [
+     "soy un duro para",
+     "soy un experto absoluto en"
+    ]
+   },
+   "det": [
+    "soy bueno",
+    "soy buena",
+    "soy seco",
+    "soy seca",
+    "soy un crack",
+    "soy un duro",
+    "soy una dura"
+   ]
+  },
+  {
+   "col": "trabajar con otros",
+   "pro": "colaborar",
+   "alt": "coordinarme",
+   "why": "Es la competencia que buscan los reclutadores, dicha con su nombre.",
+   "ex": "Me gusta ___ con otras áreas para cumplir los plazos.",
+   "d": {
+    "base": [
+     "juntarme",
+     "sinergizar"
+    ],
+    "CL": [
+     "hacer pega",
+     "sinergizar"
+    ]
+   },
+   "det": []
+  },
+  {
+   "col": {
+    "base": "lo capto rápido",
+    "CL": "cacho rápido",
+    "MX": "agarro la onda rápido",
+    "AR": "la capto al toque",
+    "CO": "le cojo el tiro rápido"
+   },
+   "pro": "aprendo con rapidez",
+   "alt": "me adapto con facilidad",
+   "why": "Transmite la misma idea con un tono adecuado al contexto.",
+   "ex": "___ nuevos sistemas; en un mes ya manejaba el sistema de bodega.",
+   "d": {
+    "base": [
+     "lo capto al toque",
+     "asimilo cognitivamente"
+    ],
+    "CL": [
+     "pesco al toque",
+     "asimilo cognitivamente"
+    ],
+    "MX": [
+     "agarro la onda",
+     "asimilo cognitivamente"
+    ],
+    "AR": [
+     "la capto al toque",
+     "asimilo cognitivamente"
+    ],
+    "CO": [
+     "le cojo el tiro",
+     "asimilo cognitivamente"
+    ]
+   },
+   "det": [
+    "cacho",
+    "al toque",
+    "agarro la onda",
+    "cojo el tiro"
+   ]
+  },
+  {
+   "col": "me fue bien",
+   "pro": "logré",
+   "alt": "conseguí",
+   "why": "Atribuye el resultado a tu acción y abre paso a una cifra.",
+   "ex": "___ reducir los errores de despacho en un 20%.",
+   "d": [
+    "me salió",
+    "acometí exitosamente"
+   ],
+   "det": [
+    "me fue bien"
+   ]
+  },
+  {
+   "col": "lo malo mío es",
+   "pro": "un aspecto que estoy mejorando es",
+   "alt": "un área de mejora es",
+   "why": "Reconoce una debilidad y muestra que trabajas en ella.",
+   "ex": "___ la delegación de tareas.",
+   "d": [
+    "mi peor defecto es",
+    "no tengo debilidades, pero"
+   ],
+   "det": [
+    "lo malo"
+   ]
+  },
+  {
+   "col": {
+    "base": "la plata",
+    "MX": "la lana",
+    "AR": "la guita"
+   },
+   "pro": {
+    "base": "remuneración",
+    "CL": "renta",
+    "MX": "sueldo",
+    "CO": "salario"
+   },
+   "alt": {
+    "base": "salario",
+    "CL": "remuneración",
+    "MX": "salario",
+    "CO": "remuneración"
+   },
+   "why": {
+    "base": "Así se habla de dinero en una entrevista.",
+    "CL": "Término habitual en Chile para hablar de sueldo en una entrevista."
+   },
+   "ex": {
+    "base": "¿Cuál es la ___ asociada al cargo?",
+    "MX": "¿Cuál es el ___ que ofrecen para el cargo?",
+    "CO": "¿Cuál es el ___ para el cargo?",
+    "AR": "¿Cuál es la ___ para el puesto?"
+   },
+   "d": {
+    "base": [
+     "plata",
+     "emolumento"
+    ],
+    "MX": [
+     "varo",
+     "emolumento"
+    ],
+    "CO": [
+     "billete",
+     "emolumento"
+    ],
+    "AR": [
+     "guita",
+     "emolumento"
+    ]
+   },
+   "det": [
+    "plata",
+    "lucas",
+    "lana",
+    "guita",
+    "varo",
+    "billete"
+   ]
+  },
+  {
+   "col": {
+    "base": "me gusta",
+    "CL": "me tinca",
+    "MX": "me late",
+    "AR": "me copa",
+    "CO": "me suena"
+   },
+   "pro": "me interesa",
+   "alt": "me motiva",
+   "why": "Expresa interés con una razón concreta detrás.",
+   "ex": "___ este cargo porque combina logística y análisis.",
+   "d": {
+    "base": [
+     "me gusta",
+     "me apasiona locamente"
+    ],
+    "CL": [
+     "me tinca",
+     "me apasiona locamente"
+    ],
+    "MX": [
+     "me late",
+     "me apasiona locamente"
+    ],
+    "AR": [
+     "me copa",
+     "me apasiona locamente"
+    ],
+    "CO": [
+     "me suena",
+     "me apasiona locamente"
+    ]
+   },
+   "det": [
+    "me tinca",
+    "me late",
+    "me copa"
+   ]
+  },
+  {
+   "col": {
+    "base": "un montón",
+    "CL": "harto",
+    "MX": "un buen",
+    "CO": "harto"
+   },
+   "pro": "considerablemente",
+   "alt": "de forma significativa",
+   "why": "Prepara el terreno para dar una cifra.",
+   "ex": "Con ese cambio, el tiempo de respuesta mejoró ___.",
+   "d": {
+    "base": [
+     "un montón",
+     "ostensiblemente"
+    ],
+    "CL": [
+     "caleta",
+     "ostensiblemente"
+    ],
+    "MX": [
+     "un buen",
+     "ostensiblemente"
+    ],
+    "CO": [
+     "harto",
+     "ostensiblemente"
+    ]
+   },
+   "det": [
+    "harto",
+    "caleta",
+    "un monton",
+    "un buen"
+   ]
+  }
+ ],
+ "sim": {
+  "start": "t1",
+  "nodes": {
+   "t1": {
+    "type": "choice",
+    "say": {
+     "base": "Cuéntame un poco de ti.",
+     "AR": "Contame un poco de vos.",
+     "CO": "Cuénteme un poco de usted."
+    },
+    "opts": [
+     {
+      "t": "Soy estudiante de ingeniería y tengo experiencia en gestión de inventario; entre mis responsabilidades estaba el control de stock.",
+      "s": 1,
+      "fb": "Breve, concreto y con experiencia verificable.",
+      "next": "t2a"
+     },
+     {
+      "t": {
+       "base": "Eh, nada, soy muy bueno para Excel y me gusta harto el trabajo.",
+       "CL": "Eh, nada, soy seco para Excel y me tinca harto la pega.",
+       "MX": "Este... pues soy bien bueno para Excel y me late la chamba.",
+       "AR": "Nada, che, soy un crack con el Excel y me copa el laburo.",
+       "CO": "Pues nada, soy un duro para Excel y me suena el camello."
+      },
+      "s": 0.3,
+      "fb": "Muy coloquial para una entrevista y sin ningún dato concreto.",
+      "next": "t2b"
+     },
+     {
+      "t": "Soy un profesional excepcional y no tengo debilidades conocidas.",
+      "s": 0.2,
+      "fb": "Sobrevenderte genera desconfianza.",
+      "next": "t2b"
+     }
+    ]
+   },
+   "t2a": {
+    "type": "choice",
+    "next": "t3",
+    "say": {
+     "base": "Interesante. ¿Por qué quieres dejar tu trabajo actual?",
+     "AR": "Interesante. ¿Por qué querés dejar tu trabajo actual?",
+     "CO": "Interesante. ¿Por qué quiere dejar su trabajo actual?"
+    },
+    "opts": [
+     {
+      "t": "Busco un cargo donde pueda aplicar lo que estudio; en mi trabajo actual aprendí mucho, pero ya no tengo espacio para crecer.",
+      "s": 1,
+      "fb": "Positivo y orientado al futuro, sin hablar mal de nadie."
+     },
+     {
+      "t": "Mi jefe es pésimo y no me valoran.",
+      "s": 0.1,
+      "fb": "Hablar mal de un empleador anterior es una alerta para cualquier reclutador."
+     },
+     {
+      "t": {
+       "base": "La verdad, por la plata.",
+       "MX": "La verdad, por la lana.",
+       "AR": "La verdad, por la guita."
+      },
+      "s": 0.3,
+      "fb": "Honesto, pero comunica solo interés económico."
+     }
+    ]
+   },
+   "t2b": {
+    "type": "choice",
+    "next": "t3",
+    "say": {
+     "base": "Mmm. ¿Me das un ejemplo concreto de algo que hayas logrado?",
+     "CO": "Mmm. ¿Me da un ejemplo concreto de algo que haya logrado?"
+    },
+    "opts": [
+     {
+      "t": "Claro: reorganicé el control de stock de la bodega y logré reducir los quiebres de stock en un 20%.",
+      "s": 1,
+      "fb": "Recuperaste el interés con un logro medible."
+     },
+     {
+      "t": "Muchas cosas, la verdad; es difícil elegir una.",
+      "s": 0.2,
+      "fb": "Evadir la pregunta hace que la reclutadora pierda interés."
+     },
+     {
+      "t": "Ayudaba en lo que se necesitara, de todo un poco.",
+      "s": 0.3,
+      "fb": "Suena disponible, pero no muestra ningún resultado."
+     }
+    ]
+   },
+   "t3": {
+    "type": "fill",
+    "next": "t4",
+    "say": {
+     "base": "¿Cuál es tu mayor debilidad?",
+     "CO": "¿Cuál es su mayor debilidad?"
+    },
+    "tpl": "___ la delegación de tareas; lo estoy trabajando con un sistema de seguimiento.",
+    "opts": [
+     "Un aspecto que estoy mejorando es",
+     "Mi peor defecto es",
+     "No tengo debilidades, pero"
+    ],
+    "fb": "Nombra la debilidad y muestra qué haces al respecto."
+   },
+   "t4": {
+    "type": "free",
+    "next": "t5",
+    "say": {
+     "base": "Cuéntame de un problema que hayas resuelto.",
+     "AR": "Contame de un problema que hayas resuelto.",
+     "CO": "Cuénteme de un problema que haya resuelto."
+    },
+    "hint": [
+     "resolver",
+     "logré",
+     "considerablemente"
+    ],
+    "groups": [
+     [
+      "resolv",
+      "resolvi",
+      "solucion"
+     ],
+     [
+      "logr",
+      "consegu"
+     ],
+     [
+      "considerablemente",
+      "significativ"
+     ]
+    ],
+    "model": "En temporada alta hubo un quiebre de stock. Lo resolví coordinando con bodega y logré reducir los atrasos considerablemente."
+   },
+   "t5": {
+    "type": "choice",
+    "next": "t6",
+    "say": {
+     "base": "¿Por qué te interesa este cargo?",
+     "AR": "¿Por qué te interesa este puesto?",
+     "CO": "¿Por qué le interesa este cargo?"
+    },
+    "opts": [
+     {
+      "t": {
+       "base": "Porque me gusta y el sueldo está bueno.",
+       "CL": "Porque me tinca y la plata está buena.",
+       "MX": "Porque me late y el sueldo está bien.",
+       "AR": "Porque me copa y la guita está buena.",
+       "CO": "Porque me suena y la plata está buena."
+      },
+      "s": 0.1,
+      "fb": "Comunica solo interés económico."
+     },
+     {
+      "t": "Me interesa porque combina análisis de datos y operaciones, que es donde quiero crecer.",
+      "s": 1,
+      "fb": "Conectas el cargo con tu proyección profesional."
+     },
+     {
+      "t": {
+       "base": "La verdad, necesito trabajo.",
+       "CL": "La verdad, necesito pega.",
+       "MX": "La verdad, necesito chamba.",
+       "AR": "La verdad, necesito laburo.",
+       "CO": "La verdad, necesito camello."
+      },
+      "s": 0.3,
+      "fb": "Transmite urgencia, no motivación por el cargo."
+     }
+    ]
+   },
+   "t6": {
+    "type": "choice",
+    "next": "t7",
+    "say": {
+     "base": "¿Cómo te ves en cinco años?",
+     "CO": "¿Cómo se ve en cinco años?"
+    },
+    "opts": [
+     {
+      "t": "Liderando un equipo de operaciones, con experiencia sólida en análisis de datos.",
+      "s": 1,
+      "fb": "Ambición concreta y alineada con el cargo."
+     },
+     {
+      "t": "No sé, la verdad; vamos viendo.",
+      "s": 0.2,
+      "fb": "Sin proyección, cuesta imaginarte creciendo en la empresa."
+     },
+     {
+      "t": "En su puesto, jaja.",
+      "s": 0.3,
+      "fb": "El humor puede funcionar, pero es arriesgado si no lo acompañas con una respuesta seria."
+     }
+    ]
+   },
+   "t7": {
+    "type": "fill",
+    "next": "t8",
+    "say": {
+     "base": "¿Cuáles son tus expectativas de sueldo?",
+     "CL": "¿Cuáles son tus expectativas de renta?",
+     "AR": "¿Cuáles son tus expectativas salariales?",
+     "CO": "¿Cuáles son sus expectativas salariales?"
+    },
+    "tpl": "Según lo que he investigado del mercado, ___ en el rango que manejan para el cargo, y estoy abierto a conversarlo.",
+    "opts": [
+     "mis expectativas están",
+     "quiero lo máximo posible",
+     "lo que me den está bien"
+    ],
+    "fb": "Hablar de expectativas con un rango y apertura muestra profesionalismo."
+   },
+   "t8": {
+    "type": "free",
+    "next": null,
+    "say": {
+     "base": "Para terminar, ¿tienes alguna pregunta para nosotros?",
+     "AR": "Para terminar, ¿tenés alguna pregunta para nosotros?",
+     "CO": "Para terminar, ¿tiene alguna pregunta para nosotros?"
+    },
+    "hint": [
+     "responsabilidades",
+     "me interesa",
+     "desempeño"
+    ],
+    "groups": [
+     [
+      "responsabilidad",
+      "funcion",
+      "tarea"
+     ],
+     [
+      "me interesa",
+      "me motiva",
+      "interes"
+     ],
+     [
+      "desempeno",
+      "evalua",
+      "medir",
+      "mide"
+     ]
+    ],
+    "model": "Sí: ¿cuáles serían las principales responsabilidades del cargo y cómo se mide el desempeño? Me interesa entender qué se espera en los primeros meses."
+   }
+  }
+ },
+ "endings": {
+  "alto": {
+   "title": "Te ofrecen el puesto",
+   "text": "Carolina destaca tus logros con datos: fueron la diferencia frente a los otros finalistas."
+  },
+  "medio": {
+   "title": "Te citan a una segunda entrevista",
+   "text": "Le gustó tu perfil, pero quiere conocerte mejor antes de decidir."
+  },
+  "bajo": {
+   "title": "No te vuelven a llamar",
+   "text": "Tus respuestas no mostraron logros concretos. Repite y prueba otra rama."
+  }
+ }
+}

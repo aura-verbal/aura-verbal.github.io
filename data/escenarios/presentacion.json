@@ -1,0 +1,423 @@
+{
+ "id": "presentacion",
+ "area": "Académico",
+ "name": "Presentación de proyecto",
+ "short": "una presentación de proyecto",
+ "who": "Comisión evaluadora",
+ "person": "Profesora Morales",
+ "blurb": "Expón tu proyecto y responde las preguntas de la comisión.",
+ "ficha": {
+  "situacion": "Presentas el proyecto final del semestre: un modelo para reducir los tiempos de despacho de una tienda. Tienes cinco minutos y después viene la ronda de preguntas.",
+  "enJuego": "La nota del proyecto, que vale la mitad del promedio del curso.",
+  "objetivo": "Explicar el problema, el método y los resultados con datos, y responder sin quedar en blanco.",
+  "pers": {
+   "amable": "Escucha con atención y te ayuda a ordenar las ideas si te pierdes.",
+   "neutral": "Toma notas y pregunta lo justo.",
+   "dificil": "Interrumpe, pide datos exactos y no deja pasar respuestas vagas."
+  }
+ },
+ "labels": [
+  "Coloquial",
+  "Profesional"
+ ],
+ "crit": "Se evalúa precisión del vocabulario, estructura y pocas muletillas. Formal, pero sin sonar rebuscado.",
+ "weights": {
+  "v": 0.6,
+  "m": 0.25,
+  "p": 0.15
+ },
+ "words": [
+  {
+   "col": "cosas",
+   "pro": "aspectos",
+   "alt": "puntos, elementos",
+   "why": "«Cosas» es vago; «aspectos» anuncia que hay una estructura.",
+   "ex": "Hoy les voy a presentar tres ___ clave del proyecto.",
+   "d": [
+    "cositas",
+    "menesteres"
+   ],
+   "det": [
+    "cosas"
+   ]
+  },
+  {
+   "col": "hicimos",
+   "pro": "desarrollamos",
+   "alt": "elaboramos, implementamos",
+   "why": "Describe el trabajo con el verbo que corresponde a un proyecto.",
+   "ex": "Para resolverlo, ___ un modelo de optimización en Python.",
+   "d": [
+    "armamos",
+    "perpetramos"
+   ],
+   "det": [
+    "hicimos"
+   ]
+  },
+  {
+   "col": "más o menos",
+   "pro": "aproximadamente",
+   "alt": "cerca de, alrededor de",
+   "why": "Da una cifra estimada sin sonar inseguro.",
+   "ex": "El costo de despacho baja ___ un 15%.",
+   "d": [
+    "como",
+    "a ojo de buen cubero"
+   ],
+   "det": [
+    "mas o menos"
+   ]
+  },
+  {
+   "col": "se nota que",
+   "pro": "se observa que",
+   "alt": "los datos muestran que",
+   "why": "Apoya la afirmación en la evidencia, no en una impresión.",
+   "ex": "En el gráfico ___ la demanda sube en diciembre.",
+   "d": {
+    "base": [
+     "se ve que",
+     "se ve clarito que"
+    ],
+    "CL": [
+     "se cacha que",
+     "se ve clarito que"
+    ]
+   },
+   "det": [
+    "se nota",
+    "se cacha"
+   ]
+  },
+  {
+   "col": "fallas",
+   "pro": "limitaciones",
+   "alt": "restricciones",
+   "why": "Reconoce los límites del trabajo sin descalificarlo.",
+   "ex": "Una de las ___ del modelo es que no considera la estacionalidad.",
+   "d": [
+    "errorcillos",
+    "flaquezas"
+   ],
+   "det": [
+    "fallas"
+   ]
+  },
+  {
+   "col": "mostrar",
+   "pro": "exponer",
+   "alt": "presentar",
+   "why": "Es el verbo propio de una presentación académica.",
+   "ex": "A continuación voy a ___ los resultados.",
+   "d": [
+    "enseñar",
+    "explayar"
+   ],
+   "det": []
+  },
+  {
+   "col": "por eso",
+   "pro": "por lo tanto",
+   "alt": "en consecuencia, por ende",
+   "why": "Conecta causa y efecto de forma explícita.",
+   "ex": "El costo de transporte bajó; ___, el margen aumentó.",
+   "d": {
+    "base": [
+     "y bueno, entonces",
+     "ergo"
+    ],
+    "CL": [
+     "entonces po",
+     "ergo"
+    ]
+   },
+   "det": [
+    "por eso"
+   ]
+  },
+  {
+   "col": "súper importante",
+   "pro": "fundamental",
+   "alt": "crucial, determinante",
+   "why": "Una palabra precisa pesa más que un intensificador.",
+   "ex": "Validar los datos fue ___ para el resultado.",
+   "d": {
+    "base": [
+     "súper súper importante",
+     "de suma trascendencia sideral"
+    ],
+    "CL": [
+     "importantísimo a full",
+     "de suma trascendencia sideral"
+    ]
+   },
+   "det": [
+    "super importante",
+    "muy importante"
+   ]
+  },
+  {
+   "col": "y eso sería",
+   "pro": "en síntesis",
+   "alt": "para concluir, en resumen",
+   "why": "Señala el cierre y deja la idea principal al final.",
+   "ex": "___, el proyecto reduce los tiempos de despacho en un 15%.",
+   "d": [
+    "y eso sería",
+    "a modo de colofón final"
+   ],
+   "det": [
+    "y eso seria"
+   ]
+  },
+  {
+   "col": "no sé",
+   "pro": "no cuento con ese dato",
+   "alt": "lo verifico y le respondo",
+   "why": "Admite que no sabes algo sin perder credibilidad.",
+   "ex": "Buena pregunta: ___ en este momento, pero lo verifico.",
+   "d": [
+    "ni idea",
+    "lo desconozco absolutamente"
+   ],
+   "det": [
+    "ni idea"
+   ]
+  }
+ ],
+ "sim": {
+  "start": "t1",
+  "nodes": {
+   "t1": {
+    "type": "choice",
+    "say": "Adelante, tiene cinco minutos. ¿De qué trata su proyecto?",
+    "opts": [
+     {
+      "t": "Hoy les presentaré los tres aspectos clave de nuestro proyecto: el problema, el modelo que desarrollamos y los resultados.",
+      "s": 1,
+      "fb": "Estructura clara y vocabulario preciso: la comisión sabe qué esperar.",
+      "next": "t2a"
+     },
+     {
+      "t": {
+       "base": "Eh, bueno, hicimos un proyecto sobre unas cosas de logística, y quedó bien.",
+       "CL": "Eh, bueno, hicimos un proyecto sobre unas cosas de logística, igual quedó bueno.",
+       "MX": "Este... pues hicimos un proyecto de unas cosas de logística, y quedó bien.",
+       "CO": "Pues, hicimos un proyecto sobre unas cosas de logística, o sea, quedó bien.",
+       "AR": "Nada, che, hicimos un proyecto sobre unas cosas de logística, quedó re bien."
+      },
+      "s": 0.3,
+      "fb": "Arrancas con muletillas y palabras vagas: la comisión no sabe qué esperar.",
+      "next": "t2b"
+     },
+     {
+      "t": "Me permito exponer ante tan distinguida comisión la sinopsis de nuestra magna investigación.",
+      "s": 0.4,
+      "fb": "Exceso de formalidad: suena impostado. Hablar con propiedad no es hablar difícil.",
+      "next": "t2b"
+     }
+    ]
+   },
+   "t2a": {
+    "type": "choice",
+    "say": "Bien. ¿Por qué eligieron ese problema y no otro?",
+    "next": "t3",
+    "opts": [
+     {
+      "t": "Porque los datos de la empresa mostraban que casi un tercio de los pedidos llegaba tarde; era el problema con más impacto.",
+      "s": 1,
+      "fb": "Justificas con un dato: así se responde a una comisión."
+     },
+     {
+      "t": "Porque nos pareció interesante y el profesor nos lo sugirió.",
+      "s": 0.4,
+      "fb": "Honesto, pero no muestra criterio propio."
+     },
+     {
+      "t": "Porque era lo más fácil de hacer en el tiempo que teníamos.",
+      "s": 0.2,
+      "fb": "Le resta valor a tu propio trabajo."
+     }
+    ]
+   },
+   "t2b": {
+    "type": "choice",
+    "say": "Vamos por partes. ¿Qué problema concreto resolvieron?",
+    "next": "t3",
+    "opts": [
+     {
+      "t": "Los pedidos llegaban tarde: casi un tercio se despachaba fuera de plazo, y propusimos un modelo para reducirlo.",
+      "s": 1,
+      "fb": "Recuperaste el hilo: problema concreto y propuesta."
+     },
+     {
+      "t": {
+       "base": "Un tema de pedidos atrasados, más que nada.",
+       "CL": "Un tema de pedidos atrasados, más o menos eso."
+      },
+      "s": 0.4,
+      "fb": "Vas mejor, pero sigue faltando un dato concreto."
+     },
+     {
+      "t": "Es complejo de explicar, pero en el informe está todo.",
+      "s": 0.1,
+      "fb": "Remitir al informe en plena presentación es perder la oportunidad."
+     }
+    ]
+   },
+   "t3": {
+    "type": "fill",
+    "say": "¿Y cómo lo resolvieron?",
+    "next": "t4",
+    "tpl": "Para resolverlo, ___ un modelo de optimización en Python y lo probamos con datos reales.",
+    "opts": [
+     "desarrollamos",
+     "armamos",
+     "perpetramos"
+    ],
+    "fb": "«Desarrollamos» describe el trabajo con el verbo propio de un proyecto."
+   },
+   "t4": {
+    "type": "choice",
+    "say": "¿Cuánto mejora el indicador con su propuesta?",
+    "next": "t5",
+    "opts": [
+     {
+      "t": {
+       "base": "Como un quince por ciento, más o menos. Se nota bastante.",
+       "CL": "Como un quince por ciento, más o menos. Se nota harto.",
+       "MX": "Como un quince por ciento, más o menos. Se nota un buen.",
+       "CO": "Como un quince por ciento, más o menos. Se nota harto.",
+       "AR": "Tipo un quince por ciento, más o menos. Se nota re bien."
+      },
+      "s": 0.3,
+      "fb": "La cifra está, pero «más o menos» le resta seguridad."
+     },
+     {
+      "t": "El tiempo de despacho baja aproximadamente un 15%, como se observa en el gráfico.",
+      "s": 1,
+      "fb": "Cifra, precisión y evidencia en una sola frase."
+     },
+     {
+      "t": {
+       "base": "La mejora es muy importante; no tengo el número exacto, pero es mucha.",
+       "CL": "La mejora es súper importante; no tengo el número exacto, pero es harta.",
+       "AR": "La mejora es re importante; no tengo el número exacto, pero es un montón."
+      },
+      "s": 0.2,
+      "fb": "Sin dato concreto, la afirmación pierde fuerza."
+     }
+    ]
+   },
+   "t5": {
+    "type": "free",
+    "say": "¿Por qué eligieron ese método y no otro?",
+    "next": "t6",
+    "hint": [
+     "desarrollamos",
+     "por lo tanto",
+     "fundamental"
+    ],
+    "groups": [
+     [
+      "desarroll",
+      "elabor",
+      "implement"
+     ],
+     [
+      "por lo tanto",
+      "en consecuencia",
+      "por ende"
+     ],
+     [
+      "fundamental",
+      "crucial",
+      "determinant",
+      "relevant"
+     ]
+    ],
+    "model": "Desarrollamos un modelo de optimización porque los datos lo permitían; por lo tanto, fue fundamental validar los supuestos antes de aplicarlo."
+   },
+   "t6": {
+    "type": "fill",
+    "say": "¿Qué limitaciones tiene su modelo?",
+    "next": "t7",
+    "tpl": "Una de las ___ del modelo es que no considera la estacionalidad; por lo tanto, proponemos ampliarlo.",
+    "opts": [
+     "limitaciones",
+     "fallas",
+     "flaquezas"
+    ],
+    "fb": "«Limitaciones» reconoce el límite sin desacreditar tu trabajo."
+   },
+   "t7": {
+    "type": "choice",
+    "say": "¿Cuánto costaría implementarlo en la empresa?",
+    "next": "t8",
+    "opts": [
+     {
+      "t": "No cuento con ese dato en este momento, pero lo puedo estimar y enviárselo esta semana.",
+      "s": 1,
+      "fb": "Admites el límite y ofreces una acción: eso da credibilidad."
+     },
+     {
+      "t": {
+       "base": "Ni idea, profe, eso no lo vimos.",
+       "AR": "Ni idea, profe, eso no lo vimos, viste."
+      },
+      "s": 0.1,
+      "fb": "Quedar en blanco sin proponer nada es lo que más resta."
+     },
+     {
+      "t": "Debe ser barato, porque usa software gratis.",
+      "s": 0.4,
+      "fb": "Suena a suposición: mejor reconocer que no tienes el dato."
+     }
+    ]
+   },
+   "t8": {
+    "type": "free",
+    "say": "Muy bien. Cierre su presentación, por favor.",
+    "next": null,
+    "hint": [
+     "en síntesis",
+     "aspectos",
+     "exponer"
+    ],
+    "groups": [
+     [
+      "en sintesis",
+      "para concluir",
+      "en resumen"
+     ],
+     [
+      "aspecto",
+      "punto",
+      "element"
+     ],
+     [
+      "expus",
+      "expon",
+      "present"
+     ]
+    ],
+    "model": "En síntesis, expusimos los tres aspectos clave del proyecto: el problema, el modelo y los resultados. Muchas gracias."
+   }
+  }
+ },
+ "endings": {
+  "alto": {
+   "title": "Nota máxima",
+   "text": "La comisión destaca tu claridad y tu manejo de los datos."
+  },
+  "medio": {
+   "title": "Aprobado",
+   "text": "Buen trabajo, pero la comisión anotó respuestas que pudieron ser más precisas."
+  },
+  "bajo": {
+   "title": "Te piden repetir la presentación",
+   "text": "La comisión no logró entender el aporte del proyecto. Practica la estructura y vuelve a intentarlo."
+  }
+ }
+}

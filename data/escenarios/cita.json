@@ -1,0 +1,546 @@
+{
+ "id": "cita",
+ "area": "Social",
+ "name": "Primera cita",
+ "short": "una primera cita",
+ "who": "Tu cita",
+ "person": "Alex",
+ "blurb": "Conversa con interés y calidez en un primer encuentro.",
+ "ficha": {
+  "situacion": {
+   "base": "Hicieron match hace una semana y por fin se encuentran en un café. Es la primera vez que se ven en persona.",
+   "CL": "Hicieron match hace una semana y por fin se juntan en un café. Es la primera vez que se ven en persona."
+  },
+  "enJuego": "Que la conversación fluya y haya una segunda cita.",
+  "objetivo": "Mostrar interés genuino, hacer preguntas abiertas y hablar de ti sin monopolizar la conversación.",
+  "pers": {
+   "amable": "Conversador y de risa fácil; llena los silencios.",
+   "neutral": "Simpático, pero espera que tú también propongas temas.",
+   "dificil": "Tímido y de respuestas cortas: tienes que sacarle conversación."
+  }
+ },
+ "labels": [
+  "Seco o rebuscado",
+  "Cálido y natural"
+ ],
+ "crit": "Aquí no se premia la formalidad: se evalúa calidez, curiosidad y devolver las preguntas. Hablar como en una entrevista también resta.",
+ "weights": {
+  "v": 0.4,
+  "m": 0.3,
+  "p": 0.3
+ },
+ "words": [
+  {
+   "col": {
+    "base": "¿y qué haces?",
+    "CL": "¿y qué hací?",
+    "AR": "¿y qué hacés?"
+   },
+   "pro": {
+    "base": "cuéntame",
+    "AR": "contame"
+   },
+   "alt": "me da curiosidad saber",
+   "why": "Invita a la otra persona a explayarse; la pregunta seca suena a interrogatorio.",
+   "ex": "___ cómo empezaste a escalar.",
+   "d": {
+    "base": [
+     "dime nomás",
+     "infórmame"
+    ],
+    "AR": [
+     "decime nomás",
+     "informame"
+    ]
+   },
+   "det": []
+  },
+  {
+   "col": "ah, ya",
+   "pro": "qué interesante",
+   "alt": "no lo sabía",
+   "why": "Muestra interés genuino y abre espacio para que siga contando.",
+   "ex": "¿Trabajas en un refugio de animales? ¡___! ¿Cómo empezaste?",
+   "d": [
+    "ah, ya",
+    "fascinante en grado superlativo"
+   ],
+   "det": []
+  },
+  {
+   "col": {
+    "base": "genial",
+    "CL": "bacán",
+    "MX": "chido",
+    "AR": "copado",
+    "CO": "chévere"
+   },
+   "pro": "me encantó",
+   "alt": "me gustó mucho",
+   "why": "Esa palabra está bien, pero si todo es igual de bueno nada destaca: precisar la emoción conecta más.",
+   "ex": "___ lo que contaste de tu viaje.",
+   "d": {
+    "base": [
+     "estuvo genial y ya",
+     "me resultó sumamente satisfactorio"
+    ],
+    "CL": [
+     "estuvo bacán nomás",
+     "me resultó sumamente satisfactorio"
+    ],
+    "MX": [
+     "estuvo chido nomás",
+     "me resultó sumamente satisfactorio"
+    ],
+    "AR": [
+     "estuvo copado y ya",
+     "me resultó sumamente satisfactorio"
+    ],
+    "CO": [
+     "estuvo chévere y ya",
+     "me resultó sumamente satisfactorio"
+    ]
+   },
+   "det": []
+  },
+  {
+   "col": {
+    "base": "aburrido",
+    "CL": "fome",
+    "AR": "un embole"
+   },
+   "pro": "tranquilo",
+   "alt": "relajado",
+   "why": "Describe lo mismo sin sonar negativo.",
+   "ex": "Me gusta este lugar: es ___ y se puede conversar.",
+   "d": {
+    "base": [
+     "aburrido",
+     "desprovisto de estímulos"
+    ],
+    "CL": [
+     "fome",
+     "desprovisto de estímulos"
+    ],
+    "AR": [
+     "un embole",
+     "desprovisto de estímulos"
+    ]
+   },
+   "det": []
+  },
+  {
+   "col": "igual podríamos",
+   "pro": "me encantaría",
+   "alt": "me gustaría",
+   "why": "Expresar interés con claridad evita parecer indiferente.",
+   "ex": "___ volver a verte la próxima semana.",
+   "d": [
+    "igual podríamos",
+    "sería un placer protocolar"
+   ],
+   "det": []
+  },
+  {
+   "col": "a mí una vez...",
+   "pro": {
+    "base": "¿y cómo fue para ti?",
+    "AR": "¿y cómo fue para vos?"
+   },
+   "alt": "¿qué sentiste?",
+   "why": "Devolver la pregunta mantiene el foco en la otra persona.",
+   "ex": "Debe haber sido intenso. ___",
+   "d": [
+    "a mí me pasó algo peor",
+    "¿cuál fue su percepción?"
+   ],
+   "det": []
+  },
+  {
+   "col": "qué asco",
+   "pro": "prefiero",
+   "alt": "no es mi favorito",
+   "why": "Expresa tus gustos sin descalificar los de la otra persona.",
+   "ex": {
+    "base": "___ algo más suave, pero pruébalo tú.",
+    "AR": "___ algo más suave, pero probalo vos."
+   },
+   "d": [
+    "qué asco eso",
+    "aborrezco"
+   ],
+   "det": []
+  },
+  {
+   "col": {
+    "base": "eres buena onda",
+    "CL": "eri' buena onda",
+    "MX": "eres bien buena onda",
+    "AR": "sos re buena onda",
+    "CO": "eres buena gente"
+   },
+   "pro": {
+    "base": "la estoy pasando muy bien",
+    "CL": "lo estoy pasando muy bien"
+   },
+   "alt": "me caes muy bien",
+   "why": "Decir cómo te sientes es más cálido que etiquetar a la persona.",
+   "ex": "___ contigo; el tiempo se pasó volando.",
+   "d": {
+    "base": [
+     "eres buena onda y ya",
+     "su compañía me resulta agradable"
+    ],
+    "CL": [
+     "eri' buena onda nomás",
+     "su compañía me resulta agradable"
+    ],
+    "MX": [
+     "eres bien buena onda y ya",
+     "su compañía me resulta agradable"
+    ],
+    "AR": [
+     "sos re buena onda y ya",
+     "su compañía me resulta agradable"
+    ],
+    "CO": [
+     "eres buena gente y ya",
+     "su compañía me resulta agradable"
+    ]
+   },
+   "det": []
+  },
+  {
+   "col": {
+    "base": "ya, entendí",
+    "CL": "cacho"
+   },
+   "pro": "te entiendo",
+   "alt": "tiene sentido",
+   "why": "Valida lo que siente la otra persona; responder solo con el dato suena distante.",
+   "ex": "___; a mí también me costó cambiar de trabajo.",
+   "d": {
+    "base": [
+     "ya, entendí",
+     "comprendo cabalmente"
+    ],
+    "CL": [
+     "cacho",
+     "comprendo cabalmente"
+    ]
+   },
+   "det": []
+  },
+  {
+   "col": {
+    "base": "bueno, chao",
+    "CL": "ya, chao",
+    "AR": "bueno, chau"
+   },
+   "pro": "me encantó conocerte",
+   "alt": "gracias por esta tarde",
+   "why": "Un cierre cálido deja la puerta abierta a una segunda cita.",
+   "ex": "___. ¿Te escribo para repetirlo?",
+   "d": {
+    "base": [
+     "bueno, chao, nos vemos",
+     "agradezco su tiempo"
+    ],
+    "CL": [
+     "ya, chao, nos vimo",
+     "agradezco su tiempo"
+    ],
+    "AR": [
+     "bueno, chau, nos vemos",
+     "agradezco su tiempo"
+    ]
+   },
+   "det": []
+  }
+ ],
+ "sim": {
+  "start": "t1",
+  "nodes": {
+   "t1": {
+    "type": "choice",
+    "say": {
+     "base": "¡Hola! Perdón, llegué un poquito tarde, había mucho tráfico.",
+     "CL": "¡Hola! Perdón, llegué un poquito tarde, había un taco terrible.",
+     "MX": "¡Hola! Perdón, llegué un poquito tarde, había un tráfico horrible.",
+     "AR": "¡Hola! Perdón, llegué un poquito tarde, había un tránsito terrible.",
+     "CO": "¡Hola! Perdón, llegué un poquito tarde, había un trancón terrible."
+    },
+    "opts": [
+     {
+      "t": {
+       "base": "No te preocupes, recién llegué. ¿Cómo estuvo el viaje?",
+       "CL": "Tranqui, recién llegué. ¿Cómo estuvo el viaje?",
+       "MX": "No te preocupes, acabo de llegar. ¿Qué tal el camino?",
+       "AR": "Tranqui, recién llego. ¿Cómo estuvo el viaje?",
+       "CO": "No te preocupes, acabo de llegar. ¿Cómo estuvo el camino?"
+      },
+      "s": 1,
+      "fb": "Relajas el momento y muestras interés. En una cita, lo cálido y cercano funciona.",
+      "next": "t2a"
+     },
+     {
+      "t": "Ya.",
+      "s": 0.1,
+      "fb": "Respuesta seca: cierra la conversación.",
+      "next": "t2b"
+     },
+     {
+      "t": "No se preocupe, la puntualidad es una virtud sobrevalorada.",
+      "s": 0.3,
+      "fb": "Tono distante («usted») y frase rebuscada.",
+      "next": "t2b"
+     }
+    ]
+   },
+   "t2a": {
+    "type": "choice",
+    "next": "t3",
+    "say": {
+     "base": "Todo bien. Oye, vi en tu perfil que te gusta viajar. ¿Cuál fue tu último viaje?",
+     "AR": "Todo bien. Che, vi en tu perfil que te gusta viajar. ¿Cuál fue tu último viaje?"
+    },
+    "opts": [
+     {
+      "t": {
+       "base": "Fui a la playa con amigos hace un mes; la pasé increíble. ¿Y a ti te gusta viajar?",
+       "CL": "Fui a la playa con amigos hace un mes; lo pasé increíble. ¿Y a ti te gusta viajar?",
+       "AR": "Fui a la playa con amigos hace un mes; la pasé bárbaro. ¿Y a vos te gusta viajar?"
+      },
+      "s": 1,
+      "fb": "Compartes algo tuyo y devuelves la pregunta."
+     },
+     {
+      "t": "A la playa.",
+      "s": 0.2,
+      "fb": "Respuesta correcta, pero sin dar pie a seguir conversando."
+     },
+     {
+      "t": "Uf, fui a mil lugares: Europa, Asia, de todo. Te cuento de cada uno...",
+      "s": 0.3,
+      "fb": "Monopolizar la conversación hablando solo de ti cansa."
+     }
+    ]
+   },
+   "t2b": {
+    "type": "choice",
+    "next": "t3",
+    "say": "Eh... bueno. ¿Te gusta este lugar?",
+    "opts": [
+     {
+      "t": {
+       "base": "¡Me encanta! Es tranquilo y se puede conversar. ¿Tú venías seguido?",
+       "AR": "¡Me encanta! Es tranquilo y se puede charlar. ¿Vos venías seguido?"
+      },
+      "s": 1,
+      "fb": "Recuperaste la conversación con calidez y una pregunta."
+     },
+     {
+      "t": "Está bien.",
+      "s": 0.2,
+      "fb": "Otra respuesta corta: Alex no sabe cómo seguir."
+     },
+     {
+      "t": "No mucho, prefiero lugares más caros.",
+      "s": 0.1,
+      "fb": "Descalificar el lugar que eligió tu cita incomoda."
+     }
+    ]
+   },
+   "t3": {
+    "type": "fill",
+    "next": "t4",
+    "say": "Yo trabajo en un refugio de animales los fines de semana. Al principio me costó mucho adaptarme.",
+    "tpl": "Te entiendo, debe haber sido intenso. ___",
+    "opts": {
+     "base": [
+      "¿Y cómo fue para ti?",
+      "A mí me pasó algo peor.",
+      "¿Cuál fue su percepción?"
+     ],
+     "AR": [
+      "¿Y cómo fue para vos?",
+      "A mí me pasó algo peor.",
+      "¿Cuál fue su percepción?"
+     ]
+    },
+    "fb": "Devolver la pregunta mantiene el foco en la otra persona."
+   },
+   "t4": {
+    "type": "choice",
+    "next": "t5",
+    "say": "Bueno, ya hablé mucho de mí.",
+    "opts": [
+     {
+      "t": "¡Para nada! Me encanta escucharte. ¿Qué es lo que más te gusta del refugio?",
+      "s": 1,
+      "fb": "Validas y profundizas con una pregunta abierta."
+     },
+     {
+      "t": "Sí, un poco.",
+      "s": 0.1,
+      "fb": "Confirma su inseguridad y apaga el momento."
+     },
+     {
+      "t": "Ahora me toca a mí: yo...",
+      "s": 0.3,
+      "fb": "Está bien hablar de ti, pero no como competencia."
+     }
+    ]
+   },
+   "t5": {
+    "type": "free",
+    "next": "t6",
+    "say": {
+     "base": "¿Y tú qué haces en tu tiempo libre?",
+     "AR": "¿Y vos qué hacés en tu tiempo libre?"
+    },
+    "hint": {
+     "base": [
+      "me encanta",
+      "¿y tú? / cuéntame"
+     ],
+     "AR": [
+      "me encanta",
+      "¿y vos? / contame"
+     ]
+    },
+    "groups": [
+     [
+      "me encanta",
+      "me gusta",
+      "disfruto"
+     ],
+     [
+      "y tu",
+      "y vos",
+      "cuentame",
+      "contame",
+      "que te gusta",
+      "a ti",
+      "a vos"
+     ]
+    ],
+    "model": {
+     "base": "Me encanta salir a trotar y cocinar los domingos. ¿Y tú? Cuéntame qué te gusta hacer.",
+     "AR": "Me encanta salir a correr y cocinar los domingos. ¿Y vos? Contame qué te gusta hacer."
+    }
+   },
+   "t6": {
+    "type": "choice",
+    "next": "t7",
+    "say": "¿Pedimos algo más? Yo quiero probar el postre de limón.",
+    "opts": [
+     {
+      "t": "Qué asco, odio el limón.",
+      "s": 0.1,
+      "fb": "Descalificar sus gustos corta la conexión."
+     },
+     {
+      "t": {
+       "base": "Yo prefiero algo más dulce, pero pidámoslo y lo pruebo.",
+       "AR": "Yo prefiero algo más dulce, pero dale, pedilo y lo pruebo."
+      },
+      "s": 1,
+      "fb": "Expresas tu gusto sin descalificar el suyo, y te sumas."
+     },
+     {
+      "t": {
+       "base": "Lo que tú digas.",
+       "AR": "Lo que vos digas."
+      },
+      "s": 0.3,
+      "fb": "Ceder en todo suena a falta de opinión propia."
+     }
+    ]
+   },
+   "t7": {
+    "type": "fill",
+    "next": "t8",
+    "say": {
+     "base": "Oye, se nos pasó la hora volando.",
+     "AR": "Che, se nos pasó la hora volando."
+    },
+    "tpl": "Sí, ___ contigo; el tiempo se pasó rapidísimo.",
+    "opts": {
+     "base": [
+      "la estoy pasando muy bien",
+      "eres buena onda y ya",
+      "su compañía me resulta agradable"
+     ],
+     "CL": [
+      "lo estoy pasando muy bien",
+      "eri' buena onda nomás",
+      "su compañía me resulta agradable"
+     ],
+     "MX": [
+      "la estoy pasando muy bien",
+      "eres bien buena onda y ya",
+      "su compañía me resulta agradable"
+     ],
+     "AR": [
+      "la estoy pasando muy bien",
+      "sos re buena onda y ya",
+      "su compañía me resulta agradable"
+     ],
+     "CO": [
+      "la estoy pasando muy bien",
+      "eres buena gente y ya",
+      "su compañía me resulta agradable"
+     ]
+    },
+    "fb": "Decir cómo te sientes es más cálido que etiquetar a la persona."
+   },
+   "t8": {
+    "type": "free",
+    "next": null,
+    "say": {
+     "base": "La pasé muy bien hoy.",
+     "CL": "Lo pasé muy bien hoy."
+    },
+    "hint": [
+     "me encantó conocerte",
+     "me encantaría repetirlo"
+    ],
+    "groups": [
+     [
+      "me encanto",
+      "lo pase muy bien",
+      "la pase muy bien",
+      "lo estoy pasando",
+      "la estoy pasando",
+      "me gusto mucho"
+     ],
+     [
+      "me encantaria",
+      "me gustaria",
+      "volver a ver",
+      "repetir"
+     ]
+    ],
+    "model": {
+     "base": "Yo también, me encantó conocerte. Me encantaría repetirlo, ¿te parece la próxima semana?",
+     "AR": "Yo también, me encantó conocerte. Me encantaría repetirlo, ¿te parece la semana que viene?"
+    }
+   }
+  }
+ },
+ "endings": {
+  "alto": {
+   "title": "Segunda cita confirmada",
+   "text": "Alex propone verse de nuevo antes de que alcances a preguntar."
+  },
+  "medio": {
+   "title": "Quedan en hablar",
+   "text": "Fue una linda conversación, pero sin planes concretos."
+  },
+  "bajo": {
+   "title": "No hubo química",
+   "text": "La conversación no fluyó. Prueba devolver más preguntas y mostrar curiosidad."
+  }
+ }
+}

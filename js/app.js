@@ -226,42 +226,81 @@ function micMsg(code) {
     : "No se pudo reconocer la voz. Intenta de nuevo o escribe.";
 }
 
-/* ===================== ESCÚCHATE (grabar y reproducir) ===================== */
-const Rec = { mr: null, stream: null, chunks: [], url: null, timer: null, t0: 0, msg: "" };
+/* ===================== ESCÚCHATE (grabar y reproducir) =====================
+   En Android, pedir el micrófono "por defecto" activa el modo llamada (cancelación de eco y
+   supresión de ruido), que recorta la voz y la deja entrecortada. Para grabarse no hace falta:
+   se pide el audio sin ese procesamiento, se espera a que el dictado suelte el micrófono y se
+   pausan los sonidos de la app mientras se graba. */
+const Rec = { mr: null, stream: null, chunks: [], url: null, timer: null, t0: 0, msg: "", prep: false, stopping: false };
 function recSupported() { return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder); }
+function recMime() {
+  const c = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"];
+  try { return c.find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || ""; } catch (e) { return ""; }
+}
+function waitDictadoOff(ms) {
+  return new Promise(res => { const t0 = Date.now(); (function chk() { if (!dict || !dict.active || Date.now() - t0 > ms) res(); else setTimeout(chk, 50); })(); });
+}
 async function recStart() {
-  stopDictado(); try { speechSynthesis.cancel(); } catch (e) {}
+  if (Rec.prep || Rec.mr) return;
   if (!recSupported()) { Rec.msg = "Tu navegador no permite grabar audio."; paintRec(); return; }
-  try { Rec.stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-  catch (e) { Rec.msg = "No pudimos usar el micrófono. Revisa el permiso del navegador."; paintRec(); return; }
-  Rec.chunks = []; Rec.msg = "";
-  try { Rec.mr = new MediaRecorder(Rec.stream); } catch (e) { Rec.msg = "No se pudo iniciar la grabación."; recRelease(); paintRec(); return; }
+  Rec.prep = true; Rec.msg = ""; paintRec();
+  stopDictado(); try { speechSynthesis.cancel(); } catch (e) {}
+  await waitDictadoOff(800);
+  await new Promise(r => setTimeout(r, 250));   // el reconocedor de Android tarda un poco en soltar el micrófono
+  try { if (actx && actx.state === "running") await actx.suspend(); } catch (e) {}
+  const raw = { echoCancellation: false, noiseSuppression: false, autoGainControl: true, channelCount: 1 };
+  try { Rec.stream = await navigator.mediaDevices.getUserMedia({ audio: raw }); }
+  catch (e) {
+    try { Rec.stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch (e2) { Rec.prep = false; Rec.msg = "No pudimos usar el micrófono. Revisa el permiso del navegador."; recRelease(); paintRec(); return; }
+  }
+  Rec.chunks = [];
+  const mime = recMime(), o = { audioBitsPerSecond: 96000 }; if (mime) o.mimeType = mime;
+  try { Rec.mr = new MediaRecorder(Rec.stream, o); }
+  catch (e) { try { Rec.mr = new MediaRecorder(Rec.stream); } catch (e2) { Rec.prep = false; Rec.msg = "No se pudo iniciar la grabación."; recRelease(); paintRec(); return; } }
   Rec.mr.ondataavailable = e => { if (e.data && e.data.size) Rec.chunks.push(e.data); };
+  Rec.mr.onstart = () => { Rec.prep = false; Rec.t0 = Date.now(); paintRec(); };
   Rec.mr.onstop = () => {
-    const type = (Rec.mr && Rec.mr.mimeType) || "audio/webm";
+    const type = (Rec.mr && Rec.mr.mimeType) || mime || "audio/webm";
     if (Rec.url) URL.revokeObjectURL(Rec.url);
     Rec.url = Rec.chunks.length ? URL.createObjectURL(new Blob(Rec.chunks, { type })) : null;
+    if (!Rec.url) Rec.msg = "No se grabó audio. Intenta de nuevo, más cerca del micrófono.";
     recRelease(); paintRec();
   };
-  Rec.mr.start(); Rec.t0 = Date.now();
+  Rec.mr.start(500);   // entrega el audio en trozos de medio segundo: si algo falla, no se pierde todo
   Rec.timer = setInterval(() => {
+    if (!Rec.t0) return;
     const s = (Date.now() - Rec.t0) / 1000, el = document.getElementById("recTime");
     if (el) el.textContent = fmtSec(s);
     if (s >= 45) recStop();
   }, 250);
-  paintRec();
 }
-function recStop() { if (Rec.mr && Rec.mr.state !== "inactive") Rec.mr.stop(); }
-function recRelease() { clearInterval(Rec.timer); Rec.timer = null; if (Rec.stream) Rec.stream.getTracks().forEach(t => t.stop()); Rec.stream = null; Rec.mr = null; }
-function recReset() { recStop(); recRelease(); if (Rec.url) URL.revokeObjectURL(Rec.url); Rec.url = null; Rec.msg = ""; }
+/* Al tocar «Detener» se graba medio segundo más para no cortar la última palabra. */
+function recStop(now) {
+  if (!Rec.mr || Rec.mr.state === "inactive" || Rec.stopping) return;
+  const mr = Rec.mr;
+  const fin = () => { Rec.stopping = false; try { if (mr.state !== "inactive") mr.stop(); } catch (e) {} };
+  if (now) { fin(); return; }
+  Rec.stopping = true; paintRec(); setTimeout(fin, 500);
+}
+function recRelease() {
+  clearInterval(Rec.timer); Rec.timer = null;
+  if (Rec.stream) Rec.stream.getTracks().forEach(t => t.stop());
+  Rec.stream = null; Rec.mr = null; Rec.prep = false; Rec.stopping = false; Rec.t0 = 0;
+  try { if (actx && actx.state === "suspended") actx.resume(); } catch (e) {}
+}
+function recReset() { if (Rec.mr) { Rec.mr.onstop = null; recStop(true); } recRelease(); if (Rec.url) URL.revokeObjectURL(Rec.url); Rec.url = null; Rec.msg = ""; }
 function escuchateHTML() {
-  const live = !!Rec.mr;
+  const live = !!Rec.mr || Rec.prep;
   return `<p class="hint"><b>Escúchate:</b> di la respuesta modelo en voz alta, grábate y compárate.</p>
-    <div class="row">${live
-      ? `<button class="btn" data-act="recStop">${ICON_STOP} Detener <span class="rec-dot" aria-hidden="true"></span> <span class="mono" id="recTime">0:00</span></button>`
+    <div class="row">${live && !Rec.t0
+      ? `<button class="btn" disabled>${ICON_MIC} Preparando micrófono...</button>`
+      : live
+      ? `<button class="btn" data-act="recStop" ${Rec.stopping ? "disabled" : ""}>${ICON_STOP} ${Rec.stopping ? "Guardando..." : "Detener"} <span class="rec-dot" aria-hidden="true"></span> <span class="mono" id="recTime">${fmtSec((Date.now() - (Rec.t0 || Date.now())) / 1000)}</span></button>`
       : `<button class="btn" data-act="recStart">${ICON_MIC} ${Rec.url ? "Grabar de nuevo" : "Grabarme"}</button>`}
       <button class="btn ghost" data-act="speakModel">${ICON_SPEAK} Escuchar modelo</button></div>
     ${Rec.url && !live ? `<audio controls src="${Rec.url}"></audio>` : ""}
+    ${live && Rec.t0 ? `<p class="note">Grabando. Habla a unos 20 cm del celular.</p>` : ""}
     ${Rec.msg ? `<p class="note">${esc(Rec.msg)}</p>` : ""}`;
 }
 function paintRec() { const el = document.getElementById("escuchate"); if (el) el.innerHTML = escuchateHTML(); }
@@ -945,7 +984,7 @@ async function openScen(id, anim) {
 function onAct(e) {
   const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
   const a = el.dataset.act;
-  if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle"].includes(a)) tick();
+  if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle", "recStart", "recStop"].includes(a)) tick();
   switch (a) {
     case "tab": setTab(el.dataset.tab); break;
     case "brand": if (progress.profile && !S.obPrueba) setTab("inicio"); break;

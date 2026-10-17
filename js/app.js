@@ -19,11 +19,12 @@ const PERS = [["amable", "Amable"], ["neutral", "Neutral"], ["dificil", "Difíci
 const FIN_NAME = { alto: "Mejor final", medio: "Final intermedio", bajo: "Final difícil" };
 const CAPA_TXT = { completa: "Modismos locales", borrador: "Modismos en borrador", neutra: "Español neutro" };
 const PRUEBA_SEG = 60;
+const RETO_VOCAB = 4;   // reto diario: 4 preguntas de vocabulario + 1 de «caza la muletilla»
 
 /* ===================== ESTADO Y PERSISTENCIA ===================== */
 function freshProgress(keep) {
   return {
-    words: {}, sims: {}, history: [], days: [], baselines: [], pers: {}, dismiss: {},
+    words: {}, sims: {}, history: [], days: [], baselines: [], pers: {}, dismiss: {}, retos: {},
     profile: (keep && keep.profile) || null, pais: (keep && keep.pais) || null,
     settings: Object.assign({}, DEFAULT_SETTINGS, (keep && keep.settings) || {})
   };
@@ -33,7 +34,7 @@ function load() {
   const p = freshProgress();
   if (raw && typeof raw === "object") Object.assign(p, raw);
   p.settings = Object.assign({}, DEFAULT_SETTINGS, p.settings || {});
-  ["words", "sims", "pers", "dismiss"].forEach(k => { if (!p[k] || typeof p[k] !== "object" || Array.isArray(p[k])) p[k] = {}; });
+  ["words", "sims", "pers", "dismiss", "retos"].forEach(k => { if (!p[k] || typeof p[k] !== "object" || Array.isArray(p[k])) p[k] = {}; });
   ["history", "days", "baselines"].forEach(k => { if (!Array.isArray(p[k])) p[k] = []; });
   try { if (localStorage.getItem("aura.sound") === "off") { p.settings.sound = false; localStorage.removeItem("aura.sound"); } } catch (e) {}
   return p;
@@ -62,6 +63,11 @@ function streak() {
   if (!set.has(dayKey(d))) d.setDate(d.getDate() - 1);
   while (set.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
   return n;
+}
+function bestStreak() {
+  const ds = Array.from(new Set(progress.days)).sort(); let best = 0, run = 0;
+  ds.forEach((d, i) => { run = i && daysBetween(ds[i - 1], d) === 1 ? run + 1 : 1; best = Math.max(best, run); });
+  return best;
 }
 function levelOf(g) { let cur = LEVELS[0], next = null; LEVELS.forEach((l, i) => { if (g >= l[0]) { cur = l; next = LEVELS[i + 1] || null; } }); return { name: cur[1], next }; }
 async function getJSON(url) { const r = await fetch(url, { cache: "no-cache" }); if (!r.ok) throw new Error(url + " " + r.status); return r.json(); }
@@ -112,8 +118,16 @@ const S_ICONS = {
   presentacion: `<svg ${SVG_ATTR}><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20l4-4 4 4"/><path d="M7 12l3-3 2 2 4-4"/></svg>`,
   entrevista: `<svg ${SVG_ATTR}><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg>`,
   venta: `<svg ${SVG_ATTR}><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>`,
-  cita: `<svg ${SVG_ATTR}><path d="M4 10h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-5z"/><path d="M16 12h2a2 2 0 0 1 0 4h-2"/><path d="M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4"/></svg>`
+  cita: `<svg ${SVG_ATTR}><path d="M4 10h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-5z"/><path d="M16 12h2a2 2 0 0 1 0 4h-2"/><path d="M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4"/></svg>`,
+  disertacion: `<svg ${SVG_ATTR}><circle cx="12" cy="4.5" r="1.8"/><path d="M12 6.5V9"/><path d="M6 9h12l-1.5 8h-9L6 9z"/><path d="M12 17v4M8 21h8"/></svg>`,
+  practica: `<svg ${SVG_ATTR}><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/><path d="M22 9v6"/></svg>`,
+  primerdia: `<svg ${SVG_ATTR}><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M10 3v2h4V3"/><circle cx="12" cy="11" r="2.8"/><path d="M7.5 18c1-2.2 8-2.2 9 0"/></svg>`,
+  devolucion: `<svg ${SVG_ATTR}><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>`,
+  networking: `<svg ${SVG_ATTR}><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M14.5 15c.8-.6 1.6-1 2.5-1 2.8 0 5 2.2 5 5"/></svg>`,
+  callcenter: `<svg ${SVG_ATTR}><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/><path d="M19 20c0 1.1-1.8 2-4 2h-2"/></svg>`
 };
+const ICON_BOLT = `<svg ${SVG_ATTR}><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>`;
+const ICON_CHECK = `<svg ${SVG_ATTR}><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>`;
 const AREA_ICONS = {
   "Académico": S_ICONS.presentacion, "Laboral": S_ICONS.entrevista, "Ventas": S_ICONS.venta, "Social": S_ICONS.cita,
   "Cotidiano": `<svg ${SVG_ATTR}><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>`
@@ -307,6 +321,7 @@ function render() {
   if (onb) html = vOnboarding();
   else if (S.sub === "prueba") html = vPrueba(false);
   else if (S.sub === "pais") html = vPais(false);
+  else if (S.sub === "reto") html = vReto();
   else if (S.tab === "inicio") html = vInicio();
   else if (S.tab === "progreso") html = vProgreso();
   else if (S.tab === "ajustes") html = vAjustes();
@@ -452,6 +467,101 @@ function prFinish(d) {
   S.pr = { phase: "done", text, res: r }; chime(); render();
 }
 
+/* ===================== RETO DIARIO ===================== */
+/* 5 preguntas al día: 4 de vocabulario (primero las palabras a medio dominar, luego las nuevas,
+   máximo una por escenario) y 1 de «caza la muletilla» de tu país. Las preguntas dependen de la fecha
+   y del país, así que el reto del día es el mismo aunque cierres y vuelvas a abrir la app. */
+function hashStr(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return function () { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function sShuffle(a, r) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function retoHoy() { return progress.retos[today()] || null; }
+function retosCount() { return Object.keys(progress.retos).length; }
+function frasesCazar() { const c = DATA.paises.cazar || {}; return c[paisId()] || c.base || []; }
+async function startReto() {
+  S.reto = { loading: true }; go({ sub: "reto" }, "right");
+  try { await Promise.all(listReady().map(x => ensureScen(x.id))); }
+  catch (e) { S.reto = { error: true }; render(); return; }
+  const r = rng(hashStr(today() + "|" + paisId()));
+  const all = []; listReady().forEach(x => { const s = scenData(x.id); s.words.forEach(w => all.push({ w, s })); });
+  const lvl = it => progress.words[it.w.id] || 0;
+  const pri = it => { const l = lvl(it); return l === 1 || l === 2 ? 0 : l === 0 ? 1 : 2; };
+  const pool = sShuffle(all, r).sort((a, b) => pri(a) - pri(b));
+  const picks = [], used = new Set();
+  for (const it of pool) { if (picks.length >= RETO_VOCAB) break; if (!used.has(it.s.id)) { used.add(it.s.id); picks.push(it); } }
+  for (const it of pool) { if (picks.length >= RETO_VOCAB) break; if (!picks.includes(it)) picks.push(it); }
+  const qs = picks.map((it, i) => ({ kind: i % 2 === 0 ? "context" : "fill", w: it.w, s: it.s, opts: sShuffle([it.w.pro].concat(it.w.d), r) }));
+  const fr = frasesCazar();
+  if (fr.length) { const f = fr[Math.floor(r() * fr.length)]; qs.splice(1 + Math.floor(r() * qs.length), 0, { kind: "mul", f, opts: sShuffle([f.m].concat(f.o), r) }); }
+  S.reto = { qs, i: 0, answered: null, correct: 0 };
+  if (S.sub === "reto") { S.anim = "right"; render(); }
+}
+function weekStrip() {
+  const L = ["D", "L", "M", "M", "J", "V", "S"], d = new Date(); d.setDate(d.getDate() - 6); let out = "";
+  for (let i = 0; i < 7; i++) {
+    const k = dayKey(d), r = progress.retos[k], t = k === today(), pr = !r && progress.days.includes(k);
+    out += `<span class="wd${r ? " on" : pr ? " prac" : ""}${t ? " today" : ""}"><i>${r ? "✓" : pr ? "•" : ""}</i><small>${t ? "Hoy" : L[d.getDay()]}</small></span>`;
+    d.setDate(d.getDate() + 1);
+  }
+  const n = Object.keys(progress.retos).filter(k => daysBetween(k, today()) < 7).length;
+  return `<div class="week" role="img" aria-label="Retos de los últimos 7 días: ${n} de 7">${out}</div>`;
+}
+function retoCard() {
+  const rh = retoHoy();
+  if (rh) return `<div class="card reto done"><span class="card-head"><span class="s-icon">${ICON_CHECK}</span><span><h3>Reto de hoy completado</h3><span class="meta">${rh.ok} de ${rh.n} correctas. Vuelve mañana por uno nuevo.</span></span></span>${weekStrip()}</div>`;
+  return `<button class="card reto" data-act="retoStart"><span class="tag">Reto diario · ${RETO_VOCAB + 1} preguntas</span>
+    <span class="card-head"><span class="s-icon">${ICON_BOLT}</span><span><h3>Tu reto de hoy</h3><span class="meta">Repasa palabras que aún no dominas y caza una muletilla. Menos de 5 minutos.</span></span></span>
+    ${weekStrip()}<span class="cta">${streak() > 0 ? "Mantén tu racha" : "Empezar"} →</span></button>`;
+}
+function vReto() {
+  const R = S.reto, head = `<button class="back" data-act="subBack">← Inicio</button>`;
+  if (!R || R.loading) return vLoading();
+  if (R.error) return `<section class="section">${head}<p class="fb no">No se pudo preparar el reto. Revisa tu conexión e intenta de nuevo.</p></section>`;
+  const n = R.qs.length;
+  if (R.done) {
+    const ok = R.correct, st = streak();
+    const msg = ok === n ? "Perfecto. Así se entrena." : ok >= n - 1 ? "Muy bien, casi perfecto." : "Las palabras que fallaste volverán a aparecer en los próximos retos: así se aprenden.";
+    return `<section class="section">${head}
+      <div class="panel"><span class="eyebrow">Reto de hoy</span><h2><span class="mono">${ok}/${n}</span> correctas</h2><p class="lead">${msg}</p>
+        <div class="kpis two"><div class="kpi"><b>${st}</b><span>${st === 1 ? "día seguido" : "días seguidos"}</span></div><div class="kpi"><b>${retosCount()}</b><span>${retosCount() === 1 ? "reto completado" : "retos completados"}</span></div></div>
+        ${weekStrip()}</div>
+      <div class="row"><button class="btn primary" data-act="tab" data-tab="inicio">Volver al inicio</button><button class="btn" data-act="tab" data-tab="practica">Ir a los escenarios</button></div></section>`;
+  }
+  const q = R.qs[R.i], answered = R.answered !== null;
+  const right = q.kind === "mul" ? q.f.m : q.w.pro;
+  const start = q.kind === "fill" && atSentenceStart(q.w.ex);
+  const optsHTML = q.opts.map((o, k) => {
+    let cls = "opt"; if (answered) { if (o === right) cls += " ok"; else if (k === R.answered) cls += " no"; }
+    return `<button class="${cls}" data-act="rAnswer" data-k="${k}" ${answered ? "disabled" : ""}>${esc(start ? cap(o) : o)}</button>`; }).join("");
+  let tag, prompt, fb = "";
+  if (q.kind === "mul") {
+    tag = "Caza la muletilla";
+    prompt = `<p class="hint">¿Qué palabra sobra en esta frase?</p><h3 class="frase">«${esc(q.f.t)}»</h3>`;
+  } else if (q.kind === "context") {
+    tag = "Sube el registro";
+    prompt = `<p class="hint">En ${esc(q.s.short)}, ¿qué usarías en lugar de…</p><h2>«${esc(q.w.col)}»</h2>`;
+  } else {
+    tag = "Completa la frase";
+    prompt = `<p class="hint">${esc(q.s.name)} · completa la frase:</p><h3 class="frase">${fillHTML(q.w.ex, answered ? (start ? cap(q.w.pro) : q.w.pro) : null)}</h3>`;
+  }
+  if (answered) {
+    const ok = q.opts[R.answered] === right;
+    const body = q.kind === "mul"
+      ? `<b>${ok ? "Exacto." : "Era «" + esc(q.f.m) + "»."}</b> «${esc(q.f.m)}» es una muletilla: no aporta información. En su lugar, haz una pausa breve; se escucha más seguro.`
+      : `<b>${ok ? "Correcto." : "Mejor: «" + esc(q.w.pro) + "»."}</b> ${esc(q.w.why)} <span class="muted">Escenario: ${esc(q.s.name)}.</span>`;
+    fb = `<div class="fb ${ok ? "ok" : "no"}">${body}</div>
+      <div class="row"><button class="btn primary" data-act="rNext">${R.i < n - 1 ? "Siguiente" : "Ver resultado"}</button></div>`;
+  }
+  return `<section class="section">${head}
+    <div><p class="eyebrow">Reto diario</p><h2>5 minutos para sonar mejor</h2></div>
+    <div class="panel">
+      <div class="qmeta"><span class="tag">${tag}</span><span class="mono muted">${R.i + 1} / ${n}</span></div>
+      <div class="dotsprog">${R.qs.map((x, k) => `<i class="${k < R.i || (k === R.i && answered) ? "done" : ""}"></i>`).join("")}</div>
+      ${prompt}
+      <div class="opts">${optsHTML}</div>
+      ${fb}
+    </div></section>`;
+}
+
 /* ===================== VISTA: INICIO ===================== */
 function vInicio() {
   const p = progress.profile, g = gProg(), lv = levelOf(g), r = recommend(), rp = sProg(r.id), pa = paisObj();
@@ -471,6 +581,7 @@ function vInicio() {
         <div class="kpi"><b>${masteredCount()}/${totalWords()}</b><span>palabras dominadas</span></div>
         <div class="kpi"><b>${g}%</b><span>progreso total</span></div>
       </div>
+      ${retoCard()}
       <button class="card feature" data-act="open" data-id="${r.id}">
         <span class="tag">${r.id === p.goal ? "Tu objetivo" : "Recomendado"}</span>
         <span class="card-head"><span class="s-icon">${iconFor(r.id, r.area)}</span><span><h3>${esc(tx(r.name))}</h3><span class="meta">${esc(tx(r.blurb))}</span></span></span>
@@ -772,8 +883,11 @@ function vProgreso() {
         <div class="kpi"><b>${masteredCount()}/${totalWords()}</b><span>palabras dominadas</span></div>
         <div class="kpi"><b>${sims}</b><span>simulaciones completadas</span></div>
         <div class="kpi"><b>${streak()}</b><span>${streak() === 1 ? "día seguido practicando" : "días seguidos practicando"}</span></div>
+        <div class="kpi"><b>${bestStreak()}</b><span>tu mejor racha (días)</span></div>
+        <div class="kpi"><b>${retosCount()}</b><span>retos diarios completados</span></div>
         <div class="kpi"><b>${p ? p.confStart + " → " + p.confNow : "—"}</b><span>confianza (1 a 5): inicio → hoy</span></div>
       </div>
+      <div class="panel"><div><h3>Tu semana</h3><p class="note">✓ reto diario completado · • practicaste sin hacer el reto. Cualquier práctica mantiene tu racha.</p></div>${weekStrip()}</div>
       ${baselineCard()}
       <div class="panel"><div><h3>Últimas simulaciones</h3><p class="note">Puntaje de cada intento (0 a 100).</p></div>${scoresChart()}</div>
       <div class="panel"><h3>Por escenario</h3>${rows}</div>
@@ -831,7 +945,7 @@ async function openScen(id, anim) {
 function onAct(e) {
   const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
   const a = el.dataset.act;
-  if (!["pAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle"].includes(a)) tick();
+  if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle"].includes(a)) tick();
   switch (a) {
     case "tab": setTab(el.dataset.tab); break;
     case "brand": if (progress.profile && !S.obPrueba) setTab("inicio"); break;
@@ -843,7 +957,7 @@ function onAct(e) {
       else { setPais(id); S.paisAuto = false; progress.dismiss.paisBanner = true; save(); S.toast = "País cambiado a " + paisObj().nombre + "."; go({ sub: null }, "left"); }
       break; }
     case "paisOpen": leaveSim(); go({ sub: "pais" }, "right"); break;
-    case "subBack": stopPrueba(); S.pr = null; go({ sub: null }, "left"); break;
+    case "subBack": stopPrueba(); S.pr = null; S.reto = null; go({ sub: null }, "left"); break;
     case "dismissPais": progress.dismiss.paisBanner = true; save(); render(); break;
     case "prOpen": leaveSim(); S.pr = null; go({ sub: "prueba" }, "right"); break;
     case "prToggle": if (S.pr && S.pr.phase === "rec") prStop(); else prStart(); break;
@@ -857,6 +971,21 @@ function onAct(e) {
       const wasOb = S.obPrueba; S.obPrueba = false; S.ob = null; S.pr = null;
       go(wasOb ? { tab: "inicio", sub: null } : { sub: null }, "up");
       break; }
+    case "retoStart": leaveSim(); startReto(); break;
+    case "rAnswer": {
+      const R = S.reto; if (!R || R.answered !== null) break;
+      const q = R.qs[R.i], k = +el.dataset.k; R.answered = k;
+      const ok = q.opts[k] === (q.kind === "mul" ? q.f.m : q.w.pro);
+      if (q.w) { const cur = progress.words[q.w.id] || 0; progress.words[q.w.id] = ok ? Math.min(3, cur + 1) : Math.max(0, cur - 1); }
+      if (ok) { R.correct++; chime(); } else softMiss();
+      markDay(); save(); render(); break; }
+    case "rNext": {
+      const R = S.reto;
+      if (R.i < R.qs.length - 1) { R.i++; R.answered = null; S.anim = "right"; render(); break; }
+      R.done = true; progress.retos[today()] = { ok: R.correct, n: R.qs.length };
+      const ks = Object.keys(progress.retos).sort(); if (ks.length > 400) ks.slice(0, ks.length - 400).forEach(k => delete progress.retos[k]);
+      save(); if (R.correct >= R.qs.length - 1) fanfare(); else chime();
+      S.anim = "up"; render(); break; }
     case "area": S.area = el.dataset.area; render(); break;
     case "list": leaveSim(); go({ tab: "practica", view: "list" }, "left"); break;
     case "open": { const back = ["practice", "sim", "results"].includes(S.view) && S.tab === "practica"; openScen(el.dataset.id || S.sid, back ? "left" : "right"); break; }

@@ -2,7 +2,7 @@
 
 El contenido de `data/` se genera con estos scripts. Para editar un escenario o un país:
 
-1. Cambia el texto en `contenido_escenarios.py` o `contenido_paises.py`.
+1. Cambia el texto en `contenido_escenarios.py`, `escenarios_nuevos.py` o `contenido_paises.py`.
 2. Regenera los archivos:
    ```
    python3 herramientas/contenido_paises.py data

@@ -1,0 +1,474 @@
+{
+ "id": "disertacion",
+ "area": "Académico",
+ "name": {
+  "base": "Disertación en clases",
+  "MX": "Exposición en clase",
+  "AR": "Exposición oral en clase",
+  "CO": "Exposición en clase"
+ },
+ "short": {
+  "base": "una disertación",
+  "MX": "una exposición",
+  "AR": "una exposición oral",
+  "CO": "una exposición"
+ },
+ "who": "Curso y profesor",
+ "person": "Profesor Fuentes",
+ "blurb": "Expón un tema ante tu curso, mantén su atención y responde sus preguntas.",
+ "ficha": {
+  "situacion": {
+   "base": "Te toca exponer diez minutos sobre la moda rápida y su impacto ambiental en la asignatura de Sustentabilidad. Son cuarenta compañeros y es la última clase antes del almuerzo.",
+   "CL": "Te toca disertar diez minutos sobre la moda rápida y su impacto ambiental en el ramo de Sustentabilidad. Son cuarenta compañeros y es la última clase antes del almuerzo.",
+   "MX": "Te toca exponer diez minutos sobre la moda rápida y su impacto ambiental en la materia de Sustentabilidad. Son cuarenta compañeros y es la última clase antes de la comida.",
+   "AR": "Te toca exponer diez minutos sobre la moda rápida y su impacto ambiental en la materia Sustentabilidad. Son cuarenta compañeros y es la última clase antes del almuerzo.",
+   "CO": "Te toca exponer diez minutos sobre la moda rápida y su impacto ambiental en la materia de Sostenibilidad. Son cuarenta compañeros y es la última clase antes del almuerzo."
+  },
+  "enJuego": {
+   "base": "El 30% de la nota de la asignatura y que el curso no se desconecte a mitad de la exposición.",
+   "CL": "El 30% de la nota del ramo y que el curso no se desconecte a mitad de la disertación.",
+   "MX": "El 30% de la calificación de la materia y que el grupo no se desconecte a mitad de la exposición.",
+   "AR": "El 30% de la nota de la materia y que el curso no se desconecte a mitad de la exposición.",
+   "CO": "El 30% de la nota de la materia y que el curso no se desconecte a mitad de la exposición."
+  },
+  "objetivo": "Captar la atención desde la primera frase, ordenar las ideas en un hilo claro y responder la pregunta de un compañero con seguridad.",
+  "pers": {
+   "amable": "El profesor asiente y el curso participa; si te trabas, te dan tiempo.",
+   "neutral": "El curso escucha, pero se distrae si la exposición se pone plana.",
+   "dificil": "Hay murmullos al fondo y el profesor te corta si te pasas del tiempo."
+  }
+ },
+ "labels": [
+  "Coloquial",
+  "Claro y atractivo"
+ ],
+ "crit": "Se evalúa captar la atención, conectar las ideas y hablar con claridad ante tus pares: preciso, pero sin sonar a informe leído.",
+ "weights": {
+  "v": 0.5,
+  "m": 0.3,
+  "p": 0.2
+ },
+ "words": [
+  {
+   "col": "bueno, empiezo",
+   "pro": "¿sabían que",
+   "alt": "imaginen que, partamos con un dato",
+   "why": "Abrir con una pregunta o un dato capta la atención; anunciar que empiezas, no.",
+   "ex": "___ hoy usamos cada prenda muchas menos veces que hace quince años?",
+   "d": {
+    "base": [
+     "bueno, el tema es que",
+     "cabe consignar que"
+    ],
+    "CL": [
+     "ya, el tema es que",
+     "cabe consignar que"
+    ],
+    "MX": [
+     "bueno, este, el tema es que",
+     "cabe consignar que"
+    ]
+   },
+   "det": [
+    "bueno empiezo",
+    "voy a empezar"
+   ]
+  },
+  {
+   "col": "lo que pasa es que",
+   "pro": "el problema central es",
+   "alt": "lo que está en juego es",
+   "why": "Nombra el problema de forma directa en vez de rodearlo.",
+   "ex": "___ que producimos más ropa de la que somos capaces de usar.",
+   "d": [
+    "la cosa es",
+    "la problemática problematizante es"
+   ],
+   "det": [
+    "lo que pasa es que",
+    "la cosa es"
+   ]
+  },
+  {
+   "col": "un montón",
+   "pro": "una cantidad considerable",
+   "alt": "gran parte, un volumen enorme",
+   "why": "Dimensiona sin exagerar ni sonar impreciso.",
+   "ex": "Se desecha ___ de ropa que todavía se podría usar.",
+   "d": {
+    "base": [
+     "un montonazo",
+     "una cantidad ingente e inconmensurable"
+    ],
+    "CL": [
+     "una cachá",
+     "una cantidad ingente e inconmensurable"
+    ],
+    "MX": [
+     "un chorro",
+     "una cantidad ingente e inconmensurable"
+    ],
+    "AR": [
+     "una banda",
+     "una cantidad ingente e inconmensurable"
+    ],
+    "CO": [
+     "un jurgo",
+     "una cantidad ingente e inconmensurable"
+    ]
+   },
+   "det": [
+    "monton",
+    "una cacha",
+    "un chorro",
+    "una banda de",
+    "jurgo"
+   ]
+  },
+  {
+   "col": "y también",
+   "pro": "además",
+   "alt": "a esto se suma",
+   "why": "Encadena las ideas sin repetir siempre el mismo conector.",
+   "ex": "___, gran parte de esa ropa termina en vertederos.",
+   "d": [
+    "y también igual",
+    "amén de lo anteriormente expuesto"
+   ],
+   "det": []
+  },
+  {
+   "col": "o sea",
+   "pro": "es decir",
+   "alt": "dicho de otro modo",
+   "why": "Reformula para aclarar; «o sea» suele quedar como muletilla.",
+   "ex": "Las prendas duran menos; ___, compramos más seguido.",
+   "d": [
+    "o sea",
+    "id est"
+   ],
+   "det": []
+  },
+  {
+   "col": "fíjense en esto",
+   "pro": "como muestra el gráfico",
+   "alt": "estos datos indican",
+   "why": "Ancla la idea en la evidencia que todos están viendo.",
+   "ex": "___, la producción mundial de ropa casi se duplicó en quince años.",
+   "d": {
+    "base": [
+     "miren esta cuestión",
+     "obsérvese con detenimiento"
+    ],
+    "AR": [
+     "miren esto, che",
+     "obsérvese con detenimiento"
+    ]
+   },
+   "det": [
+    "fijense",
+    "miren esto"
+   ]
+  },
+  {
+   "col": "es malo",
+   "pro": "tiene un impacto negativo",
+   "alt": "perjudica, afecta",
+   "why": "Precisa en qué sentido algo es dañino.",
+   "ex": "Este modelo de consumo ___ en el medioambiente.",
+   "d": [
+    "es malo",
+    "resulta nefasto a nivel cósmico"
+   ],
+   "det": [
+    "es malo",
+    "es mala"
+   ]
+  },
+  {
+   "col": "por ejemplo, eh...",
+   "pro": "un caso concreto es",
+   "alt": "pensemos en",
+   "why": "Anuncia el ejemplo con seguridad, sin rellenar el silencio.",
+   "ex": "___ el desierto de Atacama, donde se acumulan toneladas de ropa usada.",
+   "d": [
+    "por ejemplo, eh",
+    "verbigracia"
+   ],
+   "det": []
+  },
+  {
+   "col": "no sé si se entendió",
+   "pro": {
+    "base": "¿alguna pregunta hasta aquí?",
+    "AR": "¿alguna pregunta hasta acá?"
+   },
+   "alt": "¿se entiende la idea?",
+   "why": "Invita a participar con seguridad en vez de dudar de tu propia explicación.",
+   "ex": "Eso es lo central del problema. ___",
+   "d": [
+    "no sé si se entendió...",
+    "¿existe alguna interrogante al respecto?"
+   ],
+   "det": [
+    "no se si se entendio"
+   ]
+  },
+  {
+   "col": "eso, gracias",
+   "pro": "para cerrar",
+   "alt": "como conclusión, en resumen",
+   "why": "Un cierre anunciado deja la idea principal en la memoria del curso.",
+   "ex": "___, la próxima vez que compren ropa, pregúntense cuántas veces la van a usar.",
+   "d": [
+    "eso, gracias",
+    "a guisa de epílogo"
+   ],
+   "det": [
+    "eso gracias"
+   ]
+  }
+ ],
+ "sim": {
+  "start": "t1",
+  "nodes": {
+   "t1": {
+    "type": "choice",
+    "say": {
+     "base": "Muy bien, silencio por favor. Adelante con su exposición.",
+     "CL": "Muy bien, silencio por favor. Adelante con su disertación."
+    },
+    "opts": [
+     {
+      "t": "Bueno, empiezo. Mi tema es la moda rápida, que es un tema importante.",
+      "s": 0.3,
+      "fb": "Anunciar que empiezas y repetir «tema» no engancha a nadie.",
+      "next": "t2b"
+     },
+     {
+      "t": "¿Sabían que hoy usamos cada prenda muchas menos veces que hace quince años? Ese es el corazón de la moda rápida, y de eso les vengo a hablar.",
+      "s": 1,
+      "fb": "Abres con un dato que genera curiosidad y anuncias el tema: el curso levanta la vista.",
+      "next": "t2a"
+     },
+     {
+      "t": {
+       "base": "Eh... ya, voy a leer lo que tengo en la diapositiva.",
+       "CL": "Eh... ya, voy a leer lo que tengo en la diapo.",
+       "MX": "Este... va, voy a leer lo que tengo en la diapositiva.",
+       "AR": "Nada, voy a leer lo que tengo en la filmina."
+      },
+      "s": 0.1,
+      "fb": "Leer la diapositiva es la forma más rápida de perder a tu público.",
+      "next": "t2b"
+     }
+    ]
+   },
+   "t2a": {
+    "type": "choice",
+    "next": "t3",
+    "say": "Buen inicio. ¿Cuál es el problema central que quiere mostrar?",
+    "opts": [
+     {
+      "t": {
+       "base": "Lo que pasa es que la ropa es barata y la gente compra mucho, y eso no está muy bien.",
+       "CL": "Lo que pasa es que la ropa es barata y la gente compra harto, y eso como que no está bien."
+      },
+      "s": 0.3,
+      "fb": "Rodeas el problema sin nombrarlo con precisión."
+     },
+     {
+      "t": "El problema central es que producimos más ropa de la que somos capaces de usar, y gran parte termina como basura.",
+      "s": 1,
+      "fb": "Nombras el problema en una frase: todos saben hacia dónde vas."
+     },
+     {
+      "t": "Son varios problemas; después los voy explicando.",
+      "s": 0.3,
+      "fb": "Postergar la idea principal hace que el curso se pierda."
+     }
+    ]
+   },
+   "t2b": {
+    "type": "choice",
+    "next": "t3",
+    "say": "A ver, el curso se está quedando dormido. ¿Por qué debería importarles este tema?",
+    "opts": [
+     {
+      "t": "Porque es materia de prueba.",
+      "s": 0.2,
+      "fb": "Puede ser cierto, pero no genera ningún interés."
+     },
+     {
+      "t": "Porque la contaminación es mala para todos.",
+      "s": 0.4,
+      "fb": "Correcto, pero demasiado general para enganchar."
+     },
+     {
+      "t": "Porque casi todos aquí compramos ropa este mes, y parte de esa ropa va a terminar en un vertedero antes de lo que creemos.",
+      "s": 1,
+      "fb": "Conectas el tema con la vida de tu público: recuperas su atención."
+     }
+    ]
+   },
+   "t3": {
+    "type": "fill",
+    "next": "t4",
+    "say": "Bien. Continúe con el desarrollo.",
+    "tpl": "Las prendas duran menos; ___, compramos más seguido y desechamos más rápido.",
+    "opts": [
+     "es decir",
+     "o sea",
+     "id est"
+    ],
+    "fb": "«Es decir» reformula para aclarar; «o sea» suele quedar como muletilla."
+   },
+   "t4": {
+    "type": "choice",
+    "next": "t5",
+    "say": {
+     "base": "Oye, pero ¿no es exagerado? Yo compro poca ropa.",
+     "AR": "Che, pero ¿no es exagerado? Yo compro poca ropa."
+    },
+    "opts": [
+     {
+      "t": "No, no es exagerado: lo dicen los estudios.",
+      "s": 0.4,
+      "fb": "Defiendes la idea, pero sin un dato concreto suena a discusión."
+     },
+     {
+      "t": "Bueno, si no te interesa, no escuches.",
+      "s": 0.1,
+      "fb": "Responder a la defensiva rompe la conexión con todo el curso."
+     },
+     {
+      "t": "Qué bueno que sea tu caso. Pero, como muestra el gráfico, la producción mundial de ropa casi se duplicó en quince años: alguien la está comprando.",
+      "s": 1,
+      "fb": "Validas su experiencia y respondes con evidencia, sin ponerte a la defensiva."
+     }
+    ]
+   },
+   "t5": {
+    "type": "free",
+    "next": "t6",
+    "say": "Muy bien. Denos un ejemplo concreto del impacto ambiental.",
+    "hint": [
+     "un caso concreto es",
+     "tiene un impacto negativo",
+     "además"
+    ],
+    "groups": [
+     [
+      "un caso concreto",
+      "pensemos en",
+      "por ejemplo",
+      "un ejemplo"
+     ],
+     [
+      "impacto negativo",
+      "perjudic",
+      "afect",
+      "contamin"
+     ],
+     [
+      "ademas",
+      "a esto se suma",
+      "tambien"
+     ]
+    ],
+    "model": "Un caso concreto es el desierto de Atacama, donde se acumulan toneladas de ropa usada. Esa ropa tiene un impacto negativo en el suelo; además, muchas veces se quema y contamina el aire."
+   },
+   "t6": {
+    "type": "fill",
+    "next": "t7",
+    "say": "Le quedan tres minutos.",
+    "tpl": "Eso es lo central del problema. ___ Si no, paso a las soluciones.",
+    "opts": {
+     "base": [
+      "¿Alguna pregunta hasta aquí?",
+      "No sé si se entendió...",
+      "¿Existe alguna interrogante al respecto?"
+     ],
+     "AR": [
+      "¿Alguna pregunta hasta acá?",
+      "No sé si se entendió...",
+      "¿Existe alguna interrogante al respecto?"
+     ]
+    },
+    "fb": "Invitar a preguntar muestra seguridad; dudar de tu explicación la debilita."
+   },
+   "t7": {
+    "type": "choice",
+    "next": "t8",
+    "say": "¿Y qué podemos hacer nosotros, concretamente?",
+    "opts": [
+     {
+      "t": {
+       "base": "Tres cosas simples: comprar menos y de mejor calidad, reparar antes de tirar y donar o revender lo que ya no usamos.",
+       "CL": "Tres cosas simples: comprar menos y de mejor calidad, reparar antes de botar y donar o revender lo que ya no usamos.",
+       "CO": "Tres cosas simples: comprar menos y de mejor calidad, reparar antes de botar y donar o revender lo que ya no usamos."
+      },
+      "s": 1,
+      "fb": "Propuesta concreta y ordenada en tres puntos: fácil de recordar."
+     },
+     {
+      "t": "Dejar de comprar ropa para siempre.",
+      "s": 0.2,
+      "fb": "Una propuesta irreal le quita credibilidad a todo lo anterior."
+     },
+     {
+      "t": "Eso depende de cada uno; yo solo expongo el problema.",
+      "s": 0.3,
+      "fb": "Dejar al curso sin salida hace que el tema se olvide."
+     }
+    ]
+   },
+   "t8": {
+    "type": "free",
+    "next": null,
+    "say": "Muy bien. Cierre, por favor.",
+    "hint": [
+     "para cerrar",
+     "la idea central",
+     "una invitación al curso"
+    ],
+    "groups": [
+     [
+      "para cerrar",
+      "como conclusion",
+      "en resumen",
+      "en sintesis",
+      "para concluir"
+     ],
+     [
+      "moda rapida",
+      "ropa",
+      "prenda"
+     ],
+     [
+      "la proxima vez",
+      "los invito",
+      "les propongo",
+      "preguntense",
+      "se pregunten"
+     ]
+    ],
+    "model": "Para cerrar: la moda rápida nos hace comprar más y usar menos cada prenda. Los invito a que, la próxima vez que compren ropa, se pregunten cuántas veces la van a usar. Muchas gracias."
+   }
+  }
+ },
+ "endings": {
+  "alto": {
+   "title": "Aplausos del curso",
+   "text": "El curso te aplaude y el profesor pide usar tu exposición como ejemplo el próximo semestre."
+  },
+  "medio": {
+   "title": "Cumpliste",
+   "text": "La exposición se entendió, pero hubo momentos en que el curso se desconectó."
+  },
+  "bajo": {
+   "title": "El curso se desconectó",
+   "text": "Los murmullos ganaron. Prueba abrir con una pregunta y conectar el tema con tu público."
+  }
+ }
+}

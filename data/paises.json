@@ -294,5 +294,177 @@
    "capa": "neutra",
    "muletillas": []
   }
- ]
+ ],
+ "cazar": {
+  "base": [
+   {
+    "t": "Eh... el informe ya está listo para el lunes.",
+    "m": "eh",
+    "o": [
+     "informe",
+     "lunes"
+    ]
+   },
+   {
+    "t": "La reunión, o sea, se movió para el jueves.",
+    "m": "o sea",
+    "o": [
+     "reunión",
+     "jueves"
+    ]
+   },
+   {
+    "t": "El cliente literal no quedó convencido con la propuesta.",
+    "m": "literal",
+    "o": [
+     "cliente",
+     "propuesta"
+    ]
+   },
+   {
+    "t": "El modelo es, tipo, más rápido que el anterior.",
+    "m": "tipo",
+    "o": [
+     "modelo",
+     "anterior"
+    ]
+   }
+  ],
+  "CL": [
+   {
+    "t": "El modelo baja los costos, ¿cachai?, y además es fácil de usar.",
+    "m": "cachai",
+    "o": [
+     "modelo",
+     "costos"
+    ]
+   },
+   {
+    "t": "Sí po, el informe ya está listo para el lunes.",
+    "m": "po",
+    "o": [
+     "informe",
+     "listo"
+    ]
+   },
+   {
+    "t": "El cliente como que no quedó muy convencido con la propuesta.",
+    "m": "como que",
+    "o": [
+     "cliente",
+     "propuesta"
+    ]
+   },
+   {
+    "t": "La reunión, o sea, se movió para el jueves.",
+    "m": "o sea",
+    "o": [
+     "reunión",
+     "jueves"
+    ]
+   }
+  ],
+  "MX": [
+   {
+    "t": "Bueno, este... el informe ya está listo para el lunes.",
+    "m": "este",
+    "o": [
+     "informe",
+     "lunes"
+    ]
+   },
+   {
+    "t": "El cliente, güey, no quedó convencido con la propuesta.",
+    "m": "güey",
+    "o": [
+     "cliente",
+     "propuesta"
+    ]
+   },
+   {
+    "t": "Pues el modelo baja los costos de despacho.",
+    "m": "pues",
+    "o": [
+     "modelo",
+     "despacho"
+    ]
+   },
+   {
+    "t": "La reunión, o sea, se movió para el jueves.",
+    "m": "o sea",
+    "o": [
+     "reunión",
+     "jueves"
+    ]
+   }
+  ],
+  "CO": [
+   {
+    "t": "Parce, el informe ya está listo para el lunes.",
+    "m": "parce",
+    "o": [
+     "informe",
+     "lunes"
+    ]
+   },
+   {
+    "t": "El modelo baja los costos, ¿me entiende?, y es fácil de usar.",
+    "m": "me entiende",
+    "o": [
+     "modelo",
+     "costos"
+    ]
+   },
+   {
+    "t": "Pues el cliente no quedó convencido con la propuesta.",
+    "m": "pues",
+    "o": [
+     "cliente",
+     "propuesta"
+    ]
+   },
+   {
+    "t": "La reunión, o sea, se movió para el jueves.",
+    "m": "o sea",
+    "o": [
+     "reunión",
+     "jueves"
+    ]
+   }
+  ],
+  "AR": [
+   {
+    "t": "Che, el informe ya está listo para el lunes.",
+    "m": "che",
+    "o": [
+     "informe",
+     "lunes"
+    ]
+   },
+   {
+    "t": "El cliente, digamos, no quedó muy convencido con la propuesta.",
+    "m": "digamos",
+    "o": [
+     "cliente",
+     "propuesta"
+    ]
+   },
+   {
+    "t": "El modelo baja los costos, ¿viste?, y es fácil de usar.",
+    "m": "viste",
+    "o": [
+     "modelo",
+     "costos"
+    ]
+   },
+   {
+    "t": "Nada, la reunión se movió para el jueves.",
+    "m": "nada",
+    "o": [
+     "reunión",
+     "jueves"
+    ]
+   }
+  ]
+ }
 }

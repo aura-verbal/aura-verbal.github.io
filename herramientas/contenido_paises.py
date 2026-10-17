@@ -39,6 +39,29 @@ data = {
     {"id": "VE", "nombre": "Venezuela", "bandera": "🇻🇪", "voz": "es-VE", "trato": "tú", "capa": "neutra", "muletillas": []},
   ]
 }
+
+# Reto diario: «caza la muletilla». m = la muletilla tal como aparece; o = otras dos palabras de la frase.
+def F(t, m, o): return {"t": t, "m": m, "o": o}
+REUNION = F("La reunión, o sea, se movió para el jueves.", "o sea", ["reunión", "jueves"])
+data["cazar"] = {
+  "base": [F("Eh... el informe ya está listo para el lunes.", "eh", ["informe", "lunes"]), REUNION,
+           F("El cliente literal no quedó convencido con la propuesta.", "literal", ["cliente", "propuesta"]),
+           F("El modelo es, tipo, más rápido que el anterior.", "tipo", ["modelo", "anterior"])],
+  "CL": [F("El modelo baja los costos, ¿cachai?, y además es fácil de usar.", "cachai", ["modelo", "costos"]),
+         F("Sí po, el informe ya está listo para el lunes.", "po", ["informe", "listo"]),
+         F("El cliente como que no quedó muy convencido con la propuesta.", "como que", ["cliente", "propuesta"]), REUNION],
+  "MX": [F("Bueno, este... el informe ya está listo para el lunes.", "este", ["informe", "lunes"]),
+         F("El cliente, güey, no quedó convencido con la propuesta.", "güey", ["cliente", "propuesta"]),
+         F("Pues el modelo baja los costos de despacho.", "pues", ["modelo", "despacho"]), REUNION],
+  "CO": [F("Parce, el informe ya está listo para el lunes.", "parce", ["informe", "lunes"]),
+         F("El modelo baja los costos, ¿me entiende?, y es fácil de usar.", "me entiende", ["modelo", "costos"]),
+         F("Pues el cliente no quedó convencido con la propuesta.", "pues", ["cliente", "propuesta"]), REUNION],
+  "AR": [F("Che, el informe ya está listo para el lunes.", "che", ["informe", "lunes"]),
+         F("El cliente, digamos, no quedó muy convencido con la propuesta.", "digamos", ["cliente", "propuesta"]),
+         F("El modelo baja los costos, ¿viste?, y es fácil de usar.", "viste", ["modelo", "costos"]),
+         F("Nada, la reunión se movió para el jueves.", "nada", ["reunión", "jueves"])],
+}
+
 os.makedirs(OUT, exist_ok=True)
 with open(os.path.join(OUT, "paises.json"), "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=1)

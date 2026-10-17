@@ -1,0 +1,511 @@
+{
+ "id": "networking",
+ "area": "Social",
+ "name": "Networking en un evento",
+ "short": "un evento de networking",
+ "who": "Profesional del rubro",
+ "person": "Daniela Soto",
+ "blurb": "Acércate a alguien que admiras, genera una conversación y consigue el contacto.",
+ "ficha": {
+  "situacion": "Estás en un encuentro de logística y comercio electrónico. En la pausa del café ves a Daniela Soto, gerenta de operaciones de una empresa de despacho de última milla, que acaba de dar una charla.",
+  "enJuego": "Que te recuerde y acepte seguir la conversación más adelante.",
+  "objetivo": "Romper el hielo, presentarte en treinta segundos, mostrar interés por su trabajo y pedir el contacto sin forzar.",
+  "pers": {
+   "amable": "Conversadora y generosa con sus consejos.",
+   "neutral": "Cordial, pero tiene mucha gente que saludar.",
+   "dificil": "Apurada y con poca paciencia para discursos de venta."
+  }
+ },
+ "labels": [
+  "Torpe o vendedor",
+  "Natural y profesional"
+ ],
+ "crit": "Se evalúa romper el hielo con naturalidad, presentarte en pocas frases, escuchar más de lo que hablas y cerrar con un siguiente paso concreto.",
+ "weights": {
+  "v": 0.45,
+  "m": 0.3,
+  "p": 0.25
+ },
+ "words": [
+  {
+   "col": "hola, te sigo en LinkedIn",
+   "pro": "me encantó tu charla sobre",
+   "alt": "vi tu publicación sobre",
+   "why": "Romper el hielo con algo concreto de su trabajo abre la conversación mejor que un saludo genérico.",
+   "ex": "Hola, Daniela. ___ los despachos el mismo día.",
+   "d": {
+    "base": [
+     "hola, ¿tú eres la de",
+     "me placería departir sobre"
+    ],
+    "AR": [
+     "hola, ¿vos sos la de",
+     "me placería departir sobre"
+    ]
+   },
+   "det": []
+  },
+  {
+   "col": "estudio y eso",
+   "pro": "me estoy especializando en",
+   "alt": "me enfoco en",
+   "why": "Una presentación con foco hace que te recuerden.",
+   "ex": "Estudio ingeniería y ___ optimización de rutas.",
+   "d": {
+    "base": [
+     "estudio y eso, como que veo",
+     "consagro mis días al estudio de"
+    ],
+    "AR": [
+     "estudio y eso, tipo que veo",
+     "consagro mis días al estudio de"
+    ]
+   },
+   "det": [
+    "estudio y eso"
+   ]
+  },
+  {
+   "col": "¿y cómo lo hacen?",
+   "pro": "¿cuál fue el mayor desafío de",
+   "alt": "¿qué aprendieron al",
+   "why": "Una pregunta específica demuestra que escuchaste y te interesa de verdad.",
+   "ex": "___ implementar los despachos el mismo día?",
+   "d": [
+    "¿cómo fue eso de",
+    "¿cuál fue la quintaesencia de"
+   ],
+   "det": []
+  },
+  {
+   "col": {
+    "base": "qué genial",
+    "CL": "qué bacán",
+    "MX": "qué chido",
+    "AR": "qué copado",
+    "CO": "qué chévere"
+   },
+   "pro": "qué interesante lo que comentas",
+   "alt": "eso no lo había pensado",
+   "why": "Reaccionar con algo específico mantiene viva la conversación.",
+   "ex": {
+    "base": "___ de los puntos de retiro; ¿funciona igual en otras ciudades?",
+    "CL": "___ de los puntos de retiro; ¿funciona igual en regiones?"
+   },
+   "d": {
+    "base": [
+     "qué genial",
+     "resulta fascinante su disertación"
+    ],
+    "CL": [
+     "qué bacán",
+     "resulta fascinante su disertación"
+    ],
+    "MX": [
+     "qué chido",
+     "resulta fascinante su disertación"
+    ],
+    "AR": [
+     "qué copado",
+     "resulta fascinante su disertación"
+    ],
+    "CO": [
+     "qué chévere",
+     "resulta fascinante su disertación"
+    ]
+   },
+   "det": [
+    "que bacan",
+    "que chido",
+    "que copado",
+    "que chevere",
+    "que genial"
+   ]
+  },
+  {
+   "col": {
+    "base": "te quería pedir trabajo",
+    "CL": "te quería pedir pega",
+    "MX": "te quería pedir chamba",
+    "AR": "te quería pedir laburo",
+    "CO": "te quería pedir camello"
+   },
+   "pro": "me encantaría aprender de",
+   "alt": "me gustaría conocer más sobre",
+   "why": "Pedir trabajo de entrada incomoda; pedir aprender abre la puerta.",
+   "ex": "___ cómo organizan la operación.",
+   "d": {
+    "base": [
+     "te quería pedir trabajo, sobre",
+     "anhelo absorber tu sapiencia sobre"
+    ],
+    "CL": [
+     "te quería pedir pega, sobre",
+     "anhelo absorber tu sapiencia sobre"
+    ],
+    "MX": [
+     "te quería pedir chamba, sobre",
+     "anhelo absorber tu sapiencia sobre"
+    ],
+    "AR": [
+     "te quería pedir laburo, sobre",
+     "anhelo absorber tu sapiencia sobre"
+    ],
+    "CO": [
+     "te quería pedir camello, sobre",
+     "anhelo absorber tu sapiencia sobre"
+    ]
+   },
+   "det": [
+    "pedir pega",
+    "pedir trabajo",
+    "pedir chamba",
+    "pedir laburo",
+    "pedir camello"
+   ]
+  },
+  {
+   "col": {
+    "base": "¿me das tu número?",
+    "AR": "¿me pasás tu número?"
+   },
+   "pro": "¿te puedo agregar a LinkedIn",
+   "alt": "¿te parece si te escribo",
+   "why": "Pedir un canal profesional respeta su espacio y es fácil de aceptar.",
+   "ex": "___ para seguir la conversación?",
+   "d": {
+    "base": [
+     "¿me das tu número",
+     "¿me concederías tu contacto telefónico"
+    ],
+    "AR": [
+     "¿me pasás tu número",
+     "¿me concederías tu contacto telefónico"
+    ]
+   },
+   "det": [
+    "tu numero"
+   ]
+  },
+  {
+   "col": "bueno, me voy",
+   "pro": "no te quito más tiempo",
+   "alt": "sé que hay mucha gente que quiere saludarte",
+   "why": "Cerrar tú la conversación muestra que respetas su tiempo.",
+   "ex": {
+    "base": "___; fue un gusto conversar contigo.",
+    "AR": "___; fue un gusto charlar con vos."
+   },
+   "d": [
+    "bueno, me voy",
+    "procedo a retirarme"
+   ],
+   "det": []
+  },
+  {
+   "col": "busco lo que salga",
+   "pro": "me interesa encontrar oportunidades en",
+   "alt": "estoy buscando experiencia en",
+   "why": "Decir qué buscas con precisión ayuda a que la otra persona piense en cómo ayudarte.",
+   "ex": "___ planificación de última milla.",
+   "d": [
+    "busco lo que salga en",
+    "aspiro a cualquier destino laboral en"
+   ],
+   "det": [
+    "lo que salga"
+   ]
+  },
+  {
+   "col": "yo también, yo también",
+   "pro": "a mí me pasó algo parecido cuando",
+   "alt": "eso me recuerda a",
+   "why": "Conectar con una experiencia propia crea afinidad sin robar protagonismo.",
+   "ex": "___ hice mi proyecto de rutas: los datos reales cambian todo.",
+   "d": [
+    "yo igual, yo igual, cuando",
+    "idéntica vivencia experimenté cuando"
+   ],
+   "det": []
+  },
+  {
+   "col": {
+    "base": "mándame un mensaje",
+    "AR": "mandame un mensaje"
+   },
+   "pro": "te escribo esta semana",
+   "alt": "te envío lo que conversamos",
+   "why": "Comprométete tú con el siguiente paso; así no depende de la otra persona.",
+   "ex": "Gracias por tu tiempo; ___ con el artículo que te comenté.",
+   "d": {
+    "base": [
+     "tú me mandas un mensaje",
+     "le remitiré oportunamente"
+    ],
+    "AR": [
+     "vos me mandás un mensaje",
+     "le remitiré oportunamente"
+    ]
+   },
+   "det": []
+  }
+ ],
+ "sim": {
+  "start": "t1",
+  "nodes": {
+   "t1": {
+    "type": "choice",
+    "say": "Hola, ¿qué tal? ¿Nos conocemos de algún lado?",
+    "opts": [
+     {
+      "t": "Ehh, no... es que te sigo en LinkedIn, jaja.",
+      "s": 0.3,
+      "fb": "Es honesto, pero no le da de qué hablar.",
+      "next": "t2b"
+     },
+     {
+      "t": "Todavía no, pero me encantó tu charla sobre los despachos el mismo día. Estudio ingeniería y me estoy especializando en optimización de rutas.",
+      "s": 1,
+      "fb": "Rompes el hielo con algo concreto de su trabajo y te presentas en dos frases.",
+      "next": "t2a"
+     },
+     {
+      "t": "Me presento: tengo alta capacidad de trabajo en equipo, orientación a resultados y proactividad...",
+      "s": 0.2,
+      "fb": "Un discurso de currículum en la pausa del café espanta a cualquiera.",
+      "next": "t2b"
+     }
+    ]
+   },
+   "t2a": {
+    "type": "choice",
+    "next": "t3",
+    "say": "¡Gracias! ¿Y qué te pareció?",
+    "opts": [
+     {
+      "t": "Muy buena, muy buena.",
+      "s": 0.3,
+      "fb": "Amable, pero no abre la conversación."
+     },
+     {
+      "t": "Bien, aunque creo que hay errores en el modelo que mostraste.",
+      "s": 0.2,
+      "fb": "Criticar de entrada, sin pregunta ni contexto, cierra puertas."
+     },
+     {
+      "t": "Me quedé pensando en algo: ¿cuál fue el mayor desafío de implementar los despachos el mismo día?",
+      "s": 1,
+      "fb": "Una pregunta específica demuestra que escuchaste."
+     }
+    ]
+   },
+   "t2b": {
+    "type": "choice",
+    "next": "t3",
+    "say": {
+     "base": "Ah, qué bien. ¿Y a qué te dedicas?",
+     "AR": "Ah, qué bien. ¿Y a qué te dedicás?"
+    },
+    "opts": [
+     {
+      "t": "Estudio ingeniería y me estoy especializando en optimización de rutas; por eso me interesó mucho tu charla.",
+      "s": 1,
+      "fb": "Recuperas con una presentación con foco y la conectas con ella."
+     },
+     {
+      "t": "Estudio y eso, nada muy interesante.",
+      "s": 0.2,
+      "fb": "Restarte valor hace que la otra persona tampoco te lo dé."
+     },
+     {
+      "t": "Busco trabajo, ¿tienen vacantes?",
+      "s": 0.1,
+      "fb": "Pedir trabajo en el segundo minuto incomoda."
+     }
+    ]
+   },
+   "t3": {
+    "type": "fill",
+    "next": "t4",
+    "say": "El mayor desafío fue coordinar los puntos de retiro con los repartidores.",
+    "tpl": {
+     "base": "___ de los puntos de retiro; ¿funciona igual en otras ciudades?",
+     "CL": "___ de los puntos de retiro; ¿funciona igual en regiones?"
+    },
+    "opts": {
+     "base": [
+      "Qué interesante lo que comentas",
+      "Qué genial",
+      "Resulta fascinante su disertación"
+     ],
+     "CL": [
+      "Qué interesante lo que comentas",
+      "Qué bacán",
+      "Resulta fascinante su disertación"
+     ],
+     "MX": [
+      "Qué interesante lo que comentas",
+      "Qué chido",
+      "Resulta fascinante su disertación"
+     ],
+     "AR": [
+      "Qué interesante lo que comentás",
+      "Qué copado",
+      "Resulta fascinante su disertación"
+     ],
+     "CO": [
+      "Qué interesante lo que comentas",
+      "Qué chévere",
+      "Resulta fascinante su disertación"
+     ]
+    },
+    "fb": "Reaccionar con algo específico muestra que escuchaste y te interesa."
+   },
+   "t4": {
+    "type": "choice",
+    "next": "t5",
+    "say": {
+     "base": "Oye, ¿y tú estás buscando práctica o trabajo?",
+     "MX": "Oye, ¿y tú estás buscando prácticas o trabajo?",
+     "AR": "Che, ¿y vos estás buscando pasantía o trabajo?"
+    },
+    "opts": [
+     {
+      "t": "Sí, lo que salga, la verdad.",
+      "s": 0.2,
+      "fb": "«Lo que salga» no le da ninguna pista de cómo ayudarte."
+     },
+     {
+      "t": "Me interesa encontrar oportunidades en planificación de última milla, pero por ahora me encantaría aprender de cómo organizan la operación.",
+      "s": 1,
+      "fb": "Dices qué buscas sin presionar y pones el foco en aprender."
+     },
+     {
+      "t": {
+       "base": "Sí, ¿le puedes pasar mi currículum a Recursos Humanos?",
+       "AR": "Sí, ¿le podés pasar mi currículum a Recursos Humanos?"
+      },
+      "s": 0.2,
+      "fb": "Pedir un favor grande tan pronto pone a la otra persona en un compromiso."
+     }
+    ]
+   },
+   "t5": {
+    "type": "free",
+    "next": "t6",
+    "say": "¿Y qué es lo que más te interesa de la logística?",
+    "hint": [
+     "me estoy especializando en / me interesa",
+     "a mí me pasó algo parecido",
+     "¿y en tu equipo...?"
+    ],
+    "groups": [
+     [
+      "especializ",
+      "me enfoco",
+      "me interesa"
+     ],
+     [
+      "me paso algo parecido",
+      "me recuerda",
+      "en mi proyecto",
+      "cuando hice"
+     ],
+     [
+      "en tu equipo",
+      "ustedes",
+      "a ti",
+      "a vos",
+      "tu experiencia"
+     ]
+    ],
+    "model": "Me interesa la planificación de rutas; a mí me pasó algo parecido cuando hice mi proyecto: los datos reales cambian todo. ¿Y en tu equipo cómo planifican las rutas?"
+   },
+   "t6": {
+    "type": "fill",
+    "next": "t7",
+    "say": {
+     "base": "Oye, se nos fue la pausa conversando.",
+     "AR": "Che, se nos fue la pausa charlando."
+    },
+    "tpl": {
+     "base": "Verdad. ___; fue un gusto conversar contigo.",
+     "AR": "Verdad. ___; fue un gusto charlar con vos."
+    },
+    "opts": [
+     "no te quito más tiempo",
+     "bueno, me voy",
+     "procedo a retirarme"
+    ],
+    "fb": "Cerrar tú la conversación demuestra que respetas su tiempo."
+   },
+   "t7": {
+    "type": "choice",
+    "next": "t8",
+    "say": "Igualmente. ¿Cómo seguimos en contacto?",
+    "opts": [
+     {
+      "t": {
+       "base": "¿Me das tu número?",
+       "AR": "¿Me pasás tu número?"
+      },
+      "s": 0.3,
+      "fb": "No es grave, pero un número personal es más difícil de dar."
+     },
+     {
+      "t": "¿Te puedo agregar a LinkedIn? Así te envío el artículo de rutas que te comenté.",
+      "s": 1,
+      "fb": "Canal profesional y una excusa concreta para escribirle."
+     },
+     {
+      "t": {
+       "base": "Tú me buscas; estoy en todas las redes.",
+       "AR": "Vos me buscás; estoy en todas las redes."
+      },
+      "s": 0.1,
+      "fb": "Dejarle el trabajo a ella hace que no pase nada."
+     }
+    ]
+   },
+   "t8": {
+    "type": "free",
+    "next": null,
+    "say": "¡Perfecto! Me alegro de haberte conocido.",
+    "hint": [
+     "gracias por tu tiempo",
+     "te escribo esta semana",
+     "un gusto conocerte"
+    ],
+    "groups": [
+     [
+      "gracias"
+     ],
+     [
+      "te escribo",
+      "te envio",
+      "te mando"
+     ],
+     [
+      "gusto",
+      "encanto conocer"
+     ]
+    ],
+    "model": "Muchas gracias por tu tiempo. Te escribo esta semana con el artículo; fue un gusto conocerte."
+   }
+  }
+ },
+ "endings": {
+  "alto": {
+   "title": "Café agendado",
+   "text": "Daniela acepta tu invitación en LinkedIn y te propone tomar un café el próximo mes."
+  },
+  "medio": {
+   "title": "Contacto guardado",
+   "text": "Te agregó a LinkedIn, pero la conversación no dejó un siguiente paso."
+  },
+  "bajo": {
+   "title": "No hubo conexión",
+   "text": "La conversación no despegó. Prueba abrir con algo concreto de su trabajo y hacer preguntas específicas."
+  }
+ }
+}

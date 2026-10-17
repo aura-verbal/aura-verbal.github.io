@@ -314,6 +314,19 @@ input[type="range"]{width:100%;accent-color:var(--accent)}
 .loading{display:grid;place-items:center;padding:80px 0;color:var(--muted)}
 .loading .mark{width:52px;height:52px;font-size:1.4rem;animation:pulse 1.2s ease-in-out infinite}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+/* reto diario */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.wd{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
+.wd i{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);display:grid;place-items:center;font-style:normal;font-size:.85rem;font-weight:700;color:var(--accent-ink)}
+.wd.on i{background:var(--accent);border-color:var(--accent)}
+.wd.prac i{color:var(--accent);font-size:1.2rem;border-color:color-mix(in srgb, var(--accent) 45%, var(--line))}
+.wd.today i{outline:2px solid var(--accent);outline-offset:2px}
+.wd small{font-size:.72rem;color:var(--muted)}
+.wd.today small{color:var(--accent);font-weight:700}
+.card.reto.done{border-color:color-mix(in srgb, var(--good) 35%, var(--line))}
+.card.reto.done:hover{border-color:color-mix(in srgb, var(--good) 35%, var(--line))}
+.card.reto.done .s-icon{color:var(--good)}
+.frase{font-weight:500;font-family:var(--font-body);font-size:1.15rem}
 </style>
 </head>
 <body>

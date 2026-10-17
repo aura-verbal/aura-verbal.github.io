@@ -1,0 +1,463 @@
+{
+ "id": "devolucion",
+ "area": "Ventas",
+ "name": "Reclamo y devolución",
+ "short": "un reclamo con devolución",
+ "who": "Clienta",
+ "person": "Valentina",
+ "blurb": "Di que no a lo que no se puede sin perder a la clienta: ofrece alternativas.",
+ "ficha": {
+  "situacion": {
+   "base": "Atiendes el mostrador de cambios de una tienda deportiva online. Valentina quiere devolver una chaqueta de running y que le reembolsen el dinero, pero la compró hace 40 días y la política permite devoluciones hasta los 30.",
+   "CL": "Atiendes el mesón de cambios de una tienda deportiva online. Valentina quiere devolver una chaqueta de running y que le reembolsen el dinero, pero la compró hace 40 días y la política permite devoluciones hasta los 30.",
+   "MX": "Atiendes el mostrador de cambios de una tienda deportiva en línea. Valentina quiere devolver una chamarra para correr y que le reembolsen el dinero, pero la compró hace 40 días y la política permite devoluciones hasta los 30.",
+   "AR": "Atendés el mostrador de cambios de una tienda deportiva online. Valentina quiere devolver una campera de running y que le reintegren la plata, pero la compró hace 40 días y la política permite devoluciones hasta los 30."
+  },
+  "enJuego": "Que la clienta no se vaya molesta ni deje una mala reseña, sin saltarte la política de la tienda.",
+  "objetivo": "Validar su molestia, explicar el límite con claridad y ofrecer alternativas reales.",
+  "pers": {
+   "amable": "Entiende si le explicas bien; solo quiere una solución.",
+   "neutral": "Está molesta, pero escucha.",
+   "dificil": "Viene decidida a pelear y amenaza con dejar una mala reseña."
+  }
+ },
+ "labels": [
+  "Coloquial o cortante",
+  "Profesional y empático"
+ ],
+ "crit": "Se evalúa validar la molestia, explicar el límite sin culpar a la clienta y ofrecer alternativas concretas, con un trato cordial.",
+ "weights": {
+  "v": 0.55,
+  "m": 0.25,
+  "p": 0.2
+ },
+ "words": [
+  {
+   "col": "no se puede",
+   "pro": "lo que sí puedo ofrecerle es",
+   "alt": "una alternativa es",
+   "why": "Pasa del «no» a lo que sí es posible: la clienta escucha opciones, no un portazo.",
+   "ex": "La devolución del dinero no corre en este caso, pero ___ un cambio por otro producto.",
+   "d": [
+    "no se puede, salvo quizás",
+    "la normativa me constriñe a"
+   ],
+   "det": [
+    "no se puede"
+   ]
+  },
+  {
+   "col": "son las reglas",
+   "pro": "la política de la tienda establece",
+   "alt": "según nuestras condiciones",
+   "why": "Explica el límite con su fuente, sin que suene a excusa personal.",
+   "ex": "___ un plazo de 30 días para devoluciones.",
+   "d": [
+    "las reglas son las reglas y dicen",
+    "el reglamento sacrosanto estipula"
+   ],
+   "det": [
+    "son las reglas"
+   ]
+  },
+  {
+   "col": "cálmese",
+   "pro": "entiendo su molestia",
+   "alt": "tiene toda la razón en sentirse así",
+   "why": "Validar la emoción baja la tensión; pedir calma la sube.",
+   "ex": "___; nadie quiere quedarse con algo que no le sirve.",
+   "d": [
+    "cálmese, por favor",
+    "le ruego moderar su ímpetu"
+   ],
+   "det": [
+    "calmese",
+    "relajese"
+   ]
+  },
+  {
+   "col": "no es mi culpa",
+   "pro": "voy a revisar qué puedo hacer",
+   "alt": "déjeme ver las opciones",
+   "why": "Te haces cargo del caso en vez de defenderte.",
+   "ex": "No tengo cómo cambiar el plazo, pero ___ por usted.",
+   "d": [
+    "no es mi culpa, pero veré",
+    "declino toda responsabilidad, aunque veré"
+   ],
+   "det": [
+    "no es mi culpa"
+   ]
+  },
+  {
+   "col": {
+    "base": "la plata",
+    "MX": "la lana",
+    "AR": "la guita"
+   },
+   "pro": "el reembolso",
+   "alt": "la devolución del dinero",
+   "why": "Usa el término exacto: deja claro de qué opción estás hablando.",
+   "ex": "___ no es posible fuera de plazo, pero sí el cambio.",
+   "d": {
+    "base": [
+     "la plata de vuelta",
+     "la restitución pecuniaria"
+    ],
+    "MX": [
+     "la lana de vuelta",
+     "la restitución pecuniaria"
+    ],
+    "AR": [
+     "la guita de vuelta",
+     "la restitución pecuniaria"
+    ]
+   },
+   "det": [
+    "la plata",
+    "la lana",
+    "la guita"
+   ]
+  },
+  {
+   "col": "una gift card",
+   "pro": "una nota de crédito",
+   "alt": "un saldo a favor",
+   "why": "Nombra el beneficio con precisión: la clienta sabe exactamente qué recibe.",
+   "ex": "Puedo emitirle ___ por el valor total, válida por seis meses.",
+   "d": [
+    "un papelito para que compre",
+    "un instrumento crediticio"
+   ],
+   "det": [
+    "gift card"
+   ]
+  },
+  {
+   "col": "si quiere",
+   "pro": "le propongo",
+   "alt": "le sugiero",
+   "why": "Proponer con seguridad guía la decisión; «si quiere» suena a que da lo mismo.",
+   "ex": "___ dos opciones: cambiarla por otra talla o una nota de crédito.",
+   "d": [
+    "si quiere, tengo",
+    "le conmino a considerar"
+   ],
+   "det": []
+  },
+  {
+   "col": "es que usted la usó",
+   "pro": {
+    "base": "veo que la chaqueta tiene uso",
+    "MX": "veo que la chamarra tiene uso",
+    "AR": "veo que la campera tiene uso"
+   },
+   "alt": "noto señales de uso",
+   "why": "Describe el hecho sin acusar a la clienta.",
+   "ex": "___, por eso no podemos venderla de nuevo como nueva.",
+   "d": [
+    "es obvio que usted la usó",
+    "constato con pesar su evidente deterioro"
+   ],
+   "det": [
+    "usted la uso"
+   ]
+  },
+  {
+   "col": {
+    "base": "ya, listo",
+    "AR": "dale, listo"
+   },
+   "pro": "queda registrado su caso",
+   "alt": "le confirmo que",
+   "why": "Cierra con una confirmación concreta: la clienta sabe que su caso no se perdió.",
+   "ex": "___ con el número 4821; le llegará un correo de confirmación.",
+   "d": {
+    "base": [
+     "ya, listo, está",
+     "ha quedado debidamente asentado en acta"
+    ],
+    "AR": [
+     "dale, listo, está",
+     "ha quedado debidamente asentado en acta"
+    ]
+   },
+   "det": [
+    "ya listo"
+   ]
+  },
+  {
+   "col": {
+    "base": "chao, que le vaya bien",
+    "AR": "chau, que le vaya bien"
+   },
+   "pro": "gracias por su paciencia",
+   "alt": "gracias por darnos la oportunidad de resolverlo",
+   "why": "Agradecer la paciencia cierra el conflicto en buenos términos.",
+   "ex": "___; cualquier cosa, estoy aquí para ayudarle.",
+   "d": {
+    "base": [
+     "chao, que le vaya bien",
+     "le agradezco su longanimidad"
+    ],
+    "AR": [
+     "chau, que le vaya bien",
+     "le agradezco su longanimidad"
+    ]
+   },
+   "det": []
+  }
+ ],
+ "sim": {
+  "start": "t1",
+  "nodes": {
+   "t1": {
+    "type": "choice",
+    "say": {
+     "base": "Hola. Quiero devolver esta chaqueta; no me gustó cómo me queda y quiero mi dinero de vuelta.",
+     "MX": "Hola. Quiero devolver esta chamarra; no me gustó cómo me queda y quiero mi dinero de vuelta.",
+     "AR": "Hola. Quiero devolver esta campera; no me gustó cómo me queda y quiero que me devuelvan la plata."
+    },
+    "opts": [
+     {
+      "t": "Lo siento, pero no se puede: pasaron más de 30 días.",
+      "s": 0.3,
+      "fb": "Es verdad, pero un «no» seco al inicio pone a la clienta a la defensiva.",
+      "next": "t2b"
+     },
+     {
+      "t": "Entiendo su molestia; déjeme revisar la compra para ver qué opciones tenemos.",
+      "s": 1,
+      "fb": "Validas y te haces cargo antes de explicar el límite.",
+      "next": "t2a"
+     },
+     {
+      "t": "¿Y la usó? Porque se ve usada.",
+      "s": 0.1,
+      "fb": "Insinuar algo antes de escuchar suena a acusación.",
+      "next": "t2b"
+     }
+    ]
+   },
+   "t2a": {
+    "type": "choice",
+    "next": "t3",
+    "say": {
+     "base": "Bueno. ¿Y entonces? ¿Me devuelven el dinero o no?",
+     "AR": "Bueno. ¿Y entonces? ¿Me devuelven la plata o no?"
+    },
+    "opts": [
+     {
+      "t": "No, porque son las reglas.",
+      "s": 0.2,
+      "fb": "Correcto, pero sin explicación ni alternativa."
+     },
+     {
+      "t": "La política de la tienda establece un plazo de 30 días para el reembolso, y su compra fue hace 40. Pero lo que sí puedo ofrecerle es un cambio o una nota de crédito por el valor total.",
+      "s": 1,
+      "fb": "Explicas el límite con su fuente y ofreces alternativas en la misma respuesta."
+     },
+     {
+      "t": "Déjeme ver... a lo mejor sí; no le prometo nada.",
+      "s": 0.3,
+      "fb": "Generar falsas expectativas empeora la molestia después."
+     }
+    ]
+   },
+   "t2b": {
+    "type": "choice",
+    "next": "t3",
+    "say": {
+     "base": "¿Cómo que no? ¡Pagué mucho por esta chaqueta!",
+     "CL": "¿Cómo que no? ¡Pagué harta plata por esta chaqueta!",
+     "MX": "¿Cómo que no? ¡Pagué un buen de lana por esta chamarra!",
+     "AR": "¿Cómo que no? ¡Pagué un montón de plata por esta campera!",
+     "CO": "¿Cómo así que no? ¡Pagué mucha plata por esta chaqueta!"
+    },
+    "opts": [
+     {
+      "t": "Cálmese, por favor; así no podemos conversar.",
+      "s": 0.2,
+      "fb": "Pedir calma suele producir el efecto contrario."
+     },
+     {
+      "t": "Tiene toda la razón en sentirse así; es una compra importante. Voy a revisar qué puedo hacer por usted.",
+      "s": 1,
+      "fb": "Validas la emoción y te haces cargo: la tensión baja."
+     },
+     {
+      "t": "Bueno, pero no es mi culpa.",
+      "s": 0.1,
+      "fb": "Defenderte la deja sola con el problema."
+     }
+    ]
+   },
+   "t3": {
+    "type": "fill",
+    "next": "t4",
+    "say": "¿Y qué opciones tengo, entonces?",
+    "tpl": "___ dos opciones: cambiarla por otra talla o una nota de crédito por el valor total.",
+    "opts": [
+     "Le propongo",
+     "Si quiere, tengo",
+     "Le conmino a considerar"
+    ],
+    "fb": "«Le propongo» guía la decisión con seguridad."
+   },
+   "t4": {
+    "type": "choice",
+    "next": "t5",
+    "say": "Es que casi no la usé; solo un par de veces para salir a correr.",
+    "opts": [
+     {
+      "t": {
+       "base": "Le creo. Veo que la chaqueta tiene algo de uso; por eso no podemos venderla como nueva, pero sí aceptarla para un cambio.",
+       "MX": "Le creo. Veo que la chamarra tiene algo de uso; por eso no podemos venderla como nueva, pero sí aceptarla para un cambio.",
+       "AR": "Le creo. Veo que la campera tiene algo de uso; por eso no podemos venderla como nueva, pero sí aceptarla para un cambio."
+      },
+      "s": 1,
+      "fb": "Describes el hecho sin acusar y mantienes la alternativa."
+     },
+     {
+      "t": {
+       "base": "Igual se nota que la usó bastante.",
+       "CL": "Igual se nota que la usó harto."
+      },
+      "s": 0.2,
+      "fb": "Suena a acusación y reabre la discusión."
+     },
+     {
+      "t": "Da igual cuánto la usó: el plazo es el plazo.",
+      "s": 0.3,
+      "fb": "Firme, pero frío: no reconoces lo que ella dice."
+     }
+    ]
+   },
+   "t5": {
+    "type": "free",
+    "next": "t6",
+    "say": "¿Y por qué no me pueden devolver el dinero si el producto está bien?",
+    "hint": [
+     "entiendo su molestia",
+     "la política de la tienda establece",
+     "lo que sí puedo ofrecerle"
+    ],
+    "groups": [
+     [
+      "entiendo",
+      "comprendo",
+      "tiene razon"
+     ],
+     [
+      "politica",
+      "condiciones",
+      "plazo"
+     ],
+     [
+      "lo que si puedo",
+      "puedo ofrecerle",
+      "le propongo",
+      "alternativa",
+      "nota de credito",
+      "cambio"
+     ]
+    ],
+    "model": "Entiendo su molestia. La política de la tienda establece un plazo de 30 días para el reembolso, y ese plazo ya pasó. Lo que sí puedo ofrecerle es una nota de crédito por el valor total, válida por seis meses."
+   },
+   "t6": {
+    "type": "fill",
+    "next": "t7",
+    "say": "Bueno, prefiero la nota de crédito.",
+    "tpl": "Perfecto. ___ con el número 4821; le llegará un correo de confirmación.",
+    "opts": {
+     "base": [
+      "Queda registrado su caso",
+      "Ya, listo, está",
+      "Ha quedado debidamente asentado en acta"
+     ],
+     "AR": [
+      "Queda registrado su caso",
+      "Dale, listo, está",
+      "Ha quedado debidamente asentado en acta"
+     ]
+    },
+    "fb": "Confirmar con un número de caso le da tranquilidad a la clienta."
+   },
+   "t7": {
+    "type": "choice",
+    "next": "t8",
+    "say": "Igual voy a dejar una reseña contando todo esto.",
+    "opts": [
+     {
+      "t": {
+       "base": "Por favor no, me van a llamar la atención.",
+       "CL": "Por favor no, me van a retar.",
+       "MX": "Por favor no, me van a regañar.",
+       "AR": "Por favor no, me van a retar."
+      },
+      "s": 0.2,
+      "fb": "Poner tu problema en el centro incomoda a la clienta."
+     },
+     {
+      "t": "Está en su derecho. Si le sirve, puede contar también cómo lo resolvimos; su opinión nos ayuda a mejorar.",
+      "s": 1,
+      "fb": "Respetas su decisión sin presionar y le recuerdas la solución."
+     },
+     {
+      "t": "Haga lo que quiera.",
+      "s": 0.1,
+      "fb": "Una respuesta así sí merece una mala reseña."
+     }
+    ]
+   },
+   "t8": {
+    "type": "free",
+    "next": null,
+    "say": "Bueno, gracias. Eso sería todo.",
+    "hint": [
+     "gracias por su paciencia",
+     "cómo usar la nota de crédito",
+     "estoy aquí para ayudarle"
+    ],
+    "groups": [
+     [
+      "gracias",
+      "agradezco"
+     ],
+     [
+      "nota de credito",
+      "credito",
+      "saldo"
+     ],
+     [
+      "estoy aqui",
+      "estoy aca",
+      "cualquier cosa",
+      "cualquier consulta",
+      "para ayudarle",
+      "a su disposicion"
+     ]
+    ],
+    "model": {
+     "base": "Gracias por su paciencia. Puede usar la nota de crédito en la tienda online durante seis meses; cualquier consulta, estoy aquí para ayudarle.",
+     "MX": "Gracias por su paciencia. Puede usar la nota de crédito en la tienda en línea durante seis meses; cualquier consulta, estoy aquí para ayudarle.",
+     "AR": "Gracias por su paciencia. Puede usar la nota de crédito en la tienda online durante seis meses; cualquier consulta, estoy acá para ayudarle."
+    }
+   }
+  }
+ },
+ "endings": {
+  "alto": {
+   "title": "Clienta fidelizada",
+   "text": "Valentina usa la nota de crédito ese mismo día y deja una reseña destacando tu atención."
+  },
+  "medio": {
+   "title": "Caso resuelto",
+   "text": "Aceptó la nota de crédito, pero se fue con algo de molestia."
+  },
+  "bajo": {
+   "title": "Mala reseña",
+   "text": "La clienta se fue molesta y publicó una reseña negativa. Prueba validar antes de explicar la política y ofrecer alternativas."
+  }
+ }
+}

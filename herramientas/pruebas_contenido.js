@@ -17,11 +17,12 @@ for(const it of IDX.list.filter(x=>x.ready)){
     if(!N[s.sim.start]) err(it.id,'start');
     for(const [id,n] of Object.entries(N)){
       if(!n.say) err(it.id,c,id,'no say');
-      if(n.type==='choice'){ if(n.opts.length!==3) err(it.id,id,'opts'); if(!n.opts.some(o=>o.s>=1)) err(it.id,id,'no best');
+      if(n.type==='choice'){ if(n.opts.length!==3) err(it.id,id,'opts'); if(n.opts.filter(o=>o.s>=1).length!==1) err(it.id,id,'best count');
         n.opts.forEach(o=>{ const nx=o.next!==undefined?o.next:n.next; if(nx&&!N[nx]) err(it.id,id,'bad next',nx); if(!o.fb) err(it.id,id,'no fb'); }); if(n.next===undefined && n.opts.some(o=>o.next===undefined)) err(it.id,id,'missing next'); }
       else if(n.type==='fill'){ if(!n.tpl.includes('___')) err(it.id,c,id,'tpl'); if(n.opts.length!==3) err(it.id,id,'fill opts'); if(n.next&&!N[n.next]) err(it.id,id,'next'); }
       else if(n.type==='free'){ if(n.groups.length!==n.hint.length) err(it.id,c,id,'groups/hint',n.groups.length,n.hint.length); if(n.next&&!N[n.next]) err(it.id,id,'next');
-        const r=M.scoreFree(n,n.model,null,s.weights,s.words,M.mergeMuletillas(P.comunes,(P.paises.find(p=>p.id===c)||{}).muletillas)); if(r.S<0.95) err(it.id,c,id,'model score',r.S.toFixed(2),r.missing,r.mul.found,r.colloquial); }
+        const r=M.scoreFree(n,n.model,null,s.weights,s.words,M.mergeMuletillas(P.comunes,(P.paises.find(p=>p.id===c)||{}).muletillas)); if(r.S<0.95) err(it.id,c,id,'model score',r.S.toFixed(2),r.missing,r.mul.found,r.colloquial); if(r.colloquial.length) err(it.id,c,id,'model colloquial',JSON.stringify(r.colloquial));
+        const weak=M.scoreFree(n,'sí, bueno, eso',null,s.weights,s.words,[]); if(weak.S>0.5) err(it.id,c,id,'weak answer too high',weak.S.toFixed(2)); }
       else err(it.id,id,'type');
     }
     // reachability
@@ -40,4 +41,8 @@ t('MX','este yo creo que este proyecto es bueno, o sea, pues sí, este');
 t('AR','nada, che, viste que el laburo es tipo re bueno, viste la peli, tipo de cambio');
 t('CO','pues el proyecto salió bien, parce, me entiende, pues');
 t('CL','sí po, cachai que como que me fue bien, o sea');
+// reto diario: cada frase de «caza la muletilla» debe detectar su muletilla y no las otras opciones
+for(const [k,arr] of Object.entries(P.cazar)){ const c=k==='base'?'PE':k; arr.forEach(f=>{ const r=M.countMuletillas(f.t,lists(c)); const ks=Object.keys(r.found).map(M.norm);
+  if(!ks.includes(M.norm(f.m))) err('cazar',k,'no detecta',f.m,JSON.stringify(r.found)); if(ks.length!==1) err('cazar',k,'detecta otras',JSON.stringify(r.found));
+  f.o.forEach(o=>{ if(!M.norm(f.t).includes(M.norm(o))) err('cazar',k,'opcion fuera de la frase',o); }); }); }
 console.log('ERRORS',errors);

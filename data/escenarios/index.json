@@ -18,12 +18,51 @@
    "ready": true
   },
   {
+   "id": "disertacion",
+   "area": "Académico",
+   "name": {
+    "base": "Disertación en clases",
+    "MX": "Exposición en clase",
+    "AR": "Exposición oral en clase",
+    "CO": "Exposición en clase"
+   },
+   "who": "Curso y profesor",
+   "person": "Profesor Fuentes",
+   "blurb": "Expón un tema ante tu curso, mantén su atención y responde sus preguntas.",
+   "n": 10,
+   "ready": true
+  },
+  {
    "id": "entrevista",
    "area": "Laboral",
    "name": "Entrevista de trabajo",
    "who": "Reclutadora",
    "person": "Carolina",
    "blurb": "Responde las preguntas de una entrevista para un cargo que te interesa.",
+   "n": 10,
+   "ready": true
+  },
+  {
+   "id": "practica",
+   "area": "Laboral",
+   "name": {
+    "base": "Entrevista de práctica profesional",
+    "MX": "Entrevista para prácticas profesionales",
+    "AR": "Entrevista para una pasantía"
+   },
+   "who": "Jefe de logística",
+   "person": "Andrés Muñoz",
+   "blurb": "Sin experiencia laboral: convence con tus proyectos y tu actitud.",
+   "n": 10,
+   "ready": true
+  },
+  {
+   "id": "primerdia",
+   "area": "Laboral",
+   "name": "Primer día: presentarte al equipo",
+   "who": "Tu jefa y el equipo",
+   "person": "Marcela",
+   "blurb": "Preséntate, aprende cómo trabaja el equipo y empieza con el pie derecho.",
    "n": 10,
    "ready": true
   },
@@ -38,6 +77,16 @@
    "ready": true
   },
   {
+   "id": "devolucion",
+   "area": "Ventas",
+   "name": "Reclamo y devolución",
+   "who": "Clienta",
+   "person": "Valentina",
+   "blurb": "Di que no a lo que no se puede sin perder a la clienta: ofrece alternativas.",
+   "n": 10,
+   "ready": true
+  },
+  {
    "id": "cita",
    "area": "Social",
    "name": "Primera cita",
@@ -48,145 +97,129 @@
    "ready": true
   },
   {
-   "id": "pronto-01",
-   "area": "Académico",
-   "name": "Disertación en clases",
-   "ready": false
+   "id": "networking",
+   "area": "Social",
+   "name": "Networking en un evento",
+   "who": "Profesional del rubro",
+   "person": "Daniela Soto",
+   "blurb": "Acércate a alguien que admiras, genera una conversación y consigue el contacto.",
+   "n": 10,
+   "ready": true
   },
   {
-   "id": "pronto-02",
+   "id": "callcenter",
+   "area": "Cotidiano",
+   "name": "Reclamo en un call center",
+   "who": "Ejecutivo de atención",
+   "person": "Jonathan",
+   "blurb": "Haz valer tu reclamo con datos, firmeza y buen trato.",
+   "n": 10,
+   "ready": true
+  },
+  {
+   "id": "pronto-01",
    "area": "Académico",
    "name": "Pedir revisión de una nota",
    "ready": false
   },
   {
-   "id": "pronto-03",
+   "id": "pronto-02",
    "area": "Académico",
    "name": "Trabajo en grupo",
    "ready": false
   },
   {
-   "id": "pronto-04",
+   "id": "pronto-03",
    "area": "Académico",
    "name": "Defensa de tesis",
    "ready": false
   },
   {
-   "id": "pronto-05",
+   "id": "pronto-04",
    "area": "Académico",
    "name": "Entrevista para beca o intercambio",
    "ready": false
   },
   {
-   "id": "pronto-06",
-   "area": "Laboral",
-   "name": "Entrevista de práctica profesional",
-   "ready": false
-  },
-  {
-   "id": "pronto-07",
-   "area": "Laboral",
-   "name": "Primer día: presentarte al equipo",
-   "ready": false
-  },
-  {
-   "id": "pronto-08",
+   "id": "pronto-05",
    "area": "Laboral",
    "name": "Proponer una idea en reunión",
    "ready": false
   },
   {
-   "id": "pronto-09",
+   "id": "pronto-06",
    "area": "Laboral",
    "name": "Pedir un aumento",
    "ready": false
   },
   {
-   "id": "pronto-10",
+   "id": "pronto-07",
    "area": "Laboral",
    "name": "Dar una mala noticia al jefe",
    "ready": false
   },
   {
-   "id": "pronto-11",
+   "id": "pronto-08",
    "area": "Laboral",
    "name": "Negociar un plazo",
    "ready": false
   },
   {
-   "id": "pronto-12",
+   "id": "pronto-09",
    "area": "Laboral",
    "name": "Dar feedback a un compañero",
    "ready": false
   },
   {
-   "id": "pronto-13",
-   "area": "Ventas",
-   "name": "Reclamo y devolución",
-   "ready": false
-  },
-  {
-   "id": "pronto-14",
+   "id": "pronto-10",
    "area": "Ventas",
    "name": "Vender en una feria",
    "ready": false
   },
   {
-   "id": "pronto-15",
+   "id": "pronto-11",
    "area": "Ventas",
    "name": "Venta telefónica",
    "ready": false
   },
   {
-   "id": "pronto-16",
+   "id": "pronto-12",
    "area": "Ventas",
    "name": "Soporte a un cliente con poca experiencia digital",
    "ready": false
   },
   {
-   "id": "pronto-17",
+   "id": "pronto-13",
    "area": "Ventas",
    "name": "Pitch a inversionista",
    "ready": false
   },
   {
-   "id": "pronto-18",
-   "area": "Social",
-   "name": "Networking en un evento",
-   "ready": false
-  },
-  {
-   "id": "pronto-19",
+   "id": "pronto-14",
    "area": "Social",
    "name": "Conocer a los suegros",
    "ready": false
   },
   {
-   "id": "pronto-20",
+   "id": "pronto-15",
    "area": "Social",
    "name": "Brindis en un matrimonio o cumpleaños",
    "ready": false
   },
   {
-   "id": "pronto-21",
+   "id": "pronto-16",
    "area": "Social",
    "name": "Poner un límite a un amigo",
    "ready": false
   },
   {
-   "id": "pronto-22",
-   "area": "Cotidiano",
-   "name": "Reclamo en un call center",
-   "ready": false
-  },
-  {
-   "id": "pronto-23",
+   "id": "pronto-17",
    "area": "Cotidiano",
    "name": "Consulta médica",
    "ready": false
   },
   {
-   "id": "pronto-24",
+   "id": "pronto-18",
    "area": "Cotidiano",
    "name": {
     "base": "Arrendar un departamento",
@@ -197,7 +230,7 @@
    "ready": false
   },
   {
-   "id": "pronto-25",
+   "id": "pronto-19",
    "area": "Cotidiano",
    "name": {
     "base": "Reunión de apoderados",
@@ -208,7 +241,7 @@
    "ready": false
   },
   {
-   "id": "pronto-26",
+   "id": "pronto-20",
    "area": "Cotidiano",
    "name": "Ruidos con un vecino",
    "ready": false

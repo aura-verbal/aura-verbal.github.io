@@ -1,0 +1,488 @@
+{
+ "id": "practica",
+ "area": "Laboral",
+ "name": {
+  "base": "Entrevista de práctica profesional",
+  "MX": "Entrevista para prácticas profesionales",
+  "AR": "Entrevista para una pasantía"
+ },
+ "short": {
+  "base": "una entrevista de práctica",
+  "MX": "una entrevista para prácticas",
+  "AR": "una entrevista para una pasantía"
+ },
+ "who": "Jefe de logística",
+ "person": "Andrés Muñoz",
+ "blurb": "Sin experiencia laboral: convence con tus proyectos y tu actitud.",
+ "ficha": {
+  "situacion": {
+   "base": "Postulas a una práctica de seis meses en el área de logística de una empresa de alimentos. Nunca has trabajado formalmente, pero tienes proyectos de la universidad.",
+   "MX": "Postulas a unas prácticas profesionales de seis meses en el área de logística de una empresa de alimentos. Nunca has trabajado formalmente, pero tienes proyectos de la universidad.",
+   "AR": "Te postulás a una pasantía de seis meses en el área de logística de una empresa de alimentos. Nunca trabajaste formalmente, pero tenés proyectos de la facultad."
+  },
+  "enJuego": {
+   "base": "Una de las dos vacantes de práctica; la otra ya tiene candidato.",
+   "MX": "Uno de los dos lugares de prácticas; el otro ya tiene candidato.",
+   "AR": "Una de las dos vacantes de pasantía; la otra ya tiene candidato."
+  },
+  "objetivo": "Convertir tus proyectos académicos en evidencia de lo que sabes hacer y mostrar ganas de aprender sin sonar desesperado ni inventar experiencia.",
+  "pers": {
+   "amable": "Recuerda su propia práctica y te ayuda a sacar lo mejor de tus respuestas.",
+   "neutral": "Sigue una pauta y anota todo lo que dices.",
+   "dificil": "Desconfía de los estudiantes sin experiencia y te pide pruebas de cada cosa que dices."
+  }
+ },
+ "labels": [
+  "Coloquial",
+  "Profesional"
+ ],
+ "crit": "Se evalúa transformar la experiencia académica en logros concretos, mostrar disposición a aprender y hablar con seguridad sin inventar experiencia.",
+ "weights": {
+  "v": 0.55,
+  "m": 0.25,
+  "p": 0.2
+ },
+ "words": [
+  {
+   "col": "no tengo experiencia",
+   "pro": "mi experiencia viene de proyectos académicos",
+   "alt": "he aplicado lo aprendido en proyectos",
+   "why": "Reencuadra tu situación en lo que sí tienes, sin negarla.",
+   "ex": "Aún no he trabajado formalmente, pero ___ con datos reales.",
+   "d": [
+    "no tengo nada de experiencia, salvo",
+    "mi trayectoria es vastísima, incluso"
+   ],
+   "det": [
+    "no tengo experiencia"
+   ]
+  },
+  {
+   "col": {
+    "base": "en la u hicimos",
+    "MX": "en la uni hicimos",
+    "AR": "en la facu hicimos"
+   },
+   "pro": "en un proyecto del curso desarrollé",
+   "alt": "participé en, lideré",
+   "why": "Habla en primera persona: la entrevista es sobre lo que hiciste tú.",
+   "ex": "___ un modelo para ordenar las rutas de reparto.",
+   "d": {
+    "base": [
+     "en la u hicimos",
+     "en la academia se perpetró"
+    ],
+    "MX": [
+     "en la uni hicimos",
+     "en la academia se perpetró"
+    ],
+    "AR": [
+     "en la facu hicimos",
+     "en la academia se perpetró"
+    ]
+   },
+   "det": [
+    "en la u hicimos",
+    "en la uni hicimos",
+    "en la facu hicimos"
+   ]
+  },
+  {
+   "col": "me manejo en Excel",
+   "pro": "tengo dominio de Excel",
+   "alt": "uso con soltura Excel",
+   "why": "Precisa tu nivel; «me manejo» suena a que apenas sabes.",
+   "ex": "___ y uso Python para analizar bases de datos.",
+   "d": {
+    "base": [
+     "me defiendo en Excel",
+     "soy un virtuoso del Excel"
+    ],
+    "AR": [
+     "me la rebusco con Excel",
+     "soy un virtuoso del Excel"
+    ]
+   },
+   "det": [
+    "me manejo",
+    "me defiendo",
+    "me la rebusco"
+   ]
+  },
+  {
+   "col": {
+    "base": "me gusta",
+    "CL": "me tinca",
+    "MX": "me late",
+    "AR": "me copa"
+   },
+   "pro": "me motiva",
+   "alt": "me interesa especialmente",
+   "why": "Explica tu interés con un verbo que transmite convicción.",
+   "ex": "___ trabajar en logística porque se ven los resultados en el día a día.",
+   "d": {
+    "base": [
+     "me gusta harto",
+     "me apasiona hasta lo indecible"
+    ],
+    "CL": [
+     "me tinca",
+     "me apasiona hasta lo indecible"
+    ],
+    "MX": [
+     "me late",
+     "me apasiona hasta lo indecible"
+    ],
+    "AR": [
+     "me copa",
+     "me apasiona hasta lo indecible"
+    ]
+   },
+   "det": [
+    "me tinca",
+    "me late",
+    "me copa"
+   ]
+  },
+  {
+   "col": "soy muy ordenado",
+   "pro": "organizo mi trabajo con",
+   "alt": "planifico con, priorizo con",
+   "why": "Muestra la cualidad con el método, no con el adjetivo.",
+   "ex": "___ una lista de tareas y plazos semanales.",
+   "d": [
+    "soy súper ordenado con",
+    "me rijo por el sistema infalible de"
+   ],
+   "det": [
+    "super ordenad",
+    "muy ordenad"
+   ]
+  },
+  {
+   "col": "hago lo que sea",
+   "pro": "tengo disponibilidad para",
+   "alt": "puedo, me acomodo a",
+   "why": "Muestra disposición sin sonar a que aceptas cualquier condición.",
+   "ex": "___ rotar entre turnos si el área lo necesita.",
+   "d": [
+    "hago lo que sea por",
+    "me inmolo gustoso para"
+   ],
+   "det": [
+    "lo que sea"
+   ]
+  },
+  {
+   "col": "mi defecto es que soy perfeccionista",
+   "pro": "un aspecto que estoy mejorando es",
+   "alt": "estoy trabajando en",
+   "why": "Reconoce una debilidad real y muestra qué haces con ella; el cliché del perfeccionismo no convence.",
+   "ex": "___ hablar en público; por eso tomé un taller de oratoria.",
+   "d": [
+    "mi defecto es que soy perfeccionista al",
+    "no poseo defecto alguno salvo"
+   ],
+   "det": [
+    "perfeccionista",
+    "mi defecto"
+   ]
+  },
+  {
+   "col": "ni idea de SAP",
+   "pro": "aún no lo he usado, pero",
+   "alt": "estoy en proceso de aprenderlo",
+   "why": "Reconoce lo que no sabes y muestra cómo lo vas a resolver.",
+   "ex": "SAP ___ ya estoy haciendo un curso en línea.",
+   "d": [
+    "ni idea qué es, pero",
+    "lo domino a la perfección, aunque"
+   ],
+   "det": [
+    "ni idea"
+   ]
+  },
+  {
+   "col": "¿cuánto pagan?",
+   "pro": {
+    "base": "¿qué contempla la práctica",
+    "MX": "¿qué contemplan las prácticas",
+    "AR": "¿qué contempla la pasantía"
+   },
+   "alt": "¿cómo es el proceso de inducción?",
+   "why": "Pregunta por las condiciones de forma profesional, sin que el dinero sea lo primero.",
+   "ex": "Antes de terminar, ___ en cuanto a horario y beneficios?",
+   "d": [
+    "¿cuánto pagan",
+    "¿a cuánto asciende mi estipendio"
+   ],
+   "det": [
+    "cuanto pagan"
+   ]
+  },
+  {
+   "col": "ojalá me llamen",
+   "pro": "quedo a disposición para lo que necesiten",
+   "alt": "me encantaría ser parte del equipo",
+   "why": "Cierra con seguridad y deja la puerta abierta, sin rogar.",
+   "ex": "Muchas gracias por la entrevista; ___.",
+   "d": [
+    "ojalá me llamen, porfa",
+    "imploro su favorable decisión"
+   ],
+   "det": [
+    "ojala me llamen"
+   ]
+  }
+ ],
+ "sim": {
+  "start": "t1",
+  "nodes": {
+   "t1": {
+    "type": "choice",
+    "say": {
+     "base": "Hola, gracias por venir. Cuénteme, ¿por qué quiere hacer su práctica con nosotros?",
+     "MX": "Hola, gracias por venir. Cuénteme, ¿por qué quiere hacer sus prácticas con nosotros?",
+     "AR": "Hola, gracias por venir. Cuénteme, ¿por qué quiere hacer su pasantía con nosotros?"
+    },
+    "opts": [
+     {
+      "t": {
+       "base": "Porque necesito la práctica para titularme.",
+       "MX": "Porque necesito las prácticas para titularme.",
+       "AR": "Porque necesito la pasantía para recibirme."
+      },
+      "s": 0.3,
+      "fb": "Es honesto, pero habla de tu necesidad y no de lo que aportas.",
+      "next": "t2b"
+     },
+     {
+      "t": "Me motiva trabajar en logística porque se ven los resultados en el día a día, y ustedes manejan una de las redes de distribución más grandes del país.",
+      "s": 1,
+      "fb": "Conectas tu motivación con la empresa: muestras que investigaste.",
+      "next": "t2a"
+     },
+     {
+      "t": {
+       "base": "La verdad, mandé currículum a varias partes y ustedes me llamaron.",
+       "AR": "La verdad, mandé currículum a varios lados y ustedes me llamaron."
+      },
+      "s": 0.1,
+      "fb": "Confirma que te da lo mismo dónde trabajar.",
+      "next": "t2b"
+     }
+    ]
+   },
+   "t2a": {
+    "type": "choice",
+    "next": "t3",
+    "say": "Bien. Pero usted no tiene experiencia laboral. ¿Por qué deberíamos elegir su postulación?",
+    "opts": [
+     {
+      "t": "Porque aprendo rápido y tengo muchas ganas.",
+      "s": 0.4,
+      "fb": "Las ganas suman, pero sin evidencia suenan igual que las de cualquier candidato."
+     },
+     {
+      "t": "Es cierto que no tengo experiencia formal; mi experiencia viene de proyectos académicos. En un proyecto del curso desarrollé un modelo de rutas que redujo los kilómetros recorridos en un 12%.",
+      "s": 1,
+      "fb": "Reconoces el límite y lo transformas en evidencia con un número."
+     },
+     {
+      "t": "Bueno, todos empiezan sin experiencia, ¿no?",
+      "s": 0.2,
+      "fb": "Cierto, pero no responde por qué tú."
+     }
+    ]
+   },
+   "t2b": {
+    "type": "choice",
+    "next": "t3",
+    "say": "Entiendo. Pero ¿qué le interesa de este trabajo en particular?",
+    "opts": [
+     {
+      "t": "Me interesa la planificación de rutas: hice un proyecto en la universidad sobre eso y me gustaría verlo funcionando en una operación real.",
+      "s": 1,
+      "fb": "Recuperas la entrevista con un interés concreto y un proyecto que lo respalda."
+     },
+     {
+      "t": "Me da lo mismo el área; lo importante es aprender.",
+      "s": 0.3,
+      "fb": "Quieres sonar flexible, pero suena a falta de interés."
+     },
+     {
+      "t": "Que queda cerca de mi casa.",
+      "s": 0.1,
+      "fb": "Puede ser verdad, pero no es un argumento para elegirte."
+     }
+    ]
+   },
+   "t3": {
+    "type": "fill",
+    "next": "t4",
+    "say": "¿Qué herramientas maneja?",
+    "tpl": "___ y uso Python para analizar bases de datos.",
+    "opts": [
+     "Tengo dominio de Excel",
+     "Me defiendo en Excel",
+     "Soy un virtuoso del Excel"
+    ],
+    "fb": "«Tengo dominio» precisa tu nivel; «me defiendo» suena a que apenas sabes."
+   },
+   "t4": {
+    "type": "choice",
+    "next": "t5",
+    "say": "¿Ha usado SAP alguna vez?",
+    "opts": [
+     {
+      "t": "Sí, claro, lo manejo bien.",
+      "s": 0.1,
+      "fb": "Inventar experiencia es lo más riesgoso: lo van a notar el primer día."
+     },
+     {
+      "t": "No, nunca.",
+      "s": 0.3,
+      "fb": "Honesto, pero sin mostrar disposición a aprender."
+     },
+     {
+      "t": "Aún no lo he usado, pero ya estoy haciendo un curso en línea y en dos semanas termino el módulo de inventarios.",
+      "s": 1,
+      "fb": "Reconoces lo que no sabes y muestras cómo lo estás resolviendo."
+     }
+    ]
+   },
+   "t5": {
+    "type": "free",
+    "next": "t6",
+    "say": "Cuénteme de algún proyecto en el que haya resuelto un problema.",
+    "hint": [
+     "en un proyecto del curso desarrollé",
+     "un resultado con número",
+     "aprendí que"
+    ],
+    "groups": [
+     [
+      "desarroll",
+      "lider",
+      "particip",
+      "implement",
+      "elabor"
+     ],
+     [
+      "por ciento",
+      "reduj",
+      "mejor",
+      "aument",
+      "disminu",
+      "ahorr"
+     ],
+     [
+      "aprendi",
+      "me di cuenta"
+     ]
+    ],
+    "model": "En un proyecto del curso desarrollé un modelo para ordenar las rutas de reparto de una tienda. Logramos reducir los kilómetros recorridos en un doce por ciento, y aprendí que los datos reales siempre traen sorpresas."
+   },
+   "t6": {
+    "type": "fill",
+    "next": "t7",
+    "say": "¿Cuál diría que es su principal debilidad?",
+    "tpl": "___ hablar en público; por eso tomé un taller de oratoria.",
+    "opts": [
+     "Un aspecto que estoy mejorando es",
+     "Mi defecto es que soy perfeccionista al",
+     "No poseo defecto alguno salvo"
+    ],
+    "fb": "Reconocer una debilidad real y lo que haces con ella convence más que el cliché del perfeccionismo."
+   },
+   "t7": {
+    "type": "choice",
+    "next": "t8",
+    "say": {
+     "base": "La práctica es de lunes a viernes y a veces hay turnos de mañana. ¿Tiene disponibilidad?",
+     "MX": "Las prácticas son de lunes a viernes y a veces hay turnos de mañana. ¿Tiene disponibilidad?",
+     "AR": "La pasantía es de lunes a viernes y a veces hay turnos de mañana. ¿Tiene disponibilidad?"
+    },
+    "opts": [
+     {
+      "t": "Hago lo que sea, de verdad.",
+      "s": 0.3,
+      "fb": "Mostrar disposición está bien; sonar desesperado, no."
+     },
+     {
+      "t": {
+       "base": "Sí, tengo disponibilidad para los turnos de mañana: este semestre solo tengo una asignatura y es en línea.",
+       "CL": "Sí, tengo disponibilidad para los turnos de mañana: este semestre solo tengo un ramo y es online.",
+       "MX": "Sí, tengo disponibilidad para los turnos de mañana: este semestre solo tengo una materia y es en línea.",
+       "AR": "Sí, tengo disponibilidad para los turnos de mañana: este cuatrimestre solo tengo una materia y es virtual.",
+       "CO": "Sí, tengo disponibilidad para los turnos de mañana: este semestre solo tengo una materia y es virtual."
+      },
+      "s": 1,
+      "fb": "Respondes con claridad y das un dato que te hace confiable."
+     },
+     {
+      "t": "Mmm, preferiría no hacer turnos de mañana.",
+      "s": 0.2,
+      "fb": "Es válido tener límites, pero plantéalo con una alternativa."
+     }
+    ]
+   },
+   "t8": {
+    "type": "free",
+    "next": null,
+    "say": "Bueno, eso es todo de mi parte. ¿Tiene alguna pregunta para nosotros?",
+    "hint": [
+     {
+      "base": "¿qué contempla la práctica?",
+      "MX": "¿qué contemplan las prácticas?",
+      "AR": "¿qué contempla la pasantía?"
+     },
+     "quedo a disposición",
+     "muchas gracias"
+    ],
+    "groups": [
+     [
+      "contempla",
+      "proceso de induccion",
+      "como es un dia",
+      "que se espera",
+      "horario",
+      "benefici"
+     ],
+     [
+      "quedo a disposicion",
+      "me encantaria ser parte",
+      "me gustaria ser parte",
+      "quedo atent"
+     ],
+     [
+      "gracias"
+     ]
+    ],
+    "model": {
+     "base": "Sí: ¿qué contempla la práctica en cuanto a horario y beneficios? Muchas gracias por la entrevista; quedo a disposición para lo que necesiten.",
+     "MX": "Sí: ¿qué contemplan las prácticas en cuanto a horario y beneficios? Muchas gracias por la entrevista; quedo a disposición para lo que necesiten.",
+     "AR": "Sí: ¿qué contempla la pasantía en cuanto a horario y beneficios? Muchas gracias por la entrevista; quedo a disposición para lo que necesiten."
+    }
+   }
+  }
+ },
+ "endings": {
+  "alto": {
+   "title": {
+    "base": "Práctica confirmada",
+    "MX": "Prácticas confirmadas",
+    "AR": "Pasantía confirmada"
+   },
+   "text": "Andrés te ofrece la vacante y te pide empezar el próximo lunes."
+  },
+  "medio": {
+   "title": "Quedas en lista de espera",
+   "text": "Le gustó tu actitud, pero quiere compararte con el otro candidato."
+  },
+  "bajo": {
+   "title": "No quedaste",
+   "text": "No lograste mostrar qué puedes aportar. Prueba convertir tus proyectos en ejemplos con números."
+  }
+ }
+}

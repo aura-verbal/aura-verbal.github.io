@@ -1,0 +1,520 @@
+{
+ "id": "primerdia",
+ "area": "Laboral",
+ "name": "Primer día: presentarte al equipo",
+ "short": "tu primer día en un equipo nuevo",
+ "who": "Tu jefa y el equipo",
+ "person": "Marcela",
+ "blurb": "Preséntate, aprende cómo trabaja el equipo y empieza con el pie derecho.",
+ "ficha": {
+  "situacion": "Es tu primer día como analista en el área comercial de una empresa de tecnología. Marcela, tu jefa, te presenta en la reunión de la mañana a un equipo de seis personas que lleva años trabajando junto.",
+  "enJuego": "La primera impresión ante las personas con las que vas a trabajar todos los días.",
+  "objetivo": "Presentarte en pocas frases, mostrar interés por el trabajo de los demás y pedir ayuda sin parecer perdido.",
+  "pers": {
+   "amable": "El equipo es acogedor y te hace sentir parte desde el primer minuto.",
+   "neutral": "Te reciben con cordialidad, pero están ocupados.",
+   "dificil": "Tomás, un compañero escéptico, pone a prueba a cada persona nueva."
+  }
+ },
+ "labels": [
+  "Muy informal o rígido",
+  "Cercano y profesional"
+ ],
+ "crit": "Se evalúa presentarte con claridad, mostrar interés genuino y equilibrar cercanía con profesionalismo.",
+ "weights": {
+  "v": 0.45,
+  "m": 0.3,
+  "p": 0.25
+ },
+ "words": [
+  {
+   "col": "bueno, yo soy...",
+   "pro": "les cuento brevemente quién soy",
+   "alt": "me presento",
+   "why": "Anuncia una presentación breve: el equipo sabe que no vas a tomar toda la reunión.",
+   "ex": "Hola a todos, ___: vengo del área de datos de una consultora.",
+   "d": [
+    "bueno, yo soy, eh",
+    "procedo a autodefinirme"
+   ],
+   "det": []
+  },
+  {
+   "col": "hacía de todo",
+   "pro": "estuve a cargo de",
+   "alt": "me encargaba de, lideraba",
+   "why": "Concreta tu experiencia anterior en una responsabilidad clara.",
+   "ex": "En mi trabajo anterior ___ los reportes de ventas.",
+   "d": [
+    "hacía de todo un poco, incluso",
+    "ostentaba la responsabilidad suprema de"
+   ],
+   "det": [
+    "hacia de todo"
+   ]
+  },
+  {
+   "col": {
+    "base": "todavía no entiendo nada",
+    "CL": "todavía no cacho nada",
+    "MX": "todavía no le entiendo a nada"
+   },
+   "pro": "estoy conociendo los procesos",
+   "alt": "me estoy poniendo al día",
+   "why": "Reconoce que estás aprendiendo sin restarte valor.",
+   "ex": "___, así que voy a hacer muchas preguntas esta semana.",
+   "d": {
+    "base": [
+     "todavía no entiendo nada",
+     "me hallo en total desconcierto"
+    ],
+    "CL": [
+     "todavía no cacho nada",
+     "me hallo en total desconcierto"
+    ],
+    "MX": [
+     "todavía no le entiendo a nada",
+     "me hallo en total desconcierto"
+    ]
+   },
+   "det": [
+    "no entiendo nada",
+    "no cacho nada",
+    "no le entiendo a nada"
+   ]
+  },
+  {
+   "col": {
+    "base": "¿y tú qué haces?",
+    "AR": "¿y vos qué hacés?"
+   },
+   "pro": {
+    "base": "cuéntame en qué estás trabajando",
+    "AR": "contame en qué estás trabajando"
+   },
+   "alt": "me gustaría saber qué proyectos llevas",
+   "why": "Muestra interés genuino en el trabajo de los demás, no solo en su cargo.",
+   "ex": "Tomás, ___; así entiendo cómo me puedo sumar.",
+   "d": {
+    "base": [
+     "¿y tú qué haces aquí?",
+     "infórmame de tus funciones"
+    ],
+    "AR": [
+     "¿y vos qué hacés acá?",
+     "informame de tus funciones"
+    ]
+   },
+   "det": []
+  },
+  {
+   "col": "eso no se hacía así",
+   "pro": "en mi experiencia anterior funcionó",
+   "alt": "una alternativa que he visto funcionar es",
+   "why": "Aporta tu experiencia como opción, sin descalificar cómo trabaja el equipo.",
+   "ex": "___ automatizar ese reporte; si les sirve, lo podemos ver.",
+   "d": {
+    "base": [
+     "en mi otro trabajo lo hacíamos mejor:",
+     "es evidente que lo correcto es"
+    ],
+    "CL": [
+     "en mi otra pega lo hacíamos mejor:",
+     "es evidente que lo correcto es"
+    ],
+    "MX": [
+     "en mi otra chamba lo hacíamos mejor:",
+     "es evidente que lo correcto es"
+    ],
+    "AR": [
+     "en mi otro laburo lo hacíamos mejor:",
+     "es evidente que lo correcto es"
+    ]
+   },
+   "det": [
+    "lo haciamos mejor",
+    "no se hacia asi"
+   ]
+  },
+  {
+   "col": {
+    "base": "¿me ayudas con esto?",
+    "AR": "¿me ayudás con esto?"
+   },
+   "pro": {
+    "base": "¿tienes cinco minutos para explicarme",
+    "AR": "¿tenés cinco minutos para explicarme"
+   },
+   "alt": "cuando puedas, ¿me orientas con",
+   "why": "Pedir ayuda con un tiempo acotado respeta la agenda del otro.",
+   "ex": "Tomás, ___ cómo se carga un pedido en el sistema?",
+   "d": {
+    "base": [
+     "¿me ayudas con esto de",
+     "¿podría usted ilustrarme sobre"
+    ],
+    "AR": [
+     "¿me ayudás con esto de",
+     "¿podría usted ilustrarme sobre"
+    ]
+   },
+   "det": []
+  },
+  {
+   "col": "¿cómo te llamabas?",
+   "pro": {
+    "base": "perdona, ¿me repites tu nombre?",
+    "AR": "perdoná, ¿me repetís tu nombre?"
+   },
+   "alt": "ayúdame con tu nombre otra vez",
+   "why": "Pedirlo de nuevo con naturalidad es mejor que evitar a la persona toda la semana.",
+   "ex": "___ Son muchas caras nuevas hoy.",
+   "d": {
+    "base": [
+     "¿cómo era que te llamabas tú?",
+     "disculpe, ¿su gracia?"
+    ],
+    "AR": [
+     "¿cómo era que te llamabas vos?",
+     "disculpe, ¿su gracia?"
+    ]
+   },
+   "det": []
+  },
+  {
+   "col": {
+    "base": "da lo mismo",
+    "MX": "me da igual"
+   },
+   "pro": "me acomoda cualquiera de las dos",
+   "alt": "por mí está bien, ¿qué prefieren?",
+   "why": "Muestras flexibilidad sin parecer indiferente.",
+   "ex": {
+    "base": "¿Almorzamos a la una o a las dos? ___.",
+    "MX": "¿Comemos a la una o a las dos? ___."
+   },
+   "d": {
+    "base": [
+     "da lo mismo",
+     "me es absolutamente indiferente"
+    ],
+    "MX": [
+     "me da igual",
+     "me es absolutamente indiferente"
+    ]
+   },
+   "det": [
+    "da lo mismo",
+    "me da igual"
+   ]
+  },
+  {
+   "col": "yo me encargo de todo",
+   "pro": "puedo hacerme cargo de",
+   "alt": "me ofrezco para",
+   "why": "Ofrécete para algo concreto: prometer todo el primer día genera expectativas que no vas a cumplir.",
+   "ex": "Si les parece, ___ actualizar el reporte semanal.",
+   "d": [
+    "yo me encargo de todo, incluso de",
+    "asumo la totalidad de"
+   ],
+   "det": [
+    "me encargo de todo"
+   ]
+  },
+  {
+   "col": {
+    "base": "bueno, chao",
+    "AR": "bueno, chau"
+   },
+   "pro": "muchas gracias por la bienvenida",
+   "alt": "un gusto conocerlos",
+   "why": "Agradecer la bienvenida deja una buena primera impresión.",
+   "ex": "___; nos vemos mañana.",
+   "d": {
+    "base": [
+     "bueno, chao",
+     "agradezco la deferencia"
+    ],
+    "AR": [
+     "bueno, chau",
+     "agradezco la deferencia"
+    ]
+   },
+   "det": []
+  }
+ ],
+ "sim": {
+  "start": "t1",
+  "nodes": {
+   "t1": {
+    "type": "choice",
+    "say": {
+     "base": "Equipo, les presento a la persona que se suma hoy al área. ¿Te presentas?",
+     "AR": "Equipo, les presento a la persona que se suma hoy al área. ¿Te presentás?"
+    },
+    "opts": [
+     {
+      "t": "Hola... eh, bueno, yo empiezo hoy. No sé qué más decir.",
+      "s": 0.2,
+      "fb": "Quedarte en blanco deja al equipo sin nada de qué hablar contigo.",
+      "next": "t2b"
+     },
+     {
+      "t": "Buenos días. Mi trayectoria comprende cinco años de formación y tres de ejercicio profesional en el rubro analítico.",
+      "s": 0.4,
+      "fb": "Información correcta, pero suena a currículum leído, no a persona.",
+      "next": "t2b"
+     },
+     {
+      "t": "Hola a todos, les cuento brevemente quién soy: vengo del área de datos de una consultora, donde estuve a cargo de los reportes de ventas. Estoy con muchas ganas de trabajar con ustedes.",
+      "s": 1,
+      "fb": "Breve, con una responsabilidad concreta y energía positiva.",
+      "next": "t2a"
+     }
+    ]
+   },
+   "t2a": {
+    "type": "choice",
+    "next": "t3",
+    "say": {
+     "base": "Hola. Oye, ¿y por qué te cambiaste de la consultora? Allá se gana más, ¿no?",
+     "AR": "Hola. Che, ¿y por qué te fuiste de la consultora? Allá se gana más, ¿no?"
+    },
+    "opts": [
+     {
+      "t": "Buscaba estar más cerca de las decisiones comerciales; en una consultora entregas el análisis y no ves qué pasa después.",
+      "s": 1,
+      "fb": "Respondes la pregunta incómoda con una razón profesional y sin entrar en el tema del sueldo."
+     },
+     {
+      "t": {
+       "base": "Jaja, mejor no hablemos de plata.",
+       "MX": "Jaja, mejor no hablemos de lana."
+      },
+      "s": 0.4,
+      "fb": "Esquivas con humor, pero sin dar una razón."
+     },
+     {
+      "t": "Porque mi jefe era insoportable.",
+      "s": 0.1,
+      "fb": "Hablar mal de un trabajo anterior el primer día preocupa a todos."
+     }
+    ]
+   },
+   "t2b": {
+    "type": "choice",
+    "next": "t3",
+    "say": {
+     "base": "Tranquilidad, es normal el primer día. Cuéntales qué hacías antes de llegar.",
+     "CL": "Tranqui, es normal el primer día. Cuéntales qué hacías antes de llegar.",
+     "AR": "Tranqui, es normal el primer día. Contales qué hacías antes de venir."
+    },
+    "opts": [
+     {
+      "t": "Hacía de todo un poco, la verdad.",
+      "s": 0.3,
+      "fb": "Tan general que nadie recuerda qué sabes hacer."
+     },
+     {
+      "t": "Claro. Trabajaba en una consultora y estuve a cargo de los reportes de ventas, así que conozco bien el lado comercial.",
+      "s": 1,
+      "fb": "Recuperas con un dato concreto que conecta con el equipo."
+     },
+     {
+      "t": "Eso está en mi LinkedIn.",
+      "s": 0.1,
+      "fb": "Mandarlos a buscar tu perfil corta la conversación."
+     }
+    ]
+   },
+   "t3": {
+    "type": "fill",
+    "next": "t4",
+    "say": "Tomás lleva el seguimiento de los clientes grandes; vas a trabajar mucho con él.",
+    "tpl": "Tomás, ___; así entiendo cómo me puedo sumar.",
+    "opts": {
+     "base": [
+      "cuéntame en qué estás trabajando",
+      "¿y tú qué haces aquí?",
+      "infórmame de tus funciones"
+     ],
+     "AR": [
+      "contame en qué estás trabajando",
+      "¿y vos qué hacés acá?",
+      "informame de tus funciones"
+     ]
+    },
+    "fb": "Preguntar por su trabajo muestra interés real y te ayuda a ubicarte."
+   },
+   "t4": {
+    "type": "choice",
+    "next": "t5",
+    "say": {
+     "base": "Te advierto que aquí el reporte semanal se hace a mano. Es lento, pero así funciona.",
+     "AR": "Te aviso que acá el reporte semanal se hace a mano. Es lento, pero así funciona."
+    },
+    "opts": [
+     {
+      "t": {
+       "base": "Eso es muy ineficiente; en mi otro trabajo lo hacíamos mejor.",
+       "CL": "Eso es súper ineficiente; en mi otra pega lo hacíamos mejor.",
+       "MX": "Eso es muy ineficiente; en mi otra chamba lo hacíamos mejor.",
+       "AR": "Eso es re ineficiente; en mi otro laburo lo hacíamos mejor."
+      },
+      "s": 0.1,
+      "fb": "Criticar el primer día pone a todo el equipo a la defensiva."
+     },
+     {
+      "t": "Entiendo. Primero quiero ver cómo lo hacen; en mi experiencia anterior funcionó automatizar una parte y, si les sirve, más adelante lo podemos ver.",
+      "s": 1,
+      "fb": "Aportas tu experiencia como opción, después de entender cómo trabajan."
+     },
+     {
+      "t": {
+       "base": "Ah, ya. Bueno.",
+       "AR": "Ah, bueno. Dale."
+      },
+      "s": 0.3,
+      "fb": "No es un error, pero pierdes la oportunidad de mostrar qué puedes aportar."
+     }
+    ]
+   },
+   "t5": {
+    "type": "free",
+    "next": "t6",
+    "say": "¿Qué esperas de estas primeras semanas?",
+    "hint": [
+     "estoy conociendo los procesos",
+     "tengo muchas ganas",
+     "puedo hacerme cargo de"
+    ],
+    "groups": [
+     [
+      "conociendo",
+      "aprend",
+      "ponerme al dia",
+      "entender"
+     ],
+     [
+      "ganas",
+      "me entusiasma",
+      "me motiva"
+     ],
+     [
+      "hacerme cargo",
+      "me ofrezco",
+      "aportar",
+      "encargarme"
+     ]
+    ],
+    "model": "Por ahora estoy conociendo los procesos, así que voy a hacer muchas preguntas. Tengo muchas ganas de aportar y, cuando tenga más soltura, puedo hacerme cargo del reporte semanal."
+   },
+   "t6": {
+    "type": "fill",
+    "next": "t7",
+    "say": {
+     "base": "¡Hola de nuevo! Nos presentamos en la mañana, ¿te acuerdas de mí?",
+     "AR": "¡Hola de nuevo! Nos presentamos a la mañana, ¿te acordás de mí?"
+    },
+    "tpl": "¡Hola! ___ Son muchas caras nuevas hoy.",
+    "opts": {
+     "base": [
+      "Perdona, ¿me repites tu nombre?",
+      "¿Cómo era que te llamabas tú?",
+      "Disculpe, ¿su gracia?"
+     ],
+     "AR": [
+      "Perdoná, ¿me repetís tu nombre?",
+      "¿Cómo era que te llamabas vos?",
+      "Disculpe, ¿su gracia?"
+     ]
+    },
+    "fb": "Pedirlo con naturalidad y una sonrisa es mucho mejor que evitar a la persona."
+   },
+   "t7": {
+    "type": "choice",
+    "next": "t8",
+    "say": {
+     "base": "Vamos a almorzar. ¿A la una o a las dos?",
+     "MX": "Vamos a comer. ¿A la una o a las dos?"
+    },
+    "opts": [
+     {
+      "t": {
+       "base": "Da lo mismo.",
+       "MX": "Me da igual."
+      },
+      "s": 0.3,
+      "fb": "Puede sonar a desinterés en tu primer almuerzo con el equipo."
+     },
+     {
+      "t": {
+       "base": "Gracias, pero prefiero almorzar en mi escritorio para avanzar.",
+       "MX": "Gracias, pero prefiero comer en mi escritorio para avanzar."
+      },
+      "s": 0.2,
+      "fb": "Es válido, pero el primer día el almuerzo es parte de integrarte."
+     },
+     {
+      "t": "Me acomoda cualquiera de las dos; ¿qué prefieren ustedes?",
+      "s": 1,
+      "fb": "Flexible y atento al grupo, sin sonar indiferente."
+     }
+    ]
+   },
+   "t8": {
+    "type": "free",
+    "next": null,
+    "say": "¿Cómo te fue en tu primer día?",
+    "hint": [
+     "cómo te sentiste",
+     "muchas gracias por la bienvenida",
+     "lo que harás mañana"
+    ],
+    "groups": [
+     [
+      "me senti",
+      "muy bien",
+      "comod",
+      "acogid",
+      "parte del equipo"
+     ],
+     [
+      "gracias"
+     ],
+     [
+      "manana",
+      "proxima semana",
+      "siguiente paso"
+     ]
+    ],
+    "model": {
+     "base": "Muy bien, me sentí parte del equipo desde la mañana. Muchas gracias por la bienvenida; mañana empiezo revisando el reporte semanal con Tomás.",
+     "CL": "Muy bien, me sentí parte del equipo desde la mañana. Muchas gracias por la bienvenida; mañana parto revisando el reporte semanal con Tomás.",
+     "AR": "Muy bien, me sentí parte del equipo desde temprano. Muchas gracias por la bienvenida; mañana empiezo revisando el reporte semanal con Tomás."
+    }
+   }
+  }
+ },
+ "endings": {
+  "alto": {
+   "title": {
+    "base": "Ya eres parte del equipo",
+    "AR": "Ya sos parte del equipo"
+   },
+   "text": "Tomás te agrega al grupo del equipo y te invita a la salida del viernes."
+  },
+  "medio": {
+   "title": "Buen comienzo",
+   "text": {
+    "base": "Te recibieron bien, aunque todavía no saben mucho de ti.",
+    "AR": "Te recibieron bien, aunque todavía no saben mucho de vos."
+   }
+  },
+  "bajo": {
+   "title": "Comienzo cuesta arriba",
+   "text": "El equipo quedó con dudas. Prueba presentarte con un dato concreto y preguntar más por el trabajo de los demás."
+  }
+ }
+}

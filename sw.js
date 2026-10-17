@@ -1,12 +1,14 @@
 /* Aura · service worker: permite abrir la app sin conexión.
    Archivos propios: primero la red (para recibir actualizaciones) y, si no hay internet, la copia guardada.
    Tipografías de Google: primero la copia guardada. */
-const VERSION = "aura-v4-1";
+const VERSION = "aura-v5";
 const CORE = [
   "./", "index.html", "js/motor.js", "js/app.js", "manifest.webmanifest",
   "data/paises.json", "data/escenarios/index.json",
   "data/escenarios/presentacion.json", "data/escenarios/entrevista.json",
   "data/escenarios/venta.json", "data/escenarios/cita.json",
+  "data/escenarios/disertacion.json", "data/escenarios/practica.json", "data/escenarios/primerdia.json",
+  "data/escenarios/devolucion.json", "data/escenarios/networking.json", "data/escenarios/callcenter.json",
   "hero.webp", "hero.jpg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"
 ];
 self.addEventListener("install", e => {

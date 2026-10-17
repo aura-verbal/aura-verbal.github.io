@@ -295,7 +295,7 @@ VENTA = {
     "Esta zapatilla ___ porque tiene la suela reforzada.",
     loc(["dura un montón", "es imperecedera"], CL=["dura caleta", "es imperecedera"], MX=["dura un buen", "es imperecedera"],
         AR=["dura una banda", "es imperecedera"], CO=["dura harto", "es imperecedera"]),
-    ["harto", "caleta", "un monton", "un buen", "una banda"]),
+    ["harto", "caleta", "dura un monton", "dura un buen", "dura una banda"]),
   W("lléveselo", "le recomiendo", "le sugiero", "Aconseja en vez de presionar.",
     "Para correr, ___ este modelo con amortiguación.", ["lléveselo nomás", "le conmino a adquirir"], ["lleveselo"]),
   W("oferta", "promoción", "descuento vigente", "Suena a beneficio planificado, no a liquidación.",
@@ -486,20 +486,22 @@ CITA = {
   "bajo": {"title": "No hubo química", "text": "La conversación no fluyó. Prueba devolver más preguntas y mostrar curiosidad."}},
 }
 
-ESCENARIOS = [PRESENTACION, ENTREVISTA, VENTA, CITA]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from escenarios_nuevos import DISERTACION, PRACTICA, PRIMERDIA, DEVOLUCION, NETWORKING, CALLCENTER
+
+ESCENARIOS = [PRESENTACION, DISERTACION, ENTREVISTA, PRACTICA, PRIMERDIA, VENTA, DEVOLUCION, CITA, NETWORKING, CALLCENTER]
 
 # Catálogo completo (los no disponibles aparecen como «Próximamente»)
 PROXIMOS = [
- ("Académico", "Disertación en clases"), ("Académico", "Pedir revisión de una nota"), ("Académico", "Trabajo en grupo"),
+ ("Académico", "Pedir revisión de una nota"), ("Académico", "Trabajo en grupo"),
  ("Académico", "Defensa de tesis"), ("Académico", "Entrevista para beca o intercambio"),
- ("Laboral", "Entrevista de práctica profesional"), ("Laboral", "Primer día: presentarte al equipo"),
  ("Laboral", "Proponer una idea en reunión"), ("Laboral", "Pedir un aumento"), ("Laboral", "Dar una mala noticia al jefe"),
  ("Laboral", "Negociar un plazo"), ("Laboral", "Dar feedback a un compañero"),
- ("Ventas", "Reclamo y devolución"), ("Ventas", "Vender en una feria"), ("Ventas", "Venta telefónica"),
+ ("Ventas", "Vender en una feria"), ("Ventas", "Venta telefónica"),
  ("Ventas", "Soporte a un cliente con poca experiencia digital"), ("Ventas", "Pitch a inversionista"),
- ("Social", "Networking en un evento"), ("Social", "Conocer a los suegros"), ("Social", "Brindis en un matrimonio o cumpleaños"),
+ ("Social", "Conocer a los suegros"), ("Social", "Brindis en un matrimonio o cumpleaños"),
  ("Social", "Poner un límite a un amigo"),
- ("Cotidiano", "Reclamo en un call center"), ("Cotidiano", "Consulta médica"),
+ ("Cotidiano", "Consulta médica"),
  ("Cotidiano", loc("Arrendar un departamento", MX="Rentar un departamento", AR="Alquilar un departamento", CO="Arrendar un apartamento")),
  ("Cotidiano", loc("Reunión de apoderados", MX="Junta de padres de familia", AR="Reunión de padres", CO="Reunión de padres de familia")),
  ("Cotidiano", "Ruidos con un vecino"),

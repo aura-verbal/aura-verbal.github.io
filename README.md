@@ -39,6 +39,7 @@ Entrena cómo suenas. Aura es una app web para practicar vocabulario según el c
 - Sin servidor ni APIs pagadas: voz con la Web Speech API del navegador (mejor en Chrome), sonidos con Web Audio y grabación con MediaRecorder.
 - El progreso se guarda en el navegador de cada usuario.
 - Se puede instalar como app desde el navegador (`manifest.webmanifest`).
+- Diseño: tema claro marfil y cobre, con un color por área (Académico índigo, Laboral petróleo, Ventas ocre, Social ciruela, Cotidiano oliva). El modo oscuro se activa en Ajustes. Íconos generados con `herramientas/iconos.py`.
 
 ## Estado
 Prototipo en etapa de validación.

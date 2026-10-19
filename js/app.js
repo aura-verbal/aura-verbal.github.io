@@ -6,7 +6,7 @@ const M = window.AuraMotor;
 
 /* ===================== CONSTANTES ===================== */
 const KEY = "aura.v1";
-const DEFAULT_SETTINGS = { sound: true, clicks: true, autoSpeak: false };
+const DEFAULT_SETTINGS = { sound: true, clicks: true, autoSpeak: false, dark: false };
 const TABS = ["inicio", "practica", "progreso", "ajustes"];
 const GOALS = [
   { id: "presentacion", label: "Presentar con seguridad" },
@@ -72,6 +72,16 @@ function bestStreak() {
 }
 function levelOf(g) { let cur = LEVELS[0], next = null; LEVELS.forEach((l, i) => { if (g >= l[0]) { cur = l; next = LEVELS[i + 1] || null; } }); return { name: cur[1], next }; }
 async function getJSON(url) { const r = await fetch(url, { cache: "no-cache" }); if (!r.ok) throw new Error(url + " " + r.status); return r.json(); }
+
+/* ===================== TEMA (marfil o modo oscuro, elegido en Ajustes) ===================== */
+function applyTheme() {
+  const dark = !!progress.settings.dark, root = document.documentElement;
+  if (dark) root.setAttribute("data-theme", "dark"); else root.removeAttribute("data-theme");
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", dark ? "#13110f" : "#f7f3ec");
+}
+/* Color por área: cada área tiene su tono (definido en index.html como --area-*). */
+const AREA_KEY = { "Académico": "acad", "Laboral": "lab", "Ventas": "ven", "Social": "soc", "Cotidiano": "cot" };
+function arCls(area) { return AREA_KEY[area] ? "ar-" + AREA_KEY[area] : ""; }
 
 /* ===================== PAÍS ===================== */
 function paisId() { return progress.pais || "CL"; }
@@ -480,25 +490,29 @@ async function makeCard() {
   const W = 1080, H = 1920, c = document.createElement("canvas"); c.width = W; c.height = H;
   const g = c.getContext("2d");
   try { await Promise.all([document.fonts.load('700 120px "Playfair Display"'), document.fonts.load('800 120px "Playfair Display"'), document.fonts.load('700 40px "Atkinson Hyperlegible"'), document.fonts.load('400 40px "Atkinson Hyperlegible"')]); } catch (e) {}
-  g.fillStyle = "#0a0a0b"; g.fillRect(0, 0, W, H);
-  const rg = g.createRadialGradient(540, 600, 40, 540, 600, 760); rg.addColorStop(0, "rgba(212,175,55,.26)"); rg.addColorStop(1, "rgba(212,175,55,0)");
+  const P = progress.settings.dark
+    ? { bg: "#13110f", glow: "rgba(224,138,92,.24)", glow0: "rgba(224,138,92,0)", g: ["#f3b993", "#e08a5c", "#a84d24"], acc: "#e08a5c", fg: "#f3ede4", muted: "#a9a093" }
+    : { bg: "#f7f3ec", glow: "rgba(227,154,114,.30)", glow0: "rgba(227,154,114,0)", g: ["#e39a72", "#a84d24", "#7a3211"], acc: "#a84d24", fg: "#1c1a17", muted: "#6b6358" };
+  g.fillStyle = P.bg; g.fillRect(0, 0, W, H);
+  const rg = g.createRadialGradient(540, 600, 40, 540, 600, 760); rg.addColorStop(0, P.glow); rg.addColorStop(1, P.glow0);
   g.fillStyle = rg; g.fillRect(0, 0, W, H);
-  const gold = g.createLinearGradient(330, 390, 750, 810); gold.addColorStop(0, "#f6e09a"); gold.addColorStop(.55, "#d4af37"); gold.addColorStop(1, "#8f6b1e");
+  const gold = g.createLinearGradient(330, 390, 750, 810); gold.addColorStop(0, P.g[0]); gold.addColorStop(.55, P.g[1]); gold.addColorStop(1, P.g[2]);
   g.strokeStyle = gold; g.lineWidth = 16; g.beginPath(); g.arc(540, 600, 200, 0, Math.PI * 2); g.stroke();
   g.textAlign = "center"; g.textBaseline = "middle";
   g.fillStyle = gold; g.font = '700 160px "Playfair Display", Georgia, serif'; g.fillText("Aa", 540, 612);
-  g.fillStyle = "#d4af37"; g.font = '700 46px "Atkinson Hyperlegible", sans-serif';
+  g.fillStyle = P.acc; g.font = '700 46px "Atkinson Hyperlegible", sans-serif';
   if ("letterSpacing" in g) g.letterSpacing = "14px";
   g.fillText("AURA", 547, 880);
   if ("letterSpacing" in g) g.letterSpacing = "0px";
-  g.fillStyle = "#f4eee0"; g.font = '700 86px "Playfair Display", Georgia, serif';
+  g.fillStyle = P.fg; g.font = '700 86px "Playfair Display", Georgia, serif';
   const lines = wrapLines(g, end.title, 900);
   let y = 1040; lines.forEach(l => { g.fillText(l, 540, y); y += 104; });
-  g.fillStyle = "#a69f8c"; g.font = '400 42px "Atkinson Hyperlegible", sans-serif';
+  g.fillStyle = P.muted; g.font = '400 42px "Atkinson Hyperlegible", sans-serif';
   g.fillText(s.name + " · " + PERS.find(p => p[0] === R.pers)[1], 540, y + 20);
-  g.fillStyle = gold; g.font = '800 230px "Playfair Display", Georgia, serif'; g.fillText(String(R.simScore), 540, 1500);
-  g.fillStyle = "#d4af37"; g.font = '700 44px "Atkinson Hyperlegible", sans-serif'; g.fillText("puntos de 100", 540, 1660);
-  g.fillStyle = "#a69f8c"; g.font = '400 36px "Atkinson Hyperlegible", sans-serif'; g.fillText("Entrena cómo suenas · aura-verbal.github.io", 540, 1820);
+  const sg = g.createLinearGradient(400, 1390, 680, 1610); sg.addColorStop(0, P.g[0]); sg.addColorStop(1, P.g[1]);
+  g.fillStyle = sg; g.font = '800 230px "Playfair Display", Georgia, serif'; g.fillText(String(R.simScore), 540, 1500);
+  g.fillStyle = P.acc; g.font = '700 44px "Atkinson Hyperlegible", sans-serif'; g.fillText("puntos de 100", 540, 1660);
+  g.fillStyle = P.muted; g.font = '400 36px "Atkinson Hyperlegible", sans-serif'; g.fillText("Entrena cómo suenas · aura-verbal.github.io", 540, 1820);
   return new Promise(res => c.toBlob(b => res(b), "image/png"));
 }
 async function shareCard() {
@@ -720,7 +734,7 @@ function eventoCard() {
   const ev = proximoEvento(60); if (!ev) return "";
   const m = meta(ev.sid), t = ev.st.tema ? M.cleanSlot(ev.st.tema) : "";
   const title = ev.d === 0 ? `Hoy es ${ev.st.evento}` : ev.d === 1 ? `Mañana es ${ev.st.evento}` : `Faltan ${ev.d} días para ${ev.st.evento}`;
-  return `<button class="card evento" data-act="open" data-id="${ev.sid}"><span class="tag">${ev.d <= 1 ? "Último ensayo" : "Cuenta regresiva"}</span>
+  return `<button class="card evento ${arCls(m.area)}" data-act="open" data-id="${ev.sid}"><span class="tag">${ev.d <= 1 ? "Último ensayo" : "Cuenta regresiva"}</span>
     <span class="card-head"><span class="s-icon">${iconFor(ev.sid, m.area)}</span><span><h3>${esc(title)}</h3><span class="meta">${esc(t ? "Tema: " + t : tx(m.name))}. ${ev.d <= 14 ? "Tu reto diario ya está enfocado en esto." : "Ensaya un poco cada día."}</span></span></span>
     <span class="cta">Ensayar →</span></button>`;
 }
@@ -802,7 +816,7 @@ function vInicio() {
       </div>
       ${eventoCard()}
       ${retoCard()}
-      <button class="card feature" data-act="open" data-id="${r.id}">
+      <button class="card feature ${arCls(r.area)}" data-act="open" data-id="${r.id}">
         <span class="tag">${r.id === p.goal ? "Tu objetivo" : "Recomendado"}</span>
         <span class="card-head"><span class="s-icon">${iconFor(r.id, r.area)}</span><span><h3>${esc(tx(r.name))}</h3><span class="meta">${esc(tx(r.blurb))}</span></span></span>
         <span class="barlabel"><span>Dominio</span><span class="mono">${rp}%</span></span>
@@ -823,8 +837,8 @@ function vList() {
   const cards = ready.map(s => {
     const p = sProg(s.id); let mastered = 0; for (let i = 0; i < s.n; i++) if ((progress.words[s.id + "-" + i] || 0) >= 3) mastered++;
     const rec = progress.sims[s.id] || {};
-    return `<button class="card" data-act="open" data-id="${s.id}">
-      <span class="card-head"><span class="s-icon">${iconFor(s.id, s.area)}</span><span><span class="eyebrow">${esc(s.area)} · ${esc(tx(s.who))}</span><h3>${esc(tx(s.name))}</h3></span></span>
+    return `<button class="card ${arCls(s.area)}" data-act="open" data-id="${s.id}">
+      <span class="card-head"><span class="s-icon">${iconFor(s.id, s.area)}</span><span><span class="eyebrow ar">${esc(s.area)} · ${esc(tx(s.who))}</span><h3>${esc(tx(s.name))}</h3></span></span>
       <span class="meta">${esc(tx(s.blurb))}</span>
       ${s.id === r.id ? '<span class="tag">Recomendado</span>' : ""}
       <span class="barlabel"><span>${mastered}/${s.n} palabras dominadas</span><span class="mono">${rec.best ? "mejor: " + rec.best : "sin simular"}</span></span>
@@ -833,9 +847,9 @@ function vList() {
   }).join("");
   return `<section class="section"><div><p class="eyebrow">Panel de práctica</p><h2>Elige un escenario</h2>
       <p class="lead">Cada escenario tiene 3 pasos: vocabulario, práctica y una conversación que reacciona a tus respuestas.</p></div>
-    <div class="filters" role="toolbar" aria-label="Filtrar por área">${areas.map(x => `<button class="fchip ${x === a ? "on" : ""}" data-act="area" data-area="${esc(x)}" aria-pressed="${x === a}">${esc(x)}</button>`).join("")}</div>
+    <div class="filters" role="toolbar" aria-label="Filtrar por área">${areas.map(x => `<button class="fchip ${x === a ? "on" : ""} ${arCls(x)}" data-act="area" data-area="${esc(x)}" aria-pressed="${x === a}">${esc(x)}</button>`).join("")}</div>
     ${ready.length ? `<div class="grid">${cards}</div>` : `<p class="empty">Todavía no hay escenarios disponibles en ${esc(a)}. Ya vienen en camino.</p>`}
-    ${soon.length ? `<div class="stack" style="gap:8px"><p class="eyebrow">Próximamente · ${soon.length}</p><div class="soon">${soon.map(x => `<div class="soon-row"><span>${esc(tx(x.name))}</span><span>${esc(x.area)}</span></div>`).join("")}</div></div>` : ""}
+    ${soon.length ? `<div class="stack" style="gap:8px"><p class="eyebrow">Próximamente · ${soon.length}</p><div class="soon">${soon.map(x => `<div class="soon-row"><span>${esc(tx(x.name))}</span><span class="ar-txt ${arCls(x.area)}">${esc(x.area)}</span></div>`).join("")}</div></div>` : ""}
   </section>`;
 }
 function stepper(active) {
@@ -847,7 +861,7 @@ function vScenario() {
   const rows = s.words.map(w => { const b = Math.min(3, progress.words[w.id] || 0);
     return `<div class="vrow"><span class="from">${esc(w.col)}</span><span class="arrow">→</span><span class="to">${esc(w.pro)}<span class="alt">también: ${esc(w.alt)}</span></span><span class="dots" title="${b} de 3 aciertos">${[0, 1, 2].map(i => `<i class="${i < b ? "on" : ""}"></i>`).join("")}</span></div>`; }).join("");
   return `<section class="section"><button class="back" data-act="list">← Escenarios</button>
-    <div class="card-head"><span class="s-icon">${iconFor(s.id, s.area)}</span><div><p class="eyebrow">${esc(s.area)} · ${esc(s.who)}</p><h2>${esc(s.name)}</h2></div></div>
+    <div class="card-head ${arCls(s.area)}"><span class="s-icon">${iconFor(s.id, s.area)}</span><div><p class="eyebrow ar">${esc(s.area)} · ${esc(s.who)}</p><h2>${esc(s.name)}</h2></div></div>
     ${stepper("open")}
     ${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
     ${s.prep ? prepCard(s) : ""}
@@ -1048,7 +1062,7 @@ function vResults() {
       <div class="panel"><h3>Comparte tu resultado</h3>
         ${cardUrl ? `<img class="share-img" src="${cardUrl}" alt="Tarjeta con tu resultado: ${esc(end.title)}, ${R.simScore} puntos">
           <button class="btn primary" data-act="shareCard">${ICON_SHARE} Compartir</button>`
-          : `<p class="note">Crea una imagen en negro y dorado con tu final y tu puntaje, lista para tus historias.</p>
+          : `<p class="note">Crea una imagen con los colores de Aura, tu final y tu puntaje, lista para tus historias.</p>
           <button class="btn" data-act="makeCard">Crear tarjeta</button>`}</div>
       <div class="panel"><h3>Qué mejorar</h3><ul class="recs">${recommendations(s, R).map(x => `<li>${x}</li>`).join("")}</ul></div>
       <div class="panel"><h3>La conversación, turno a turno</h3>${turns}</div>
@@ -1095,7 +1109,7 @@ function vProgreso() {
   const rows = listReady().map(s => {
     const sp = sProg(s.id); let m = 0; for (let i = 0; i < s.n; i++) if ((progress.words[s.id + "-" + i] || 0) >= 3) m++;
     const rec = progress.sims[s.id] || {};
-    return `<div class="srow"><span class="s-icon">${iconFor(s.id, s.area)}</span><div class="stack" style="gap:6px;min-width:0">
+    return `<div class="srow ${arCls(s.area)}"><span class="s-icon">${iconFor(s.id, s.area)}</span><div class="stack" style="gap:6px;min-width:0">
       <span class="barlabel"><span style="color:var(--fg);font-weight:700">${esc(tx(s.name))}</span><span class="mono">${sp}%</span></span>
       <span class="bar" aria-hidden="true"><i style="width:${sp}%"></i></span>
       <span class="barlabel"><span>${m}/${s.n} palabras</span><span>${rec.best ? "mejor: " + rec.best + (rec.lastFin ? " · último: " + FIN_NAME[rec.lastFin].toLowerCase() : "") : "sin simular"}</span></span></div></div>`; }).join("");
@@ -1136,6 +1150,8 @@ function vAjustes() {
       <div class="setting"><div><p>${pa.bandera} ${esc(pa.nombre)}</p><small>${CAPA_TXT[pa.capa]} · trato habitual: ${esc(pa.trato)}${pa.capa === "borrador" ? " · puede tener errores" : ""}</small></div>
         <button class="btn" data-act="paisOpen">Cambiar</button></div></div>
     <div class="panel"><h3>${p ? "Tu perfil" : "Crea tu perfil"}</h3>${profileForm(p, p ? "Guardar cambios" : "Crear perfil")}</div>
+    <div class="panel"><h3>Apariencia</h3>
+      ${sw("dark", "Modo oscuro", "Fondo carbón con acentos cobre. Por defecto, Aura usa el tema claro marfil.")}</div>
     <div class="panel"><h3>Sonido</h3>
       ${sw("sound", "Sonidos de acierto y error", "Campanita al acertar, notas suaves al fallar.")}
       ${sw("clicks", "Sonido al tocar botones", "Un tic corto y neutro.", !st.sound)}</div>
@@ -1290,12 +1306,13 @@ function onAct(e) {
     case "toggle": {
       const k = el.dataset.key; progress.settings[k] = !progress.settings[k]; save();
       if (progress.settings[k] && (k === "sound" || k === "clicks")) chime();
+      if (k === "dark") applyTheme();
       render(); break; }
     case "resetAsk": S.confirm = "reset"; render(); break;
     case "wipeAsk": S.confirm = "wipe"; render(); break;
     case "cancelConfirm": S.confirm = null; render(); break;
     case "resetYes": progress = freshProgress(progress); save(); S.confirm = null; S.toast = "Progreso reiniciado."; S.practiceDone = null; S.view = "list"; render(); break;
-    case "wipeYes": leaveSim(); progress = freshProgress(); save(); DATA.esc = {}; S = { tab: "inicio", view: "list", sub: null, anim: "up", ob: "bienvenida", area: "Todos" }; render(); break;
+    case "wipeYes": leaveSim(); progress = freshProgress(); save(); applyTheme(); DATA.esc = {}; S = { tab: "inicio", view: "list", sub: null, anim: "up", ob: "bienvenida", area: "Todos" }; render(); break;
   }
 }
 
@@ -1311,7 +1328,7 @@ async function boot() {
   if (progress.profile && !progress.pais) { progress.pais = guessPais() || "CL"; S.paisAuto = true; save(); }
   else if (progress.pais && !DATA.paises.paises.some(x => x.id === progress.pais)) { progress.pais = "CL"; save(); }
   try { if ("speechSynthesis" in window) speechSynthesis.getVoices(); } catch (e) {}
-  render();
+  applyTheme(); render();
 }
 if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
   window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });

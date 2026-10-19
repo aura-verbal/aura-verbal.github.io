@@ -6,7 +6,7 @@ const M = window.AuraMotor;
 
 /* ===================== CONSTANTES ===================== */
 const KEY = "aura.v1";
-const DEFAULT_SETTINGS = { sound: true, clicks: true, autoSpeak: false, dark: false };
+const DEFAULT_SETTINGS = { sound: true, clicks: true, autoSpeak: false, dark: false, narra: true };
 const TABS = ["inicio", "practica", "progreso", "ajustes"];
 const GOALS = [
   { id: "presentacion", label: "Presentar con seguridad" },
@@ -566,7 +566,7 @@ function setTab(t) {
   if (t === "practica" && (S.view === "results" || S.view === "loading")) S.view = "list";
   go({ tab: t, sub: null }, dir);
 }
-function leaveSim() { clearTimeout(pwTimer); stopDictado(); recReset(); stopPrueba(); try { speechSynthesis.cancel(); } catch (e) {} }
+function leaveSim() { escStop(); clearTimeout(pwTimer); stopDictado(); recReset(); stopPrueba(); try { speechSynthesis.cancel(); } catch (e) {} }
 
 /* ===================== PERFIL ===================== */
 function profileForm(p, cta) {
@@ -687,6 +687,60 @@ function prFinish(d) {
   const r = M.speechMetrics(text, secs, mulList());
   if (r.words < 15 || elapsed < 10) { S.pr = { phase: "idle", text, msg: "No alcanzamos a escucharte bien. Intenta hablar al menos 20 segundos, cerca del micrófono." }; render(); return; }
   S.pr = { phase: "done", text, res: r }; chime(); render();
+}
+
+/* ===================== ESCENA DE APERTURA =====================
+   4 imágenes con movimiento suave (efecto Ken Burns), subtítulos con los datos del usuario y
+   narración opcional con la voz del celular. Las imágenes se descargan solo al reproducir. */
+const Esc = { sid: null, i: 0, playing: false, done: false, timer: null };
+const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
+const ICON_MUTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>';
+function escDur(f) {
+  const words = String(f.t || "").split(/\s+/).length;
+  return Math.max((f.dur || 4.2), progress.settings.narra ? words / 2.4 + 1.2 : words / 3.2 + 1.6) * 1000;
+}
+function escStop() { clearTimeout(Esc.timer); Esc.timer = null; if (Esc.playing) { try { speechSynthesis.cancel(); } catch (e) {} } Esc.playing = false; }
+function escenaCard(s) {
+  const E = s.escena; if (!E || !E.frames || !E.frames.length) return "";
+  const n = E.frames.length, mine = Esc.sid === s.id, secs = Math.round(E.frames.reduce((a, f) => a + escDur(f), 0) / 1000);
+  const state = mine && Esc.playing ? "play" : mine && Esc.done ? "done" : "idle";
+  const frames = E.frames.map((f, i) => `<div class="esc-f mov-${esc(f.mov || "in")}${state !== "idle" && i === Esc.i ? " on kb" : state === "done" && i === Esc.i ? " on" : ""}" data-i="${i}" style="--d:${escDur(f)}ms">
+      <img src="${esc(f.img)}" alt="" ${i === 0 ? 'loading="lazy"' : 'loading="lazy" data-later="1"'} decoding="async"></div>`).join("");
+  const segs = E.frames.map((f, i) => `<i class="${state === "done" || (state === "play" && i < Esc.i) ? "done" : state === "play" && i === Esc.i ? "cur" : ""}" style="--d:${escDur(f)}ms"></i>`).join("");
+  const sub = state === "play" ? esc(E.frames[Esc.i].t) : "";
+  const overlay = state === "idle"
+    ? `<button class="esc-cover" data-act="escPlay"><span class="esc-playbtn">${ICON_PLAY}</span><span><b>Mira tu escena</b><small>${secs} segundos · así empieza tu situación</small></span></button>`
+    : state === "done"
+    ? `<div class="esc-cover end"><div class="row"><button class="btn primary" data-act="startPractice">Empezar práctica</button><button class="btn" data-act="escPlay">Volver a ver</button></div></div>` : "";
+  return `<div class="esc ${state}" id="esc" data-sid="${s.id}">
+    <div class="esc-stage">${frames}<div class="esc-shade"></div>
+      <div class="esc-segs" aria-hidden="true">${segs}</div>
+      ${state === "play" ? `<button class="esc-tap prev" data-act="escPrev" aria-label="Cuadro anterior"></button><button class="esc-tap next" data-act="escNext" aria-label="Cuadro siguiente"></button>
+        <div class="esc-tools"><button class="esc-ic" data-act="escVoz" aria-pressed="${!!progress.settings.narra}" aria-label="${progress.settings.narra ? "Silenciar narración" : "Activar narración"}">${progress.settings.narra ? ICON_SPEAK : ICON_MUTE}</button><button class="esc-skip" data-act="escSkip">Saltar</button></div>` : ""}
+      <p class="esc-sub" id="escSub" aria-live="polite">${sub}</p>
+      ${overlay}</div></div>`;
+}
+function escGo(i) {
+  const s = scenData(Esc.sid); if (!s || !s.escena) return;
+  const fr = s.escena.frames; clearTimeout(Esc.timer); try { speechSynthesis.cancel(); } catch (e) {}
+  if (i >= fr.length) { Esc.playing = false; Esc.done = true; Esc.i = fr.length - 1; render(); return; }
+  Esc.i = Math.max(0, i); Esc.playing = true; Esc.done = false;
+  const root = document.getElementById("esc");
+  if (!root || root.dataset.sid !== Esc.sid || !root.classList.contains("play")) render();
+  else {
+    root.querySelectorAll(".esc-f").forEach((el, k) => { el.classList.toggle("on", k === Esc.i); if (k === Esc.i) { el.classList.remove("kb"); void el.offsetWidth; el.classList.add("kb"); } });
+    root.querySelectorAll(".esc-segs i").forEach((el, k) => { el.className = k < Esc.i ? "done" : k === Esc.i ? "cur" : ""; if (k === Esc.i) { void el.offsetWidth; } });
+    const sub = document.getElementById("escSub"); if (sub) { sub.classList.remove("in"); void sub.offsetWidth; sub.textContent = fr[Esc.i].t; sub.classList.add("in"); }
+  }
+  const nx = fr[Esc.i + 1]; if (nx) { const im = new Image(); im.src = nx.img; }
+  if (progress.settings.narra) speak(fr[Esc.i].t);
+  Esc.timer = setTimeout(() => { if (Esc.playing && Esc.sid === s.id) escGo(Esc.i + 1); }, escDur(fr[Esc.i]));
+}
+function escPlay(sid) {
+  const s = scenData(sid); if (!s || !s.escena) return;
+  Esc.sid = sid; Esc.i = 0; Esc.playing = true; Esc.done = false;
+  s.escena.frames.forEach(f => { const im = new Image(); im.src = f.img; });
+  render(); escGo(0);
 }
 
 /* ===================== RETO DIARIO ===================== */
@@ -865,6 +919,7 @@ function vScenario() {
     ${stepper("open")}
     ${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
     ${s.prep ? prepCard(s) : ""}
+    ${S.prepW && S.prepW.sid === s.id ? "" : escenaCard(s)}
     <div class="panel"><dl class="ficha">
       <div><dt>Situación</dt><dd>${esc(s.ficha.situacion)}</dd></div>
       <div><dt>Interlocutor</dt><dd><b>${esc(s.person)}</b> · ${esc(s.who)}. ${esc(s.ficha.pers[pers])}</dd></div>
@@ -1186,7 +1241,7 @@ async function openScen(id, anim) {
 function onAct(e) {
   const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
   const a = el.dataset.act;
-  if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle", "recStart", "recStop", "pwSave"].includes(a)) tick();
+  if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle", "recStart", "recStop", "pwSave", "escNext", "escPrev", "escVoz"].includes(a)) tick();
   switch (a) {
     case "tab": setTab(el.dataset.tab); break;
     case "brand": if (progress.profile && !S.obPrueba) setTab("inicio"); break;
@@ -1243,7 +1298,13 @@ function onAct(e) {
     case "open": { const back = ["practice", "sim", "results"].includes(S.view) && S.tab === "practica"; openScen(el.dataset.id || S.sid, back ? "left" : "right"); break; }
     case "pers": progress.pers[S.sid] = el.dataset.p; save(); render(); break;
     case "startPractice": if (el.dataset.id) S.sid = el.dataset.id; leaveSim(); startPractice(); break;
-    case "startSim": if (el.dataset.id) S.sid = el.dataset.id; startSim(); break;
+    case "startSim": if (el.dataset.id) S.sid = el.dataset.id; escStop(); startSim(); break;
+    case "escPlay": escPlay(S.sid); break;
+    case "escNext": escGo(Esc.i + 1); break;
+    case "escPrev": escGo(Esc.i - 1); break;
+    case "escSkip": escStop(); Esc.done = true; render(); break;
+    case "escVoz": progress.settings.narra = !progress.settings.narra; save(); if (!progress.settings.narra) { try { speechSynthesis.cancel(); } catch (e) {} } else speak(scenData(Esc.sid).escena.frames[Esc.i].t);
+      { const b = el; b.setAttribute("aria-pressed", String(!!progress.settings.narra)); b.innerHTML = progress.settings.narra ? ICON_SPEAK : ICON_MUTE; } break;
     case "retryPers": progress.pers[S.sid] = el.dataset.p; save(); startSim(); break;
     case "pAnswer": {
       const P = S.practice, q = P.qs[P.i], k = +el.dataset.k; P.answered = k;

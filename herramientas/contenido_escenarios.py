@@ -509,7 +509,13 @@ PROXIMOS = [
 
 os.makedirs(OUT, exist_ok=True)
 index = {"areas": ["Académico", "Laboral", "Ventas", "Social", "Cotidiano"], "list": []}
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(OUT)))
 for e in ESCENARIOS:
+    if "escena" in e:
+        falta = [f["img"] for f in e["escena"]["frames"] if not os.path.exists(os.path.join(ROOT, f["img"]))]
+        if falta:
+            e = dict(e); del e["escena"]
+            print("  %s: escena oculta, faltan %d imágenes" % (e["id"], len(falta)))
     with open(os.path.join(OUT, e["id"] + ".json"), "w", encoding="utf-8") as f:
         json.dump(e, f, ensure_ascii=False, indent=1)
     index["list"].append({"id": e["id"], "area": e["area"], "name": e["name"], "who": e["who"], "person": e["person"],

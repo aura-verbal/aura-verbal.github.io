@@ -96,6 +96,22 @@ PREP_PRACTICA = [
  {"id": "fecha", "tipo": "fecha", "q": "¿Cuándo es la entrevista?", "evento": "tu entrevista"},
 ]
 
+# Escena de apertura: 4 cuadros con movimiento suave y narración. Solo se publica si existen las
+# imágenes en img/escenas/ (contenido_escenarios.py lo revisa). mov: in, out, left, right.
+ESCENA_DISERTACION = {"frames": [
+  {"img": "img/escenas/disertacion-1.webp", "mov": "in",
+   "t": loc("Última clase antes del almuerzo. Cuarenta compañeros y un murmullo que no para.", MX="Última clase antes de la comida. Cuarenta compañeros y un murmullo que no para.")},
+  {"img": "img/escenas/disertacion-2.webp", "mov": "left", "t": "El profesor Fuentes mira la hora. Tienes {min} minutos."},
+  {"img": "img/escenas/disertacion-3.webp", "mov": "out", "t": "Tu tema: {tema}. La primera frase decide si te escuchan."},
+  {"img": "img/escenas/disertacion-4.webp", "mov": "right", "t": "Respira. Mira al curso. Te toca."}]}
+ESCENA_PRACTICA = {"frames": [
+  {"img": "img/escenas/practica-1.webp", "mov": "in",
+   "t": loc("Llegas a {empresa} diez minutos antes. Es tu primera entrevista de práctica.", MX="Llegas a {empresa} diez minutos antes. Es tu primera entrevista de prácticas.", AR="Llegás a {empresa} diez minutos antes. Es tu primera entrevista de pasantía.")},
+  {"img": "img/escenas/practica-2.webp", "mov": "left",
+   "t": loc("Estudias {carrera}. No tienes experiencia formal, pero traes tus proyectos.", AR="Estudiás {carrera}. No tenés experiencia formal, pero traés tus proyectos.")},
+  {"img": "img/escenas/practica-3.webp", "mov": "out", "t": "Andrés Muñoz, jefe de logística, revisa tu currículum."},
+  {"img": "img/escenas/practica-4.webp", "mov": "right", "t": "Quedan dos vacantes y una ya tiene candidato. Es tu momento."}]}
+
 # =====================================================================
 DISERTACION = {
  "id": "disertacion", "area": "Académico",
@@ -117,7 +133,7 @@ DISERTACION = {
    "amable": "El profesor asiente y el curso participa; si te trabas, te dan tiempo.",
    "neutral": "El curso escucha, pero se distrae si la exposición se pone plana.",
    "dificil": "Hay murmullos al fondo y el profesor te corta si te pasas del tiempo."}},
- "prep": PREP_DISERTACION,
+ "prep": PREP_DISERTACION, "escena": ESCENA_DISERTACION,
  "labels": ["Coloquial", "Claro y atractivo"],
  "crit": "Se evalúa captar la atención, conectar las ideas y hablar con claridad ante tus pares: preciso, pero sin sonar a informe leído.",
  "weights": {"v": .5, "m": .3, "p": .2},
@@ -247,7 +263,7 @@ PRACTICA = {
    "amable": "Recuerda su propia práctica y te ayuda a sacar lo mejor de tus respuestas.",
    "neutral": "Sigue una pauta y anota todo lo que dices.",
    "dificil": "Desconfía de los estudiantes sin experiencia y te pide pruebas de cada cosa que dices."}},
- "prep": PREP_PRACTICA,
+ "prep": PREP_PRACTICA, "escena": ESCENA_PRACTICA,
  "labels": ["Coloquial", "Profesional"],
  "crit": "Se evalúa transformar la experiencia académica en logros concretos, mostrar disposición a aprender y hablar con seguridad sin inventar experiencia.",
  "weights": {"v": .55, "m": .25, "p": .2},

@@ -44,6 +44,7 @@ for(const it of IDX.list.filter(x=>x.ready)){
       if(s.words.length!==10) err(it.id,'words',s.words.length);
       s.words.forEach((w,i)=>{ if(!w.ex.includes('___')) err(it.id,c,'ex blank',i); if(!Array.isArray(w.d)||w.d.length!==2) err(it.id,c,'d',i); if(w.d.includes(w.pro)) err(it.id,c,'d has pro',i,w.pro); });
       if(ps.propio && !s.simPropio) err(it.id,'propio sin simPropio');
+      if(s.escena){ if(!s.escena.frames.length) err(it.id,'escena vacía'); s.escena.frames.forEach((f,k)=>{ if(!f.t) err(it.id,c,'escena sin texto',k); if(!fs.existsSync(R+'/'+f.img)) err(it.id,'escena sin imagen',f.img); if(!['in','out','left','right'].includes(f.mov)) err(it.id,'escena mov',f.mov); }); }
       checkSim(it.id,c,s,ps.propio?s.simPropio:s.sim,ps.propio?'propio':'sim');
     }
     if(c==='CL') console.log(it.id,'turnos',M.maxTurnos(base.sim),'nodos',Object.keys(base.sim.nodes).length,'combinaciones',states.length);

@@ -124,6 +124,33 @@
    }
   }
  ],
+ "escena": {
+  "frames": [
+   {
+    "img": "img/escenas/disertacion-1.webp",
+    "mov": "in",
+    "t": {
+     "base": "Última clase antes del almuerzo. Cuarenta compañeros y un murmullo que no para.",
+     "MX": "Última clase antes de la comida. Cuarenta compañeros y un murmullo que no para."
+    }
+   },
+   {
+    "img": "img/escenas/disertacion-2.webp",
+    "mov": "left",
+    "t": "El profesor Fuentes mira la hora. Tienes {min} minutos."
+   },
+   {
+    "img": "img/escenas/disertacion-3.webp",
+    "mov": "out",
+    "t": "Tu tema: {tema}. La primera frase decide si te escuchan."
+   },
+   {
+    "img": "img/escenas/disertacion-4.webp",
+    "mov": "right",
+    "t": "Respira. Mira al curso. Te toca."
+   }
+  ]
+ },
  "labels": [
   "Coloquial",
   "Claro y atractivo"

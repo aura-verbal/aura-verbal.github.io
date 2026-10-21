@@ -322,27 +322,64 @@
     return String(s || "").replace(/\s*por\s*ciento/gi, "%").replace(/(\d)\.(\d{3})(?!\d)/g, "$1$2")
       .replace(/(\d)[,.](\d)/g, "$1d$2").replace(/%/g, "");
   }
-  /* Cuánto del texto se recordó al decirlo: palabras con contenido que aparecen en lo dicho. */
-  function recall(dicho, texto) {
-    dicho = numFix(canonConn(dicho)); texto = numFix(canonConn(texto));
-    const content = M.tokens(texto).filter(w => (w.length >= 4 || /\d/.test(w) && w.length >= 2) && !STOP.has(w));
-    if (!content.length) return 1;
-    const said = new Set(M.tokens(dicho).map(w => /\d/.test(w) ? w : w.slice(0, 5)));
-    const hit = content.filter(w => said.has(/\d/.test(w) ? w : w.slice(0, 5))).length;
-    return hit / content.length;
+  /* Firma para comparar: las cifras y los conectores (zconn+función) exactos; el resto por sus 5 primeras letras. */
+  function sig(w) { return /\d/.test(w) || w.startsWith("zconn") ? w : w.slice(0, 5); }
+  function esContenido(w) { return (w.length >= 4 || /\d/.test(w) && w.length >= 2) && !STOP.has(w); }
+  /* Revisión de lo dicho contra el texto, palabra por palabra.
+     alias: {palabra: [cómo la escribe el micrófono]} que el usuario confirmó con «Lo dije» (se guarda por presentación).
+     oidas: palabras que el usuario marcó como dichas en este intento.
+     Devuelve r (0–1), toks (texto con las palabras que faltaron marcadas), miss (palabras que faltaron, sin repetir)
+     y faltan (palabras clave que faltaron). */
+  function revisar(dicho, texto, claves, alias, oidas) {
+    alias = alias || {}; oidas = oidas || [];
+    const D = M.tokens(numFix(canonConn(dicho))), said = new Set(D.map(sig));
+    const ok = w => said.has(sig(w)) || oidas.includes(w) || (alias[w] || []).some(f => D.includes(f));
+    const T = String(texto || ""), spans = conectores(T), toks = [], miss = [], seen = new Set();
+    let hit = 0, total = 0, m; const re = /\S+/g;
+    while ((m = re.exec(T))) {
+      const raw = m[0], sp = spans.find(c => m.index >= c.start && m.index < c.end);
+      const pieces = (sp ? ["zconn" + sp.fn] : M.tokens(numFix(raw))).filter(esContenido);
+      const first = !sp || !seen.has(sp); if (sp) seen.add(sp);
+      const bad = pieces.filter(w => !ok(w));
+      if (first) pieces.forEach(w => { total++; if (ok(w)) hit++; });
+      bad.forEach(w => { if (!miss.some(x => x.w === w)) miss.push({ w, label: sp ? sp.w : raw.replace(/^[¿¡«"(]+|[.,;:!?»")]+$/g, "") }); });
+      toks.push({ t: raw, miss: bad.length > 0 });
+    }
+    const faltan = (claves || []).filter(k => !dijoClave(dicho, k, alias, oidas));
+    return { r: total ? hit / total : 1, toks, miss, faltan };
   }
+  /* Cuánto del texto se recordó al decirlo: palabras con contenido que aparecen en lo dicho. */
+  function recall(dicho, texto, alias, oidas) { return revisar(dicho, texto, [], alias, oidas).r; }
   /* ¿Se dijo esta palabra clave? Las cifras se comparan exactas («0,2» no vale por «0,25»). */
-  function dijoClave(dicho, k) {
-    const nk = numFix(k);
-    if (/\d/.test(nk)) { const tk = M.tokens(nk), ds = M.tokens(numFix(dicho)); return tk.every(x => ds.includes(x)); }
+  function dijoClave(dicho, k, alias, oidas) {
+    alias = alias || {}; oidas = oidas || [];
+    const nk = numFix(k), tk = M.tokens(nk), ds = M.tokens(numFix(dicho));
+    if (tk.length && tk.every(w => oidas.includes(w) || (alias[w] || []).some(f => ds.includes(f)) || /\d/.test(w) && ds.includes(w))) return true;
+    if (/\d/.test(nk)) return tk.every(x => ds.includes(x) || (alias[x] || []).some(f => ds.includes(f)));
     return M.hasStem(dicho, stemOf(k));
   }
-  function cobertura(dicho, bs) {
+  function cobertura(dicho, bs, alias) {
     return bs.map(b => {
       const ks = (b.claves || []);
-      const ok = ks.filter(k => dijoClave(dicho, k));
+      const ok = ks.filter(k => dijoClave(dicho, k, alias));
       return { id: b.id, titulo: b.titulo, total: ks.length, ok: ok.length, faltan: ks.filter(k => !ok.includes(k)) };
     });
+  }
+  /* Qué escribió el micrófono en lugar de una palabra: se alinean texto y dicho (LCS) y se toma lo que quedó
+     entre las dos palabras vecinas que sí coinciden («septiembre el [ipom] y» ↔ «septiembre el [limon] y»).
+     Si el hueco es largo o está vacío, no se adivina. */
+  function escuchadoComo(dicho, texto, w) {
+    const T = M.tokens(numFix(canonConn(texto))), D = M.tokens(numFix(canonConn(dicho)));
+    const n = T.length, mm = D.length, L = Array.from({ length: n + 1 }, () => new Array(mm + 1).fill(0));
+    for (let i = n - 1; i >= 0; i--) for (let j = mm - 1; j >= 0; j--) L[i][j] = sig(T[i]) === sig(D[j]) ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+    const pair = new Array(n).fill(-1); let i = 0, j = 0;
+    while (i < n && j < mm) { if (sig(T[i]) === sig(D[j])) { pair[i] = j; i++; j++; } else if (L[i + 1][j] >= L[i][j + 1]) i++; else j++; }
+    const at = T.findIndex((x, k) => x === w && pair[k] < 0); if (at < 0) return [];
+    let a = at - 1; while (a >= 0 && pair[a] < 0) a--;
+    let b = at + 1; while (b < n && pair[b] < 0) b++;
+    const gap = D.slice(a >= 0 ? pair[a] + 1 : 0, b < n ? pair[b] : mm);
+    if (!gap.length || gap.length > 3) return [];
+    return gap.filter(x => x.length >= 3 && !STOP.has(x) && !x.startsWith("zconn") && !T.includes(x));
   }
 
   /* ---------- preguntas del profesor (plantillas, sin IA) ---------- */
@@ -389,7 +426,7 @@
   }
 
   const API = { CONECTORES, SALVAVIDAS, conectores, alternativas, canonConn, sinConectores, oraciones, mapaConectores, relevoItems, puenteSugerido, PPM, SES, PLAN_TXT, words, countWords, secsFor, clean, firstSentence, keywords, stemOf, mkBlock, marcarTipos, fromGuion, fromSlides,
-    asignarTiempo, fmt, plan, diasEntre, addDays, fade, recall, cobertura, preguntas, promptGuion };
+    asignarTiempo, fmt, plan, diasEntre, addDays, fade, recall, revisar, escuchadoComo, cobertura, preguntas, promptGuion };
   root.AuraPres = API;
   if (typeof module !== "undefined" && module.exports) module.exports = API;
 })(typeof window !== "undefined" ? window : globalThis);

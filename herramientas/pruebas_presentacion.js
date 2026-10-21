@@ -83,4 +83,17 @@ const M = require("../js/motor.js");
 const tr = M.buildTranscript(["dice que bastante menos entre un 0,25", "dice que es bastante menos entre un 0,25 o un 0,75% es una"]);
 if ((tr.match(/bastante/g) || []).length !== 1) err("frase revisada duplicada", tr);
 if (M.buildTranscript(["hola a todos", "hoy hablaré del agua"]) !== "hola a todos hoy hablaré del agua") err("segmentos distintos se pierden");
+// Revisión palabra por palabra y «Lo dije» (caso real: IPoM escrito como «El Limón»)
+const tA = "En junio, el Banco Central esperaba entre 1% y 1,75%. Ese recorte es noticia del Informe de septiembre, el IPoM, y de eso les vengo a hablar.";
+const dA = "en junio el banco central estimaba entre un 1 a 1,75% es noticia del informe en septiembre el limón y de eso les vengo a hablar";
+const rv = P.revisar(dA, tA, ["IPoM", "1,75%"]);
+if (rv.miss.map(x => x.w).join() !== "esperaba,recorte,ipom") err("revisar miss", JSON.stringify(rv.miss));
+if (!rv.toks.find(x => x.t === "IPoM,").miss || rv.toks.find(x => x.t === "1,75%.").miss) err("revisar toks");
+if (rv.faltan.join() !== "IPoM") err("revisar faltan", rv.faltan);
+if (P.escuchadoComo(dA, tA, "ipom").join() !== "limon") err("escuchadoComo", P.escuchadoComo(dA, tA, "ipom"));
+const rv2 = P.revisar(dA, tA, ["IPoM"], { ipom: ["limon"] });
+if (rv2.miss.some(x => x.w === "ipom") || rv2.faltan.length || rv2.r <= rv.r) err("alias no aplicado");
+if (P.revisar(dA, tA, [], {}, ["recorte"]).miss.some(x => x.w === "recorte")) err("oidas no aplicado");
+if (P.cobertura("el limon", [{ id: 1, titulo: "t", claves: ["IPoM"] }], { ipom: ["limon"] })[0].ok !== 1) err("cobertura con alias");
+if (P.recall("además la economía creció", "Sin embargo, la economía creció") > 0.9) err("conector de otra función cuenta como dicho");
 console.log("ERRORS", errors);

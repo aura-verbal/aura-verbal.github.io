@@ -887,6 +887,23 @@ function presPlan(p) { p = p || pres(); return p && p.fecha && p.bloques && p.bl
 function presSesiones(pl) { return pl ? pl.dias.reduce((a, d) => a.concat(d.ses.map(s => Object.assign({ dia: d }, s))), []) : []; }
 function presHoy(p) { const pl = presPlan(p); if (!pl) return null; return presSesiones(pl).filter(s => s.dia.f === today()).find(s => !p.done[s.id]) || null; }
 function presCuenta(p) { const d = daysBetween(today(), p.fecha); return d < 0 ? "ya pasó" : d === 0 ? "es hoy" : d === 1 ? "es mañana" : "en " + d + " días"; }
+/* Revisa el último intento del bloque actual (con las palabras que el usuario marcó «Lo dije»). */
+function presEval() {
+  const P = S.ps, p = pres(), b = pbFind(P.blocks[P.i]);
+  P.res = PR.revisar(P.dicho || "", presTxt(b), b.claves, p.alias, P.oidas);
+}
+function revHTML() {
+  const P = S.ps; if (!P.res || !P.res.toks) return "";
+  const pend = P.res.miss, marc = (P.oidas || []);
+  if (!pend.length && !marc.length) return "";
+  const chips = pend.map(x => ({ ...x, on: false })).concat(marc.map(w => ({ w, label: (P.oLabel || {})[w] || w, on: true })));
+  return `<div class="rev"><p class="eyebrow">Revisión</p>
+    ${pend.length ? `<p class="fd rev-t">${P.res.toks.map(x => x.miss ? `<mark class="miss">${esc(x.t)}</mark>` : esc(x.t)).join(" ")}</p>` : ""}
+    <p class="note">${pend.length ? "En rojo, lo que no escuché. " : ""}¿Lo dijiste y el micrófono no lo captó? Toca la palabra y la cuento.</p>
+    <div class="miss-chips">${chips.map(x => `<button class="miss-chip${x.on ? " on" : ""}" data-act="psOida" data-w="${esc(x.w)}" data-l="${esc(x.label)}" aria-pressed="${x.on}">${x.on ? "✓ " : ""}${esc(x.label)}${x.on ? " · lo dije" : ""}</button>`).join("")}</div>
+    ${P.aprendi ? `<p class="note good-note">${esc(P.aprendi)}</p>` : ""}
+    <details class="heard"><summary>Lo que escuché</summary><p class="transcript">${esc(P.dicho || "")}</p></details></div>`;
+}
 function presTxt(b) { return b.texto && b.texto.trim() ? b.texto : (b.apoyo || b.titulo); }
 function presGo(pv, extra, anim) { leaveSim(); presMicStop(); go(Object.assign({ sub: "pres", pv }, extra || {}), anim || "right"); }
 function presSave() { clearTimeout(presSave.t); presSave.t = setTimeout(save, 300); }
@@ -1118,7 +1135,7 @@ function vPresSesion() {
   }
   if (t === "bloques" || t === "ancla") {
     const b = pbFind(P.blocks[P.i]), maxN = t === "ancla" ? 4 : 3, txt = presTxt(b);
-    const res = P.res ? `<div class="fb ${P.res.r >= .7 ? "ok" : P.res.r >= .45 ? "mid" : "no"}"><b>Recordaste ${Math.round(P.res.r * 100)}% del contenido.</b> ${P.res.faltan.length ? "Te faltó: " + P.res.faltan.map(esc).join(", ") + "." : "Dijiste todas las palabras clave."} ${P.res.r < .6 ? "Repite este nivel una vez más." : P.nivel < maxN ? "Bien, quitemos más ayuda." : ""}</div>` : "";
+    const res = P.res ? `<div class="fb ${P.res.r >= .7 ? "ok" : P.res.r >= .45 ? "mid" : "no"}"><b>Recordaste ${Math.round(P.res.r * 100)}% del contenido.</b> ${P.res.faltan.length ? "Te faltó: " + P.res.faltan.map(esc).join(", ") + "." : "Dijiste todas las palabras clave."} ${P.res.r < .6 ? "Repite este nivel una vez más." : P.nivel < maxN ? "Bien, quitemos más ayuda." : ""}</div>` + revHTML() : "";
     return `<section class="section">${psHead(b.titulo, `${PRES_TIPO[b.tipo]} · bloque ${P.i + 1} de ${P.blocks.length}`)}
       <div class="dotsprog">${P.blocks.map((_, k) => `<i class="${k < P.i ? "done" : ""}"></i>`).join("")}</div>
       <div class="panel"><div class="qmeta"><span class="tag">Nivel ${P.nivel + 1} de ${maxN + 1} · ${NIVELES[P.nivel]}</span></div>
@@ -1259,7 +1276,7 @@ function presTick() {
   if (b) { b.style.width = Math.min(100, s / meta * 100) + "%"; b.parentElement.classList.toggle("over", s > meta * 1.1); }
 }
 function presEnsayoFin(text, secs) {
-  const p = pres(), cov = PR.cobertura(text, p.bloques);
+  const p = pres(), cov = PR.cobertura(text, p.bloques, p.alias);
   const tot = cov.reduce((a, c) => a + c.total, 0), ok = cov.reduce((a, c) => a + c.ok, 0);
   const m = text ? M.speechMetrics(text, secs, mulList()) : null;
   S.ps.res = { secs, cov, covPct: tot ? Math.round(ok / tot * 100) : 0, ppm: m && m.ppm, mpm: m ? m.mpm : null,
@@ -1350,12 +1367,24 @@ function presAct(a, el, ev) {
       } else {
         const ok = presMic((text, secs) => {
           if (P.tipo === "preguntas") { const m = M.speechMetrics(text, secs, mulList()); P.res = { words: m.words, secs, mul: m.mul.count, ok: m.words >= 25 && secs <= 75 }; }
-          else { const b = pbFind(P.blocks[P.i]), c = PR.cobertura(text, [b])[0]; P.res = { r: PR.recall(text, presTxt(b)), faltan: c.faltan }; }
+          else { P.oidas = []; P.aprendi = null; P.dicho = text; presEval(); }
           P.phase = "idle"; render(); });
         if (ok) render();
       }
       return true; }
     case "psMicStop": presMicFinish(); return true;
+    case "psOida": {   /* «Lo dije»: cuenta la palabra en este intento y aprende cómo la escribe el micrófono */
+      const P = S.ps, p = pres(), w = el.dataset.w, b = pbFind(P.blocks[P.i]);
+      P.oidas = P.oidas || []; P.oLabel = P.oLabel || {}; p.alias = p.alias || {};
+      if (P.oidas.includes(w)) {
+        P.oidas = P.oidas.filter(x => x !== w); P.aprendi = null;
+        const nuevos = (P.oAlias || {})[w] || []; if (p.alias[w]) { p.alias[w] = p.alias[w].filter(f => !nuevos.includes(f)); if (!p.alias[w].length) delete p.alias[w]; }
+      } else {
+        P.oidas.push(w); P.oLabel[w] = el.dataset.l || w;
+        const forms = PR.escuchadoComo(P.dicho || "", presTxt(b), w).filter(f => !(p.alias[w] || []).includes(f));
+        if (forms.length) { p.alias[w] = (p.alias[w] || []).concat(forms); (P.oAlias = P.oAlias || {})[w] = forms; P.aprendi = `Aprendido: cuando el micrófono escriba «${forms.join(" ")}», contaré «${P.oLabel[w]}».`; }
+      }
+      save(); presEval(); render(); return true; }
     case "psTimerOnly": { const P = S.ps; P.micErr = null; P.phase = "rec"; P.timerOnly = true; presT0 = Date.now(); render(); presTimer = setInterval(presTick, 250); presTick(); return true; }
     case "psNext": {
       const P = S.ps, maxN = P.tipo === "ancla" ? 4 : 3;

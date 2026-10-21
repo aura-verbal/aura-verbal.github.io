@@ -22,12 +22,118 @@
     return out.trim();
   }
 
+
+  /* ---------- conectores ----------
+     Se aprenden por función: si se olvida «no obstante», cualquier conector de contraste sirve.
+     «o sea» se detecta pero nunca se sugiere, porque suele ser muletilla. */
+  /* w: formas que se detectan · sug: alternativas que encajan gramaticalmente en la misma frase · fam: familia
+     (las opciones «incorrectas» del ejercicio vienen siempre de otra familia, para no confundir casi-sinónimos). */
+  const CONECTORES = {
+    contraste: { nombre: "Contraste", para: "marcar una idea opuesta", fam: "A", w: ["sin embargo", "no obstante", "pero", "aun así", "por otro lado", "en cambio", "por el contrario", "ahora bien", "a diferencia de"], sug: ["sin embargo", "no obstante", "aun así", "por otro lado", "en cambio"] },
+    concesion: { nombre: "Concesión", para: "reconocer algo y seguir con tu idea", fam: "A", w: ["aunque", "a pesar de que", "a pesar de", "si bien", "pese a que", "pese a"], sug: ["aunque", "si bien", "a pesar de que"] },
+    causa: { nombre: "Causa", para: "explicar por qué", fam: "C", w: ["porque", "ya que", "debido a", "dado que", "puesto que", "gracias a", "a causa de"], sug: ["porque", "ya que", "dado que", "puesto que"] },
+    consecuencia: { nombre: "Consecuencia", para: "decir qué provoca algo", fam: "D", w: ["por lo tanto", "por eso", "así que", "en consecuencia", "por ende", "por esta razón", "de modo que", "entonces"], sug: ["por lo tanto", "por eso", "en consecuencia", "por esta razón"] },
+    adicion: { nombre: "Agregar", para: "sumar otra idea", fam: "B", w: ["además", "también", "a esto se suma", "más aún", "asimismo", "incluso"], sug: ["además", "también", "asimismo", "más aún"] },
+    ejemplo: { nombre: "Ejemplo", para: "bajar la idea a un caso", fam: "F", w: ["por ejemplo", "un caso concreto es", "pensemos en", "tal como"], sug: ["por ejemplo", "en concreto", "como ejemplo"] },
+    orden: { nombre: "Orden", para: "ordenar los pasos", fam: "G", w: ["en primer lugar", "en segundo lugar", "para empezar", "primero", "luego", "después", "a continuación", "por último", "finalmente"],
+      grupos: [["en primer lugar", "para empezar", "primero"], ["en segundo lugar", "luego", "después", "a continuación"], ["por último", "finalmente", "para terminar"]] },
+    reformulacion: { nombre: "Aclarar", para: "decir lo mismo más claro", fam: "E", w: ["es decir", "dicho de otro modo", "en otras palabras", "o sea"], sug: ["es decir", "dicho de otro modo", "en otras palabras"] },
+    cierre: { nombre: "Cerrar", para: "anunciar el final", fam: "E", w: ["en resumen", "en conclusión", "para cerrar", "en síntesis", "para terminar", "en definitiva", "para concluir"], sug: ["en resumen", "en conclusión", "en síntesis", "para cerrar"] },
+    enfasis: { nombre: "Destacar", para: "subrayar lo importante", fam: "B", w: ["sobre todo", "de hecho", "en particular", "especialmente", "lo más importante es"], sug: ["sobre todo", "en particular", "especialmente"] },
+    comparacion: { nombre: "Comparar", para: "relacionar dos cosas parecidas", fam: "B", w: ["al igual que", "del mismo modo", "de la misma manera"], sug: ["del mismo modo", "de la misma manera", "igualmente"] }
+  };
+  const NO_SUGERIR = new Set(["o sea"]);
+  /* Frases comodín para ganar tiempo si te quedas en blanco (no suenan a muletilla). */
+  const SALVAVIDAS = ["Ahora bien…", "Dicho esto…", "Lo que nos lleva a…", "Vamos al siguiente punto:"];
+  const CON_LIST = Object.entries(CONECTORES).flatMap(([fn, o]) => o.w.map(w => ({ fn, w }))).sort((a, b) => b.w.length - a.w.length);
+  const ACC = { a: "[aá]", e: "[eé]", i: "[ií]", o: "[oó]", u: "[uúü]", n: "[nñ]" };
+  const CON_RE = CON_LIST.map(c => ({ fn: c.fn, w: c.w,
+    re: new RegExp("(^|[^\\p{L}])(" + M.norm(c.w).split("").map(ch => ACC[ch] || ch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("").replace(/ /g, "\\s+") + ")(?=[^\\p{L}]|$)", "giu") }));
+  /* Encuentra los conectores de un texto: [{fn, w (como está escrito), canon, start, end}] sin superponerse. */
+  function conectores(text) {
+    const t = String(text || ""), found = [], taken = [];
+    CON_RE.forEach(c => {
+      c.re.lastIndex = 0; let m;
+      while ((m = c.re.exec(t))) {
+        const start = m.index + m[1].length, end = start + m[2].length;
+        if (!taken.some(([a, b]) => start < b && end > a)) { taken.push([start, end]); found.push({ fn: c.fn, w: m[2], canon: c.w, start, end }); }
+        if (m[0].length === 0) c.re.lastIndex++;
+      }
+    });
+    return found.sort((a, b) => a.start - b.start);
+  }
+  function alternativas(fn, sin) {
+    const c = CONECTORES[fn], n = M.norm(sin || "");
+    let base = c.sug;
+    if (c.grupos) base = c.grupos.find(g => g.some(w => M.norm(w) === n)) || c.grupos[1];
+    return base.filter(w => !NO_SUGERIR.has(w) && M.norm(w) !== n);
+  }
+  function sugDe(fn) { const c = CONECTORES[fn]; return c.sug || c.grupos[1]; }
+  /* Reemplaza cada conector por su función: así «pero» y «sin embargo» cuentan igual al medir lo dicho. */
+  function canonConn(text) {
+    let t = String(text || ""); const cs = conectores(t);
+    for (let i = cs.length - 1; i >= 0; i--) t = t.slice(0, cs[i].start) + " zconn" + cs[i].fn + " " + t.slice(cs[i].end);
+    return t;
+  }
+  function sinConectores(text) {
+    let t = String(text || ""); const cs = conectores(t);
+    for (let i = cs.length - 1; i >= 0; i--) t = t.slice(0, cs[i].start) + " " + t.slice(cs[i].end);
+    return t;
+  }
+  function oraciones(text) {
+    const t = String(text || ""), out = [], re = /[^.!?\n]+[.!?]*/g; let m;
+    while ((m = re.exec(t))) { const s0 = m[0]; if (s0.trim()) out.push({ t: s0.trim(), start: m.index + (s0.length - s0.trimStart().length), end: m.index + s0.trimEnd().length }); }
+    return out;
+  }
+  function mapaConectores(bs) {
+    const m = {};
+    bs.forEach(b => conectores(b.texto).forEach(c => { (m[c.fn] = m[c.fn] || { fn: c.fn, nombre: CONECTORES[c.fn].nombre, usos: [] }).usos.push({ w: c.w, bloque: b.titulo }); }));
+    return Object.values(m).sort((a, b) => b.usos.length - a.usos.length);
+  }
+  function capFirst(w) { return w.charAt(0).toUpperCase() + w.slice(1); }
+  /* Ítems del ejercicio Relevo: conectores del guion (variados por función), palabras que el usuario
+     marcó como difíciles y los saltos entre bloques. */
+  function relevoItems(bs, max) {
+    max = max || 10;
+    const porFn = {};
+    bs.forEach(b => {
+      const sents = oraciones(b.texto);
+      conectores(b.texto).forEach(c => {
+        const s0 = sents.find(x => c.start >= x.start && c.end <= x.end); if (!s0) return;
+        const rel = c.start - s0.start, inicio = rel === 0;
+        const blank = s0.t.slice(0, rel) + "___" + s0.t.slice(rel + (c.end - c.start));
+        (porFn[c.fn] = porFn[c.fn] || []).push({ tipo: "con", fn: c.fn, w: c.w, canon: c.canon, frase: s0.t, blank, inicio, bloque: b.titulo });
+      });
+    });
+    const fns = Object.keys(porFn), items = [], usados = new Set();
+    for (let r = 0; items.length < max && fns.some(f => porFn[f].length > r); r++)
+      fns.forEach(f => { const it = porFn[f][r]; if (it && items.length < max && !usados.has(M.norm(it.w) + it.frase)) { usados.add(M.norm(it.w) + it.frase); items.push(it); } });
+    items.forEach((it, k) => {
+      const ok = alternativas(it.fn, it.canon), fam = CONECTORES[it.fn].fam;
+      const otros = Object.keys(CONECTORES).filter(f => CONECTORES[f].fam !== fam && f !== "orden" && !(it.fn === "orden" && CONECTORES[f].fam === "E"));
+      const malos = [otros[k % otros.length], otros[(k + 2) % otros.length]].map((f, j) => sugDe(f)[j % sugDe(f).length]);
+      const fmt = w => it.inicio ? capFirst(w) : w;
+      it.validas = ok.map(fmt); it.opciones = [ok[0], ok[1] || ok[0], malos[0], malos[1]].map(fmt);
+    });
+    bs.forEach(b => (b.dificiles || []).forEach(d => items.push({ tipo: "dif", w: d.w, alt: d.alt, bloque: b.titulo,
+      frase: (oraciones(b.texto).find(x => M.norm(x.t).includes(M.norm(d.w))) || {}).t || "" })));
+    for (let i = 0; i < bs.length - 1; i++) items.push({ tipo: "puente", de: bs[i].titulo, a: bs[i + 1].titulo, texto: (bs[i].puente || "").trim() || puenteSugerido(bs[i], bs[i + 1]) });
+    return items;
+  }
+  function puenteSugerido(a, b) {
+    const gen = t => /^(apertura|introducci[oó]n|inicio|cierre|conclusi[oó]n|conclusiones|final|portada|gracias)$/i.test(String(t || "").replace(/[¿?¡!:.]/g, "").trim());
+    if (b.tipo === "cierre") return gen(a.titulo) ? "Para cerrar, quiero dejarles una idea." : `Ya vimos ${minusTit(a.titulo)}; para cerrar, quiero dejarles una idea.`;
+    if (a.tipo === "apertura" || gen(a.titulo)) return gen(b.titulo) ? "Partamos por lo central." : `Para entenderlo, partamos por ${minusTit(b.titulo)}.`;
+    return `Ya vimos ${minusTit(a.titulo)}; ahora veamos ${minusTit(b.titulo)}.`;
+  }
+  function minusTit(t) { t = String(t || "").replace(/[¿?¡!:.]+/g, "").trim(); return /^[A-ZÁÉÍÓÚÑ]{2,}/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1); }
+
   /* ---------- palabras clave ----------
      Prioriza cifras (2,3%, 2025), nombres propios y palabras largas o repetidas; ignora palabras vacías. */
   function stemOf(w) { const n = M.norm(w); return n.length <= 5 ? n : n.slice(0, Math.max(5, n.length - 2)); }
   function keywords(text, n) {
     n = n || 4;
-    const raw = String(text || "").replace(/[«»“”"()\[\]]/g, " ");
+    const raw = sinConectores(text).replace(/[«»“”"()\[\]]/g, " ");
     const toks = raw.split(/\s+/).filter(Boolean);
     const score = new Map(), show = new Map();
     toks.forEach((tok, i) => {
@@ -136,6 +242,7 @@
     bloques: { titulo: "Aprende bloque por bloque", min: 10, desc: "Cada bloque: lo lees, lo dices con menos texto y terminas solo con las palabras clave." },
     ancla: { titulo: "Memoriza la apertura y el cierre", min: 8, desc: "Son las únicas partes que vale la pena saber casi palabra por palabra: ahí se notan los nervios." },
     tarjetas: { titulo: "Repaso rápido con tarjetas", min: 4, desc: "Ves el título del bloque, recuerdas sus ideas y compruebas." },
+    relevo: { titulo: "Relevo de conectores", min: 3, desc: "Si se te olvida un conector, tienes 3 segundos para encontrar otro que cumpla la misma función." },
     ensayo: { titulo: "Ensayo completo cronometrado", min: 6, desc: "De principio a fin, por voz, sin mirar el guion. Medimos tiempo, ideas y muletillas." },
     preguntas: { titulo: "Preguntas del profesor", min: 6, desc: "Respondes en voz alta las preguntas que podrían hacerte." },
     calentamiento: { titulo: "Calentamiento antes de presentar", min: 5, desc: "Respiración, voz y tu primera frase dicha tres veces." }
@@ -150,21 +257,21 @@
     let tipo, dias = [];
     if (d === 0) {
       tipo = "expres";
-      dias = [{ f: hoy, etiqueta: "Hoy, antes de presentar", ses: [S("lectura"), S("ancla"), S("bloques"), ...ens(Math.max(2, reps)), S("calentamiento")] }];
+      dias = [{ f: hoy, etiqueta: "Hoy, antes de presentar", ses: [S("lectura"), S("ancla"), S("bloques"), S("relevo"), ...ens(Math.max(2, reps)), S("calentamiento")] }];
     } else if (d === 1) {
       tipo = "expres";
       dias = [{ f: hoy, etiqueta: "Hoy", ses: [S("lectura"), S("ancla"), S("bloques"), S("ensayo", { n: 1 })] },
-              { f: hoy, etiqueta: "Hoy en la noche", parte: "noche", ses: [S("tarjetas"), ...ens(Math.max(2, reps)).map((s, i) => Object.assign(s, { n: i + 2 }))] },
+              { f: hoy, etiqueta: "Hoy en la noche", parte: "noche", ses: [S("tarjetas"), S("relevo"), ...ens(Math.max(2, reps)).map((s, i) => Object.assign(s, { n: i + 2 }))] },
               { f: fecha, etiqueta: "Mañana, antes de presentar", ses: [S("tarjetas"), S("calentamiento")] }];
     } else if (d <= 4) {
       tipo = "estructurado";
       const base = [
         [S("lectura"), S("bloques"), S("ancla")],
-        [S("ancla"), S("tarjetas"), ...ens(reps)],
-        [S("tarjetas"), ...ens(reps), S("preguntas")],
+        [S("ancla"), S("relevo"), S("tarjetas"), ...ens(reps)],
+        [S("tarjetas"), S("relevo"), ...ens(reps), S("preguntas")],
         [S("tarjetas"), S("ensayo", { n: 1 })]];
       const n = d;     // días de práctica antes del día de la presentación
-      const pick = n === 2 ? [base[0], [S("ancla"), S("tarjetas"), ...ens(reps), S("preguntas")]] : n === 3 ? base.slice(0, 3) : base;
+      const pick = n === 2 ? [base[0], [S("ancla"), S("relevo"), S("tarjetas"), ...ens(reps), S("preguntas")]] : n === 3 ? base.slice(0, 3) : base;
       dias = pick.map((ses, i) => ({ f: addDays(hoy, i), etiqueta: i === 0 ? "Hoy" : i === 1 ? "Mañana" : null, ses }));
       dias.push({ f: fecha, etiqueta: "Día de la presentación", ses: [S("tarjetas"), S("calentamiento")] });
     } else {
@@ -174,12 +281,12 @@
         const left = n - i;            // días que faltan desde ese día
         let ses;
         if (i === 0) ses = [S("lectura"), S("bloques")];
-        else if (left === 1) ses = [S("tarjetas"), ...ens(reps), S("preguntas")];     // simulacro el día anterior
-        else if (left === 2) ses = [S("ancla"), S("ensayo", { n: 1 }), S("preguntas")];
+        else if (left === 1) ses = [S("tarjetas"), S("relevo"), ...ens(reps), S("preguntas")];     // simulacro el día anterior
+        else if (left === 2) ses = [S("ancla"), S("relevo"), S("ensayo", { n: 1 }), S("preguntas")];
         else if (left === 3) ses = [S("ancla"), ...ens(reps)];
         else if (i === 1) ses = [S("tarjetas")];
         else if (i % 2 === 0) ses = [S("bloques"), S("ancla")];
-        else ses = [S("tarjetas")];                                                    // día liviano: espaciar ayuda a recordar
+        else ses = [S("tarjetas"), S("relevo")];                                       // día liviano: espaciar ayuda a recordar
         dias.push({ f: addDays(start, i), etiqueta: i === 0 && start === hoy ? "Hoy" : null, ses });
       }
       dias.push({ f: fecha, etiqueta: "Día de la presentación", ses: [S("tarjetas"), S("calentamiento")] });
@@ -211,6 +318,7 @@
   }
   /* Cuánto del texto se recordó al decirlo: palabras con contenido que aparecen en lo dicho. */
   function recall(dicho, texto) {
+    dicho = canonConn(dicho); texto = canonConn(texto);
     const content = M.tokens(texto).filter(w => w.length >= 4 && !STOP.has(w));
     if (!content.length) return 1;
     const said = new Set(M.tokens(dicho).map(w => w.slice(0, 5)));
@@ -268,7 +376,7 @@
     ].filter((x, i, a) => !(x === "" && a[i - 1] === "")).join("\n");
   }
 
-  const API = { PPM, SES, PLAN_TXT, words, countWords, secsFor, clean, firstSentence, keywords, stemOf, mkBlock, marcarTipos, fromGuion, fromSlides,
+  const API = { CONECTORES, SALVAVIDAS, conectores, alternativas, canonConn, sinConectores, oraciones, mapaConectores, relevoItems, puenteSugerido, PPM, SES, PLAN_TXT, words, countWords, secsFor, clean, firstSentence, keywords, stemOf, mkBlock, marcarTipos, fromGuion, fromSlides,
     asignarTiempo, fmt, plan, diasEntre, addDays, fade, recall, cobertura, preguntas, promptGuion };
   root.AuraPres = API;
   if (typeof module !== "undefined" && module.exports) module.exports = API;

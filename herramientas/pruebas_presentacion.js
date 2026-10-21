@@ -55,4 +55,22 @@ if (P.firstSentence("Buenos días. ¿Sabían que el agua se acaba en el norte?")
 // Prompt del puente: incluye duración en palabras y la regla de no inventar
 const pr = P.promptGuion({ tema: "El IMACEC", minutos: 5, material: "dato X" });
 if (!/650 palabras/.test(pr) || !/VERIFICAR/.test(pr) || !/dato X/.test(pr)) err("prompt");
+// Conectores: detección, alternativas gramaticales, distractores de otra familia y equivalencia al medir
+const txt = "Sin embargo, la economía creció. Aunque el comercio cayó, la minería subió. El índice subió porque la minería creció. Primero veremos el dato. Finalmente, la conclusión. O sea, avanzamos.";
+const cs = P.conectores(txt).map(c => c.fn);
+["contraste", "concesion", "causa", "orden", "reformulacion"].forEach(f => { if (!cs.includes(f)) err("conector no detectado", f, cs); });
+if (P.conectores("Embargaron el auto. Perolito no es pero.").filter(c => c.fn === "contraste").length !== 1) err("límite de palabra en conectores");
+const its = P.relevoItems(P.fromGuion("## A\n" + txt + "\n## B\nfin del bloque\n## C\nfin"));
+its.filter(x => x.tipo === "con").forEach(x => {
+  if (!x.blank.includes("___")) err("sin hueco", x.w);
+  if (x.validas.some(v => P.alternativas(x.fn, x.canon).map(a => a.toLowerCase()).indexOf(v.toLowerCase()) < 0)) err("válida rara", x.w);
+  if (x.validas.map(v => v.toLowerCase()).includes("o sea")) err("sugiere o sea");
+  const fam = P.CONECTORES[x.fn].fam;
+  x.opciones.slice(2).forEach(o => { const f = Object.keys(P.CONECTORES).find(k => (P.CONECTORES[k].sug || []).concat(P.CONECTORES[k].w).map(w => w.toLowerCase()).includes(o.toLowerCase())); if (f && P.CONECTORES[f].fam === fam) err("distractor de la misma familia", x.w, o); });
+  if (x.fn === "orden" && /finalmente|por último/i.test(x.w) && x.validas.some(v => /primer|empezar/i.test(v))) err("orden mezclado", x.w);
+});
+if (P.alternativas("causa", "porque").includes("debido a")) err("alternativa no gramatical para causa");
+if (its.filter(x => x.tipo === "puente").length !== 2) err("puentes");
+if (P.recall("pero la economía creció", "Sin embargo, la economía creció") < 0.99) err("equivalencia de conectores en recall");
+if (P.keywords("Sin embargo, no obstante, en consecuencia el IMACEC creció", 4).some(w => /embargo|obstante|consecuencia/i.test(w))) err("conector como palabra clave");
 console.log("ERRORS", errors);

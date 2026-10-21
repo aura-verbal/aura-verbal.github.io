@@ -872,8 +872,16 @@ const SES_ICON = {
   tarjetas: `<svg ${SVG_ATTR}><rect x="6" y="3" width="13" height="16" rx="2"/><path d="M4 7v12a2 2 0 0 0 2 2h10"/></svg>`,
   ensayo: `<svg ${SVG_ATTR}><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>`,
   preguntas: `<svg ${SVG_ATTR}><path d="M4 5h16v11H9l-5 4V5z"/><path d="M10 9a2 2 0 1 1 2.8 1.8c-.5.3-.8.7-.8 1.2M12 14h.01"/></svg>`,
-  calentamiento: `<svg ${SVG_ATTR}><path d="M12 3c2 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.6 1.2 2.5 2.2 2.5C11 7 11 5 12 3z"/></svg>`
+  calentamiento: `<svg ${SVG_ATTR}><path d="M12 3c2 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.6 1.2 2.5 2.2 2.5C11 7 11 5 12 3z"/></svg>`,
+  relevo: `<svg ${SVG_ATTR}><path d="M4 12h11"/><path d="M11 7l5 5-5 5"/><path d="M20 5v14"/></svg>`
 };
+/* Texto con los conectores resaltados (y sus alternativas al pasar el dedo o el mouse). */
+function conHTML(text) {
+  const t = String(text || ""), cs = PR.conectores(t); let out = "", last = 0;
+  cs.forEach(c => { const alt = PR.alternativas(c.fn, c.canon).slice(0, 3).join(", ");
+    out += esc(t.slice(last, c.start)) + `<mark class="con" title="${esc(PR.CONECTORES[c.fn].nombre + (alt ? " · también: " + alt : ""))}">${esc(t.slice(c.start, c.end))}</mark>`; last = c.end; });
+  return (out + esc(t.slice(last))).replace(/\n/g, "<br>");
+}
 function pres() { return progress.pres || null; }
 function presPlan(p) { p = p || pres(); return p && p.fecha && p.bloques && p.bloques.length ? PR.plan(p.fecha, today(), p.minDia || 30) : null; }
 function presSesiones(pl) { return pl ? pl.dias.reduce((a, d) => a.concat(d.ses.map(s => Object.assign({ dia: d }, s))), []) : []; }
@@ -990,6 +998,7 @@ function presSetBloques(bs, fuente, archivo) {
 /* ---------- Paso 3: revisar bloques ---------- */
 function vPresBloques() {
   const p = pres(), bs = p.bloques, t = PR.asignarTiempo(bs, p.minutos);
+  const mapa = PR.mapaConectores(bs);
   const rows = bs.map((b, i) => `<div class="panel pb ${b.tipo}" data-bid="${b.id}">
       <div class="pb-top"><span class="tag ${b.tipo === "idea" ? "quiet" : ""}">${PRES_TIPO[b.tipo]}${b.lamina ? " · lámina " + b.lamina : ""}</span><span class="mono muted">≈ ${t.secs[i]} s</span>
         <span class="pb-tools"><button class="icon-btn sm" data-act="pbMove" data-bid="${b.id}" data-dir="-1" aria-label="Subir" ${i === 0 ? "disabled" : ""}>↑</button><button class="icon-btn sm" data-act="pbMove" data-bid="${b.id}" data-dir="1" aria-label="Bajar" ${i === bs.length - 1 ? "disabled" : ""}>↓</button><button class="icon-btn sm" data-act="pbDel" data-bid="${b.id}" aria-label="Eliminar bloque">×</button></span></div>
@@ -1001,11 +1010,21 @@ function vPresBloques() {
       <div class="field"><span class="lbl">Palabras clave <span class="muted">(tu ayuda memoria)</span></span>
         <div class="pb-keys">${(b.claves || []).map(k => `<span class="kchip">${esc(k)}<button data-act="pbKeyDel" data-bid="${b.id}" data-k="${esc(k)}" aria-label="Quitar ${esc(k)}">×</button></span>`).join("")}
           <input type="text" class="pb-key" data-bid="${b.id}" placeholder="+ agregar" maxlength="30" enterkeyhint="done"></div></div>
-    </div>`).join("");
+      <details class="pb-dif"${(b.dificiles || []).length ? " open" : ""}><summary>Palabras que se te olvidan <span class="muted">(${(b.dificiles || []).length})</span></summary>
+        <p class="note">Anota una palabra que se te suele escapar y otra forma de decirla. Entra al Relevo.</p>
+        ${(b.dificiles || []).map((d, k) => `<span class="kchip">${esc(d.w)} → ${esc(d.alt)}<button data-act="pbDifDel" data-bid="${b.id}" data-k="${k}" aria-label="Quitar">×</button></span>`).join(" ")}
+        <div class="dif-add"><input type="text" id="dw-${b.id}" placeholder="Palabra (ej: estacionalidad)" maxlength="40"><input type="text" id="da-${b.id}" placeholder="Otra forma (ej: los cambios según la época)" maxlength="80"><button class="btn sm" data-act="pbDifAdd" data-bid="${b.id}">Agregar</button></div></details>
+    </div>
+    ${i < bs.length - 1 ? `<div class="puente"><span class="puente-l">${SES_ICON.relevo} Puente hacia «${esc(bs[i + 1].titulo)}»</span>
+      <input type="text" data-bid="${b.id}" data-f="puente" maxlength="160" value="${esc(b.puente || "")}" placeholder="${esc(PR.puenteSugerido(b, bs[i + 1]))}" aria-label="Frase para pasar al siguiente bloque"></div>` : ""}`).join("");
   return `<section class="section"><button class="back" data-act="presBack">← Volver</button>
     <div><p class="eyebrow">${p.planCreado ? "Editar" : "Paso 3 de 3"}</p><h2>Revisa tu presentación</h2>
       <p class="lead">${bs.length} bloques. ${t.faltan ? `${t.faltan} sin guion.` : `Tu guion dura cerca de ${PR.fmt(t.estimado)}; tienes ${p.minutos}:00 min.`}</p></div>
     ${t.aviso ? `<p class="fb mid">${esc(t.aviso.texto)}</p>` : ""}
+    <div class="panel"><h3>Tus conectores ${mapa.length ? `<span class="muted">(${mapa.reduce((a, m) => a + m.usos.length, 0)})</span>` : ""}</h3>
+      ${mapa.length ? `<p class="note">Son los puentes entre tus ideas y donde más se suele quedar en blanco. En el <b>Relevo</b> entrenas otras salidas para cada uno: si se te olvida uno, cualquiera de la misma función sirve.</p>
+        <div class="con-map">${mapa.map(m => `<div><b>${esc(m.nombre)}</b><span>${m.usos.map(u => esc(u.w.toLowerCase())).filter((x, i, a) => a.indexOf(x) === i).join(", ")}</span><small>también: ${esc(PR.alternativas(m.fn, m.usos[0].w).filter(a => !m.usos.some(u => M.norm(u.w) === M.norm(a))).slice(0, 3).join(", "))}</small></div>`).join("")}</div>`
+        : `<p class="note">Tu guion casi no tiene conectores. Agregar algunos («además», «por eso», «en resumen») hace que tus ideas se sigan mejor. Entre bloques, usa las frases puente.</p>`}</div>
     <p class="note">La primera parte es tu <b>apertura</b> y la última tu <b>cierre</b>: son las que vas a saber casi de memoria. Lo del medio lo vas a dominar con palabras clave.</p>
     ${rows}
     <button class="btn wide" data-act="pbAdd">+ Agregar bloque</button>
@@ -1053,6 +1072,7 @@ function presStartSes(id) {
   const blocks = s.tipo === "ancla" ? p.bloques.filter(b => b.tipo !== "idea") : p.bloques;
   S.ps = { id, tipo: s.tipo, n: s.n, libre: s.libre, i: 0, nivel: 0, blocks: blocks.map(b => b.id), res: null, phase: "idle", flip: false, sabe: 0, step: 0, frase: 0, cues: s.tipo === "ensayo" && presPlan() && presPlan().tipo === "expres" && (s.n || 1) === 1 };
   if (s.tipo === "preguntas") S.ps.qs = PR.preguntas(p.bloques, p.tema);
+  if (s.tipo === "relevo") { S.ps.items = PR.relevoItems(p.bloques, 10); S.ps.phase = "intro"; S.ps.ok = 0; S.ps.rapidas = 0; S.ps.nCon = S.ps.items.filter(x => x.tipo === "con").length; }
   presGo("sesion");
 }
 function psHead(titulo, sub) {
@@ -1068,7 +1088,7 @@ function fadeHTML(text, nivel, claves) {
     : t.hid ? `${esc(t.pre)}<span class="fd-h" data-w="${esc(t.core)}">${"_".repeat(Math.max(2, t.core.length))}</span>${esc(t.post)}` : esc(t.t)).join("")}</p>`;
 }
 let presDict = null, presT0 = 0, presTimer = null, presCb = null;
-function presMicStop() { clearInterval(presTimer); presTimer = null; if (presDict && presDict.active) presDict.stop(); }
+function presMicStop() { relStop(); clearInterval(presTimer); presTimer = null; if (presDict && presDict.active) presDict.stop(); }
 function presMic(onEnd, liveId) {
   presMicStop(); presCb = onEnd;
   presDict = Dictado({ lang: paisObj().voz, keepAlive: true,
@@ -1092,7 +1112,8 @@ function vPresSesion() {
   if (t === "lectura") {
     return `<section class="section">${psHead()}
       <div class="panel"><p class="note">Léela completa en voz alta, a ritmo de presentación (no de lectura en silencio). Si quieres, escucha cómo suena primero.</p>
-        ${p.bloques.map(b => `<div class="read-b"><p class="eyebrow">${PRES_TIPO[b.tipo]} · ${esc(b.titulo)}</p><p>${esc(presTxt(b)).replace(/\n/g, "<br>")}</p><button class="btn ghost sm" data-act="psSpeak" data-bid="${b.id}">${ICON_SPEAK} Escuchar</button></div>`).join("")}</div>
+        <p class="note">Los <mark class="con">conectores</mark> van resaltados: fíjate en ellos, son los puentes entre tus ideas.</p>
+        ${p.bloques.map(b => `<div class="read-b"><p class="eyebrow">${PRES_TIPO[b.tipo]} · ${esc(b.titulo)}</p><p>${conHTML(presTxt(b))}</p><button class="btn ghost sm" data-act="psSpeak" data-bid="${b.id}">${ICON_SPEAK} Escuchar</button></div>`).join("")}</div>
       <button class="btn primary wide" data-act="psDone">La leí en voz alta</button></section>`;
   }
   if (t === "bloques" || t === "ancla") {
@@ -1119,6 +1140,7 @@ function vPresSesion() {
       ${P.flip ? `<div class="row"><button class="btn primary" data-act="psSabe" data-v="1">La sabía</button><button class="btn" data-act="psSabe" data-v="0">Me costó</button></div>` : ""}</section>`;
   }
   if (t === "ensayo") return vPresEnsayo();
+  if (t === "relevo") return vRelevo();
   if (t === "preguntas") {
     const q = P.qs[P.i];
     if (!q) return `<section class="section">${psHead()}<div class="panel"><h3>¡Bien!</h3><p>Respondiste ${P.qs.length} preguntas. Una buena respuesta tiene tres partes: la respuesta directa, un dato o ejemplo y una conclusión.</p></div><button class="btn primary wide" data-act="psDone">Terminar</button></section>`;
@@ -1147,6 +1169,58 @@ function vPresSesion() {
   }
   return "";
 }
+let relTimer = null;
+function relStop() { clearInterval(relTimer); relTimer = null; }
+function relStart() {
+  relStop(); S.ps.t0 = Date.now(); S.ps.lento = false;
+  relTimer = setInterval(() => {
+    const P = S.ps; if (!P || P.tipo !== "relevo") { relStop(); return; }
+    const k = Math.min(1, (Date.now() - P.t0) / 3000), b = document.getElementById("relBar");
+    if (b) b.style.width = (100 - k * 100) + "%";
+    if (k >= 1) { P.lento = true; relStop(); const l = document.getElementById("relLbl"); if (l) l.textContent = "Tómate un segundo y elige. El objetivo es bajar de 3 segundos."; if (b) b.parentElement.classList.add("over"); }
+  }, 60);
+}
+function relShuffle(arr, seed) { const a = arr.slice(); let x = seed + 7; for (let i = a.length - 1; i > 0; i--) { x = (x * 9301 + 49297) % 233280; const j = Math.floor(x / 233280 * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function vRelevo() {
+  const P = S.ps, items = P.items;
+  if (!items.length) return `<section class="section">${psHead()}<div class="panel"><p>Tu guion todavía no tiene conectores ni saltos entre bloques para practicar. Agrega bloques o frases puente en «Editar bloques».</p></div><button class="btn primary wide" data-act="psDone">Terminar</button></section>`;
+  const salv = `<div class="salv"><b>Tu salvavidas si te quedas en blanco</b><p>Haz una pausa de 2 segundos: el público la siente como énfasis, solo tú la sientes eterna. Luego usa una frase comodín y mira tu siguiente palabra clave:</p><div class="pb-keys">${PR.SALVAVIDAS.map(x => `<span class="kchip">${esc(x)}</span>`).join("")}</div></div>`;
+  if (P.phase === "intro") return `<section class="section">${psHead()}
+    <div class="panel"><p style="margin:0">Vas a ver frases de tu guion con el conector borrado. Tienes <b>3 segundos</b> para elegir otro que cumpla la misma función. Dila en voz alta con tu opción.</p>
+      <p class="note">${P.nCon} conectores · ${items.filter(x => x.tipo === "dif").length} palabras tuyas · ${items.filter(x => x.tipo === "puente").length} saltos entre bloques</p></div>
+    ${salv}
+    <button class="btn primary wide" data-act="relGo">Empezar relevo</button></section>`;
+  const it = items[P.i];
+  if (!it) return `<section class="section">${psHead("Relevo listo")}
+    <div class="panel"><div class="kpis two"><div class="kpi"><b>${P.ok}/${P.nCon}</b><span>conectores con una buena alternativa</span></div><div class="kpi"><b>${P.rapidas}</b><span>en menos de 3 segundos</span></div></div>
+      <p class="note">${P.ok === P.nCon ? "Excelente: ya no dependes de una sola palabra." : "Los que fallaste vuelven en el próximo relevo. Recuerda: no buscas la palabra exacta, buscas la función."}</p></div>
+    ${salv}<button class="btn primary wide" data-act="psDone">Terminar</button></section>`;
+  const head = psHead("Relevo", `${P.i + 1} de ${items.length} · ${it.tipo === "con" ? PR.CONECTORES[it.fn].nombre : it.tipo === "dif" ? "Tu palabra difícil" : "Salto entre bloques"}`);
+  const dots = `<div class="dotsprog">${items.map((_, k) => `<i class="${k < P.i ? "done" : ""}"></i>`).join("")}</div>`;
+  if (it.tipo === "con") {
+    const opts = relShuffle(it.opciones, P.i), ans = P.ans;
+    const valid = o => it.validas.map(M.norm).includes(M.norm(o));
+    let fb = "";
+    if (ans != null) {
+      const o = opts[ans], ok = valid(o), other = !ok && Object.keys(PR.CONECTORES).find(f => (PR.CONECTORES[f].w.concat(PR.CONECTORES[f].sug || [])).map(M.norm).includes(M.norm(o)));
+      fb = ok ? `<div class="fb ok"><b>¡Bien${P.lento ? "" : ", y rápido"}!</b> También sirven: ${esc(it.validas.filter(v => M.norm(v) !== M.norm(o)).slice(0, 3).join(", "))}. Tu guion dice «${esc(it.w)}».</div>`
+        : `<div class="fb no"><b>«${esc(o)}» sirve para ${esc(other ? PR.CONECTORES[other].para : "otra cosa")}.</b> Aquí necesitas ${esc(PR.CONECTORES[it.fn].para)}: ${esc(it.validas.slice(0, 3).join(", "))}. Tu guion dice «${esc(it.w)}».</div>`;
+    }
+    return `<section class="section">${head}${dots}
+      <div class="panel"><p class="eyebrow">${esc(it.bloque)}</p>
+        <p class="rel-frase">${esc(it.blank).replace("___", `<span class="rel-blank${ans != null ? " fill" : ""}">${ans != null ? esc(opts[ans]) : "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"}</span>`)}</p>
+        ${ans == null ? `<div class="bar tbar rel-bar" aria-hidden="true"><i id="relBar" style="width:100%"></i></div><p class="note" id="relLbl">Elige un conector para ${esc(PR.CONECTORES[it.fn].para)}. Dila en voz alta con tu opción.</p>` : ""}
+        <div class="opts">${opts.map((o, k) => { let c = "opt"; if (ans != null) { if (valid(o)) c += " ok"; else if (k === ans) c += " no"; } return `<button class="${c}" data-act="relPick" data-k="${k}" ${ans != null ? "disabled" : ""}>${esc(o)}</button>`; }).join("")}</div>
+        ${fb}${ans != null ? `<button class="btn primary" data-act="relNext">Siguiente</button>` : ""}</div></section>`;
+  }
+  if (it.tipo === "dif") return `<section class="section">${head}${dots}
+      <div class="panel"><p class="eyebrow">${esc(it.bloque)}</p><p class="rel-frase">Si se te olvida <b>«${esc(it.w)}»</b>…</p>
+        ${it.frase ? `<p class="note">${esc(it.frase).replace(new RegExp(esc(it.w).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), '<span class="rel-blank">&nbsp;&nbsp;&nbsp;&nbsp;</span>')}</p>` : ""}
+        ${P.ver ? `<div class="fb ok"><b>Di:</b> «${esc(it.alt)}»</div><button class="btn primary" data-act="relNext">La tengo</button>` : `<p class="note">¿Qué dirías en su lugar? Dilo en voz alta y luego compara.</p><button class="btn primary" data-act="relVer">Ver mi alternativa</button>`}</div></section>`;
+  return `<section class="section">${head}${dots}
+      <div class="panel"><p class="rel-frase">Terminaste <b>«${esc(it.de)}»</b>. ¿Con qué frase pasas a <b>«${esc(it.a)}»</b>?</p>
+        ${P.ver ? `<div class="fb ok">«${esc(it.texto)}»</div><button class="btn primary" data-act="relNext">La dije</button>` : `<p class="note">Dila en voz alta y toca para ver tu puente.</p><button class="btn primary" data-act="relVer">Ver mi puente</button>`}</div></section>`;
+}
 function vPresEnsayo() {
   const P = S.ps, p = pres(), meta = p.minutos * 60;
   if (P.phase === "done") {
@@ -1172,7 +1246,8 @@ function vPresEnsayo() {
       ${rec ? `<div class="rec-wrap"><button class="rec-btn live" data-act="psMicStop" aria-label="Terminar ensayo"><span>${ICON_STOP}</span></button><p class="note" style="text-align:center">Presenta de principio a fin. Toca para terminar.</p></div>`
         : `<div class="rec-wrap"><button class="rec-btn" data-act="psMicGo" aria-label="Empezar ensayo"><span>${ICON_MIC}</span></button><p class="note" style="text-align:center">Ponte de pie, imagina al curso y empieza con tu apertura.</p></div>`}
       <label class="row" style="align-items:center;gap:8px"><input type="checkbox" id="psCues" ${P.cues ? "checked" : ""}> <span class="note" style="margin:0">Ver palabras clave mientras ensayo</span></label>
-      ${P.cues ? `<div class="cues">${p.bloques.map(b => `<p><b>${esc(b.titulo)}</b> · ${b.claves.map(esc).join(" · ")}</p>`).join("")}</div>` : ""}
+      ${P.cues ? `<div class="cues">${p.bloques.map((b, i) => `<p><b>${esc(b.titulo)}</b> · ${b.claves.map(esc).join(" · ")}</p>${i < p.bloques.length - 1 && b.puente ? `<p class="cue-p">→ ${esc(b.puente)}</p>` : ""}`).join("")}</div>` : ""}
+      ${!rec ? `<p class="note salv-mini"><b>Si te quedas en blanco:</b> pausa de 2 segundos, «${esc(PR.SALVAVIDAS[0])}» y mira tu siguiente palabra clave.</p>` : ""}
       ${rec ? `<p class="transcript small" id="psLive">${esc(P.live || "")}</p>` : ""}
       ${P.micErr ? `<p class="note warn">${esc(P.micErr)}</p><button class="btn" data-act="psTimerOnly">Ensayar solo con cronómetro</button>` : ""}</div></section>`;
 }
@@ -1300,6 +1375,19 @@ function presAct(a, el, ev) {
         if (k >= plan.length) { P.breath = false; if (el2) el2.textContent = "¡Bien!"; P.step = 1; chime(); render(); return; }
         const [txt, secs] = plan[k++]; if (el2) { el2.textContent = txt; el2.parentElement.dataset.ph = txt; } setTimeout(stepB, secs * 1000); };
       stepB(); return true; }
+    case "relGo": S.ps.phase = "item"; S.ps.i = 0; S.ps.ans = null; S.ps.ver = false; S.anim = "right"; render(); if (S.ps.items[0] && S.ps.items[0].tipo === "con") relStart(); return true;
+    case "relPick": {
+      const P = S.ps, it = P.items[P.i]; if (P.ans != null) return true;
+      relStop(); P.ans = +el.dataset.k; const o = relShuffle(it.opciones, P.i)[P.ans];
+      const ok = it.validas.map(M.norm).includes(M.norm(o));
+      if (ok) { P.ok++; if (!P.lento) P.rapidas++; chime(); } else softMiss();
+      render(); return true; }
+    case "relVer": S.ps.ver = true; tick(); render(); return true;
+    case "relNext": { const P = S.ps; P.i++; P.ans = null; P.ver = false; P.lento = false; S.anim = "right"; render(); const n = P.items[P.i]; if (n && n.tipo === "con") relStart(); return true; }
+    case "pbDifAdd": { const b = pbFind(el.dataset.bid), w = (document.getElementById("dw-" + b.id).value || "").trim(), alt = (document.getElementById("da-" + b.id).value || "").trim();
+      if (!w || !alt) { alertNote(el, "Escribe la palabra y otra forma de decirla."); return true; }
+      b.dificiles = (b.dificiles || []).concat([{ w, alt }]).slice(0, 8); save(); render(); return true; }
+    case "pbDifDel": { const b = pbFind(el.dataset.bid); b.dificiles.splice(+el.dataset.k, 1); save(); render(); return true; }
     case "psEnsayoAgain": S.ps.phase = "idle"; S.ps.res = null; S.ps.live = ""; render(); return true;
   }
   return false;

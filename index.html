@@ -513,6 +513,30 @@ input.pb-key{width:110px;min-height:34px;padding:6px 10px;border-radius:99px;fon
 .cov-ic.ok{background:var(--good-soft);color:var(--good)}.cov-ic.mid{background:var(--accent-soft);color:var(--accent)}.cov-ic.no{background:var(--bad-soft);color:var(--bad)}
 .kpi b.good{color:var(--good)}.kpi b.warn{color:var(--bad)}
 @media (prefers-reduced-motion: reduce){.breath{transition:none}}
+mark.con{background:color-mix(in srgb, var(--area-lab) 16%, transparent);color:inherit;border-bottom:2px solid var(--area-lab);border-radius:3px;padding:0 2px}
+.con-map{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.con-map div{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;background:var(--surface-2);border-left:3px solid var(--area-lab);min-width:0}
+.con-map b{font-size:.85rem}
+.con-map span{font-size:.9rem}
+.con-map small{color:var(--muted);font-size:.78rem}
+@media (max-width:360px){.con-map{grid-template-columns:1fr}}
+.puente{display:flex;flex-direction:column;gap:6px;padding:4px 6px 4px 22px;border-left:2px dashed var(--area-lab);margin-left:18px}
+.puente-l{display:flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700;color:var(--area-lab)}
+.puente-l svg{width:16px;height:16px}
+.puente input{min-height:40px;font-size:.9rem}
+.pb-dif summary{cursor:pointer;font-size:.85rem;font-weight:700}
+.pb-dif .kchip{margin:4px 4px 0 0}
+.dif-add{display:grid;grid-template-columns:1fr;gap:6px;margin-top:8px}
+.dif-add input{min-height:40px;font-size:.9rem}
+.dif-add .btn{justify-self:start}
+.rel-frase{font-size:1.18rem;line-height:1.6;margin:0}
+.rel-blank{display:inline-block;min-width:90px;border-bottom:2px solid var(--area-lab);color:var(--area-lab);font-weight:700;text-align:center}
+.rel-blank.fill{border-bottom-style:solid}
+.rel-bar i{background:var(--area-lab)!important;transition:width .06s linear}
+.salv{padding:14px 16px;border-radius:var(--r);background:color-mix(in srgb, var(--area-lab) 10%, var(--surface));border:1px solid color-mix(in srgb, var(--area-lab) 30%, var(--line));display:flex;flex-direction:column;gap:8px}
+.salv p{margin:0;font-size:.92rem}
+.salv-mini{border-left:3px solid var(--area-lab);padding-left:10px}
+.cue-p{color:var(--area-lab);font-size:.85rem}
 .frase{font-weight:500;font-family:var(--font-body);font-size:1.15rem}
 </style>
 </head>

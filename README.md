@@ -10,7 +10,8 @@ Entrena cómo suenas. Aura es una app web para practicar vocabulario según el c
 3. **Bloques:** apertura, ideas y cierre, con lo que se va a decir, palabras clave y tiempo estimado por bloque.
 4. **Plan según los días que faltan:** exprés (hoy o mañana), estructurado (2 a 4 días) o espaciado (5 o más).
 5. **Sesiones:** lectura en voz alta, aprender bloque por bloque con el texto que se va borrando, memorizar apertura y cierre, tarjetas, ensayo completo cronometrado por voz (tiempo, ideas clave dichas, muletillas, ritmo), preguntas del profesor y calentamiento antes de presentar.
-6. **Pro (próximamente):** Aura genera la presentación completa con IA.
+6. **Conectores:** Aura detecta los conectores del guion y los agrupa por función (contraste, causa, consecuencia…). En el **Relevo** el usuario tiene 3 segundos para encontrar otro conector con la misma función; también practica sus frases puente entre bloques y las palabras que marcó como difíciles. Al medir lo dicho, «pero» cuenta igual que «sin embargo».
+7. **Pro (próximamente):** Aura genera la presentación completa con IA.
 
 ## Más situaciones
 1. **País:** el usuario elige su país; cambian las muletillas que se detectan, los modismos, el trato (tú, vos o usted) y la voz del reconocedor.

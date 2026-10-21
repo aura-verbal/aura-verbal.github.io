@@ -365,6 +365,50 @@
       return { id: b.id, titulo: b.titulo, total: ks.length, ok: ok.length, faltan: ks.filter(k => !ok.includes(k)) };
     });
   }
+  /* ---------- modo silencioso: escribir en vez de hablar ----------
+     huecos(): el texto con los conectores (completos) y las palabras clave ocultos; con denso, también
+     una de cada tres palabras con contenido. Devuelve segmentos {t} o {gap, ans, fn?, pre, post}. */
+  function huecos(text, claves, denso) {
+    const T = String(text || ""), spans = conectores(T), ks = (claves || []).map(k => /\d/.test(k) ? "#" + M.norm(numFix(k)) : stemOf(k)).filter(k => !k.includes(" "));
+    const out = []; let m, last = 0, nc = 0, used = new Set(); const re = /\S+/g;
+    const strip = raw => { const core = raw.replace(/^[¿¡«"(]+|[.,;:!?»")]+$/g, ""); const a = raw.indexOf(core); return { core, pre: raw.slice(0, a), post: raw.slice(a + core.length) }; };
+    while ((m = re.exec(T))) {
+      if (m.index < last) continue;
+      out.push({ t: T.slice(last, m.index) });
+      const sp = spans.find(c => m.index >= c.start && m.index < c.end);
+      if (sp && !used.has(sp)) {
+        used.add(sp); const raw = T.slice(sp.start, sp.end), s = strip(raw);
+        out.push({ gap: true, ans: s.core, fn: sp.fn, pre: T.slice(m.index, sp.start) + s.pre, post: s.post });
+        re.lastIndex = sp.end; last = sp.end; continue;
+      }
+      const raw = m[0], s = strip(raw), n = M.norm(s.core);
+      const nn = "#" + M.norm(numFix(s.core)), isKey = s.core && ks.some(k => k[0] === "#" ? nn === k : n.startsWith(k));
+      const cont = M.tokens(numFix(s.core)).some(esContenido);
+      if (s.core && (isKey || denso && cont && (++nc % 3 === 0))) out.push({ gap: true, ans: s.core, pre: s.pre, post: s.post });
+      else out.push({ t: raw });
+      last = m.index + raw.length;
+    }
+    out.push({ t: T.slice(last) });
+    return out.filter(x => x.gap || x.t);
+  }
+  function lev(a, b) {
+    const d = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) { let prev = d[0]; d[0] = i;
+      for (let j = 1; j <= b.length; j++) { const tmp = d[j]; d[j] = Math.min(d[j] + 1, d[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = tmp; } }
+    return d[b.length];
+  }
+  /* Corrige un hueco: sin tildes ni mayúsculas, con un error de tipeo (dos en palabras largas);
+     un conector de la misma función vale («pero» por «sin embargo»). Devuelve "ok", "equiv" o "no". */
+  function checkHueco(input, gap) {
+    const a = M.norm(numFix(gap.ans)).replace(/\s+/g, ""), v = M.norm(numFix(input)).replace(/\s+/g, "");
+    if (!v) return "no";
+    if (v === a) return "ok";
+    const tol = /\d/.test(a) ? 0 : a.length >= 9 ? 2 : a.length >= 5 ? 1 : 0;
+    if (tol && lev(v, a) <= tol) return "ok";
+    if (gap.fn && conectores(input).some(c => c.fn === gap.fn)) return "equiv";
+    return "no";
+  }
+
   /* Qué escribió el micrófono en lugar de una palabra: se alinean texto y dicho (LCS) y se toma lo que quedó
      entre las dos palabras vecinas que sí coinciden («septiembre el [ipom] y» ↔ «septiembre el [limon] y»).
      Si el hueco es largo o está vacío, no se adivina. */
@@ -426,7 +470,7 @@
   }
 
   const API = { CONECTORES, SALVAVIDAS, conectores, alternativas, canonConn, sinConectores, oraciones, mapaConectores, relevoItems, puenteSugerido, PPM, SES, PLAN_TXT, words, countWords, secsFor, clean, firstSentence, keywords, stemOf, mkBlock, marcarTipos, fromGuion, fromSlides,
-    asignarTiempo, fmt, plan, diasEntre, addDays, fade, recall, revisar, escuchadoComo, cobertura, preguntas, promptGuion };
+    asignarTiempo, fmt, plan, diasEntre, addDays, fade, recall, revisar, escuchadoComo, huecos, checkHueco, cobertura, preguntas, promptGuion };
   root.AuraPres = API;
   if (typeof module !== "undefined" && module.exports) module.exports = API;
 })(typeof window !== "undefined" ? window : globalThis);

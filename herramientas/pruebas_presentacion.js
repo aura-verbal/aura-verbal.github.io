@@ -96,4 +96,12 @@ if (rv2.miss.some(x => x.w === "ipom") || rv2.faltan.length || rv2.r <= rv.r) er
 if (P.revisar(dA, tA, [], {}, ["recorte"]).miss.some(x => x.w === "recorte")) err("oidas no aplicado");
 if (P.cobertura("el limon", [{ id: 1, titulo: "t", claves: ["IPoM"] }], { ipom: ["limon"] })[0].ok !== 1) err("cobertura con alias");
 if (P.recall("además la economía creció", "Sin embargo, la economía creció") > 0.9) err("conector de otra función cuenta como dicho");
+// Modo silencioso: huecos con conectores completos y cifras; corrección tolerante pero sin regalar cifras
+const tH = "En junio, el Banco Central esperaba 1,75%. Sin embargo, el problema es la demanda. Por eso, recortó su proyección del IPoM.";
+const gH = P.huecos(tH, ["1,75%", "IPoM", "demanda"]).filter(x => x.gap);
+if (gH.map(x => x.ans).join("|") !== "1,75%|Sin embargo|demanda|Por eso|IPoM") err("huecos", gH.map(x => x.ans));
+if (P.huecos(tH, ["IPoM"]).map(x => x.gap ? x.pre + x.ans + x.post : x.t).join("") !== tH) err("huecos no reconstruye el texto");
+if (P.huecos(tH, ["IPoM"], true).filter(x => x.gap).length <= P.huecos(tH, ["IPoM"]).filter(x => x.gap).length) err("huecos densos");
+const ch = (v, i) => P.checkHueco(v, gH[i]);
+if (ch("1,75", 0) !== "ok" || ch("1,7", 0) !== "no" || ch("pero", 1) !== "equiv" || ch("debido a", 1) !== "no" || ch("demnda", 2) !== "ok" || ch("IPOM", 4) !== "ok" || ch("", 4) !== "no" || ch("oferta", 2) !== "no") err("checkHueco");
 console.log("ERRORS", errors);

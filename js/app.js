@@ -528,8 +528,13 @@ async function shareCard() {
 }
 
 /* ===================== NAVEGACIÓN ===================== */
+let rendering = false;
 function render() {
-  if (!DATA.index) return;
+  if (!DATA.index || rendering) return;
+  rendering = true;
+  try { renderNow(); } finally { rendering = false; }
+}
+function renderNow() {
   document.getElementById("levelPill").textContent = levelOf(gProg()).name;
   const onb = !progress.profile || !!S.obPrueba;
   document.body.classList.toggle("onboarding", onb);
@@ -538,6 +543,7 @@ function render() {
   else if (S.sub === "prueba") html = vPrueba(false);
   else if (S.sub === "pais") html = vPais(false);
   else if (S.sub === "reto") html = vReto();
+  else if (S.sub === "pres") html = vPres();
   else if (S.tab === "inicio") html = vInicio();
   else if (S.tab === "progreso") html = vProgreso();
   else if (S.tab === "ajustes") html = vAjustes();
@@ -566,7 +572,7 @@ function setTab(t) {
   if (t === "practica" && (S.view === "results" || S.view === "loading")) S.view = "list";
   go({ tab: t, sub: null }, dir);
 }
-function leaveSim() { escStop(); clearTimeout(pwTimer); stopDictado(); recReset(); stopPrueba(); try { speechSynthesis.cancel(); } catch (e) {} }
+function leaveSim() { presMicStop(); escStop(); clearTimeout(pwTimer); stopDictado(); recReset(); stopPrueba(); try { speechSynthesis.cancel(); } catch (e) {} }
 
 /* ===================== PERFIL ===================== */
 function profileForm(p, cta) {
@@ -849,6 +855,457 @@ function vReto() {
     </div></section>`;
 }
 
+/* ===================== MI PRESENTACIÓN =====================
+   Plan gratis: el usuario trae su presentación (PowerPoint, PDF, Word o guion pegado) y Aura
+   arma un plan de estudio según los días que faltan, con sesiones guiadas. Motor en js/pres.js. */
+const PR = window.AuraPres;
+const PRES_TIPO = { apertura: "Apertura", idea: "Idea", cierre: "Cierre" };
+const MIN_OPTS = [3, 5, 7, 10, 15, 20];
+const PLAN_NOM = { expres: "exprés", estructurado: "estructurado", espaciado: "espaciado" };
+const DIA_OPTS = [[15, "15 min"], [30, "30 min"], [60, "1 hora o más"]];
+const NIVELES = ["Léelo en voz alta", "Con huecos", "Solo primeras letras", "Solo palabras clave", "Sin ayuda"];
+const TRABA = ["Tres tristes tigres tragaban trigo en un trigal.", "Pablito clavó un clavito en la calva de un calvito.", "El perro de San Roque no tiene rabo porque Ramón Ramírez se lo ha robado."];
+const SES_ICON = {
+  lectura: `<svg ${SVG_ATTR}><path d="M4 5h6a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4z"/><path d="M20 5h-6a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h6z"/></svg>`,
+  bloques: `<svg ${SVG_ATTR}><rect x="3" y="4" width="18" height="4" rx="1.5"/><rect x="3" y="10" width="18" height="4" rx="1.5"/><rect x="3" y="16" width="11" height="4" rx="1.5"/></svg>`,
+  ancla: `<svg ${SVG_ATTR}><circle cx="12" cy="5" r="2"/><path d="M12 7v14M5 13a7 7 0 0 0 14 0M8 11h8"/></svg>`,
+  tarjetas: `<svg ${SVG_ATTR}><rect x="6" y="3" width="13" height="16" rx="2"/><path d="M4 7v12a2 2 0 0 0 2 2h10"/></svg>`,
+  ensayo: `<svg ${SVG_ATTR}><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>`,
+  preguntas: `<svg ${SVG_ATTR}><path d="M4 5h16v11H9l-5 4V5z"/><path d="M10 9a2 2 0 1 1 2.8 1.8c-.5.3-.8.7-.8 1.2M12 14h.01"/></svg>`,
+  calentamiento: `<svg ${SVG_ATTR}><path d="M12 3c2 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.6 1.2 2.5 2.2 2.5C11 7 11 5 12 3z"/></svg>`
+};
+function pres() { return progress.pres || null; }
+function presPlan(p) { p = p || pres(); return p && p.fecha && p.bloques && p.bloques.length ? PR.plan(p.fecha, today(), p.minDia || 30) : null; }
+function presSesiones(pl) { return pl ? pl.dias.reduce((a, d) => a.concat(d.ses.map(s => Object.assign({ dia: d }, s))), []) : []; }
+function presHoy(p) { const pl = presPlan(p); if (!pl) return null; return presSesiones(pl).filter(s => s.dia.f === today()).find(s => !p.done[s.id]) || null; }
+function presCuenta(p) { const d = daysBetween(today(), p.fecha); return d < 0 ? "ya pasó" : d === 0 ? "es hoy" : d === 1 ? "es mañana" : "en " + d + " días"; }
+function presTxt(b) { return b.texto && b.texto.trim() ? b.texto : (b.apoyo || b.titulo); }
+function presGo(pv, extra, anim) { leaveSim(); presMicStop(); go(Object.assign({ sub: "pres", pv }, extra || {}), anim || "right"); }
+function presSave() { clearTimeout(presSave.t); presSave.t = setTimeout(save, 300); }
+function chipBtn(act, v, label, on, extra) { return `<button class="pw-opt${on ? " on" : ""}" data-act="${act}" data-v="${esc(v)}"${extra || ""}>${esc(label)}</button>`; }
+function fechaLarga(iso) { try { return new Date(iso + "T12:00:00").toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long" }); } catch (e) { return iso; } }
+
+/* ---------- Inicio: tarjeta principal ---------- */
+function presCard() {
+  const p = pres();
+  if (!p) return `<button class="card pres-hero" data-act="presNew">
+      <span class="tag">Gratis</span>
+      <span class="card-head"><span class="s-icon">${SES_ICON.ensayo}</span><span><h3>¿Tienes que presentar?</h3><span class="meta">Sube tu PowerPoint, PDF o guion y Aura te arma un plan para dominarla antes de la fecha, aunque sea mañana.</span></span></span>
+      <span class="cta">Preparar mi presentación →</span></button>`;
+  if (!p.bloques || !p.bloques.length) return `<button class="card pres-hero" data-act="presOpen" data-pv="cargar"><span class="tag">Falta un paso</span><h3>${esc(p.tema || "Mi presentación")}</h3><span class="meta">Carga tu presentación o tu guion para crear el plan.</span><span class="cta">Continuar →</span></button>`;
+  const d = daysBetween(today(), p.fecha);
+  if (d < 0) return `<button class="card pres-hero" data-act="presOpen" data-pv="plan"><span class="tag">Ya presentaste</span><h3>${esc(p.tema)}</h3><span class="meta">Cuéntanos cómo te fue y prepara la siguiente.</span><span class="cta">Ver →</span></button>`;
+  const pl = presPlan(p), all = presSesiones(pl), hechas = all.filter(s => p.done[s.id]).length, hoy = presHoy(p), pc = all.length ? Math.round(hechas / all.length * 100) : 0;
+  return `<button class="card pres-hero" data-act="presOpen" data-pv="${hoy ? "sesion" : "plan"}" ${hoy ? `data-ses="${hoy.id}"` : ""}>
+      <span class="tag">${d === 0 ? "Hoy presentas" : d === 1 ? "Presentas mañana" : "Faltan " + d + " días"}</span>
+      <span class="card-head"><span class="s-icon">${SES_ICON.ensayo}</span><span><h3>${esc(p.tema)}</h3><span class="meta">${p.minutos} min · ${p.bloques.length} bloques · plan ${esc(PLAN_NOM[pl.tipo])}</span></span></span>
+      <span class="barlabel"><span>Plan</span><span class="mono">${hechas}/${all.length}</span></span><span class="bar" aria-hidden="true"><i style="width:${pc}%"></i></span>
+      <span class="cta">${hoy ? "Sesión de hoy: " + esc(PR.SES[hoy.tipo].titulo.toLowerCase()) + " · " + hoy.min + " min →" : "Hoy ya cumpliste. Ver mi plan →"}</span></button>`;
+}
+
+/* ---------- Paso 1: datos ---------- */
+function presStartNew(edit) {
+  const p = pres();
+  S.pd = edit && p ? { tema: p.tema, fecha: p.fecha, minutos: p.minutos, minDia: p.minDia, otra: false, edit: true }
+    : { tema: "", fecha: addDays(2), minutos: 5, minDia: 30, otra: false };
+  presGo("crear");
+}
+function vPresCrear() {
+  const d = S.pd || (S.pd = { tema: "", fecha: addDays(2), minutos: 5, minDia: 30 });
+  const quick = [["Hoy", addDays(0)], ["Mañana", addDays(1)], ["En 3 días", addDays(3)], ["En una semana", addDays(7)]];
+  const isQuick = quick.some(q => q[1] === d.fecha);
+  return `<section class="section"><button class="back" data-act="presBack">← ${d.edit ? "Mi plan" : "Inicio"}</button>
+    <div><p class="eyebrow">${d.edit ? "Editar" : "Paso 1 de 3"}</p><h2>Tu presentación</h2><p class="lead">Con esto Aura calcula cuánto debes hablar y arma tu plan.</p></div>
+    <div class="panel">
+      <div class="field"><label for="pdTema">¿Sobre qué es?</label><input type="text" id="pdTema" maxlength="90" placeholder="Ej: El IMACEC de los últimos 6 meses" value="${esc(d.tema)}"></div>
+      <div class="field"><span class="lbl">¿Cuándo presentas?</span><div class="pw-opts flat">${quick.map(q => chipBtn("pdSet", q[1], q[0], d.fecha === q[1], ' data-k="fecha"')).join("")}${chipBtn("pdOtra", "", "Otra fecha", d.otra || !isQuick)}</div>
+        ${d.otra || !isQuick ? `<input type="date" id="pdFecha" min="${today()}" value="${esc(d.fecha)}">` : ""}
+        <span class="note">${esc(fechaLarga(d.fecha))}</span></div>
+      <div class="field"><span class="lbl">¿Cuántos minutos tienes para hablar?</span><div class="pw-opts flat">${MIN_OPTS.map(m => chipBtn("pdSet", m, m + " min", d.minutos === m, ' data-k="minutos"')).join("")}</div>
+        <span class="note">Unas ${Math.round(d.minutos * PR.PPM).toLocaleString("es-CL")} palabras habladas a ritmo ideal.</span></div>
+      <div class="field"><span class="lbl">¿Cuánto tiempo puedes practicar al día?</span><div class="pw-opts flat">${DIA_OPTS.map(o => chipBtn("pdSet", o[0], o[1], d.minDia === o[0], ' data-k="minDia"')).join("")}</div></div>
+      <p class="err" id="pdErr"></p>
+      <button class="btn primary wide" data-act="pdOk">${d.edit ? "Guardar cambios" : "Siguiente"}</button>
+    </div></section>`;
+}
+
+/* ---------- Paso 2: cargar ---------- */
+function vPresCargar() {
+  const p = pres(), mode = S.pc || null;
+  const head = `<button class="back" data-act="${mode && mode !== "leyendo" ? "pcBack" : "presBack"}">← ${mode && mode !== "leyendo" ? "Opciones" : "Volver"}</button>
+    <div><p class="eyebrow">Paso 2 de 3</p><h2>Carga tu presentación</h2><p class="lead">${esc(p.tema)} · ${p.minutos} min · ${esc(presCuenta(p))}</p></div>`;
+  const err = S.perr ? `<p class="fb no">${esc(S.perr)}</p>` : "";
+  if (mode === "leyendo") return `<section class="section">${head}<div class="panel"><div class="loading" style="padding:30px 0"><span class="mark" aria-hidden="true">Aa</span></div><p class="note" style="text-align:center">Leyendo tu archivo…</p></div></section>`;
+  if (mode === "pegar") return `<section class="section">${head}${err}<div class="panel">
+      <div class="field"><label for="pcText">Pega tu guion</label><textarea id="pcText" rows="12" placeholder="Pega aquí lo que vas a decir. Si usas títulos (## Apertura, ## Idea 1…) o separas por párrafos, Aura arma los bloques solo.">${esc(S.pcText || "")}</textarea></div>
+      <button class="btn primary wide" data-act="pcUse">Usar este guion</button></div></section>`;
+  if (mode === "puente") {
+    const prm = PR.promptGuion({ tema: p.tema, minutos: p.minutos, fecha: fechaLarga(p.fecha), instrucciones: S.pbIns || "", material: S.pbMat || "", pais: paisObj().nombre });
+    return `<section class="section">${head}${err}
+      <div class="panel"><h3>1 · Cuéntale a la IA lo que tienes</h3>
+        <div class="field"><label for="pbIns">Instrucciones del profesor <span class="muted">(opcional)</span></label><textarea id="pbIns" rows="3" placeholder="Ej: máximo 5 minutos, incluir al menos dos datos y una conclusión personal.">${esc(S.pbIns || "")}</textarea></div>
+        <div class="field"><label for="pbMat">Tu material y datos <span class="muted">(muy recomendado)</span></label><textarea id="pbMat" rows="5" placeholder="Pega tus apuntes, datos y fuentes. La IA usará solo esto para las cifras.">${esc(S.pbMat || "")}</textarea></div></div>
+      <div class="panel"><h3>2 · Copia el prompt y pégalo en tu IA</h3>
+        <p class="note">Sirve ChatGPT, Gemini o Claude en su versión gratis. El prompt le pide no inventar datos y marcar con [VERIFICAR] lo que falte.</p>
+        <textarea id="pbPrompt" rows="8" readonly>${esc(prm)}</textarea>
+        <button class="btn" data-act="pbCopy">Copiar prompt</button></div>
+      <div class="panel"><h3>3 · Pega aquí la respuesta</h3>
+        <textarea id="pcText" rows="8" placeholder="Pega la respuesta completa de la IA.">${esc(S.pcText || "")}</textarea>
+        <button class="btn primary wide" data-act="pcUse">Usar este guion</button>
+        <p class="note">Revisa los datos marcados con [VERIFICAR] antes de presentar.</p></div></section>`;
+  }
+  return `<section class="section">${head}${err}
+    <label class="card load-opt" for="pcFileA"><span class="card-head"><span class="s-icon">${SES_ICON.tarjetas}</span><span><h3>Subir mi presentación</h3><span class="meta">PowerPoint (.pptx) o PDF. Si tiene notas del orador, se usan como guion.</span></span></span></label>
+    <input type="file" id="pcFileA" accept=".pptx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation" class="sr-only">
+    <label class="card load-opt" for="pcFileB"><span class="card-head"><span class="s-icon">${SES_ICON.lectura}</span><span><h3>Subir mi guion</h3><span class="meta">Word (.docx) o texto (.txt).</span></span></span></label>
+    <input type="file" id="pcFileB" accept=".docx,.txt,.md,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="sr-only">
+    <button class="card load-opt" data-act="pcMode" data-v="pegar"><span class="card-head"><span class="s-icon">${SES_ICON.bloques}</span><span><h3>Pegar mi guion</h3><span class="meta">Copia y pega lo que vas a decir.</span></span></span></button>
+    <button class="card load-opt" data-act="pcMode" data-v="puente"><span class="card-head"><span class="s-icon">${SES_ICON.preguntas}</span><span><h3>Todavía no tengo guion</h3><span class="meta">Aura te arma un prompt para que tu IA lo escriba con tu material, gratis.</span></span></span></button>
+    <div class="pro-card"><span class="tag">Aura Pro · próximamente</span><p><b>Aura arma tu presentación completa.</b> Escribes el tema y las instrucciones, y Aura genera el guion, los datos y las láminas, listo para entrenar.</p></div>
+    <p class="note">En Canva: <b>Compartir → Descargar</b> y elige <b>PowerPoint</b> o <b>PDF</b>.</p></section>`;
+}
+async function presImport(file) {
+  S.pc = "leyendo"; S.perr = null; render();
+  try {
+    const r = await window.AuraImport.importFile(file);
+    let bs = null, fuente = (file.name.split(".").pop() || "").toLowerCase();
+    if (r.kind === "slides") bs = PR.fromSlides(r.slides);
+    else if (r.kind === "guion") bs = PR.fromGuion(r.text);
+    else if (r.kind === "vacio") throw new Error("Tu PDF no tiene texto que se pueda leer. Pasa con algunos PDF de Canva, que guardan el texto como dibujo. Descárgalo como PowerPoint o pega tu guion.");
+    else if (r.kind === "antiguo") throw new Error("Ese formato es antiguo (.ppt o .doc). Ábrelo y guárdalo como .pptx o .docx, o expórtalo a PDF.");
+    else throw new Error("Ese tipo de archivo no lo podemos leer. Sube .pptx, .pdf, .docx o .txt.");
+    if (!bs || !bs.length) throw new Error("No encontramos texto en el archivo. Prueba pegando tu guion.");
+    presSetBloques(bs, fuente, file.name);
+  } catch (e) {
+    S.pc = null; S.perr = e && e.message && !/^No se pudo cargar|JSZip|Invalid|zip/i.test(e.message) ? e.message
+      : "No pudimos leer el archivo. Si tiene contraseña, quítala; si no, exporta a PDF o pega tu guion. Para subir archivos por primera vez necesitas conexión.";
+    render();
+  }
+}
+function presSetBloques(bs, fuente, archivo) {
+  const p = pres(); p.bloques = bs; p.fuente = fuente; p.archivo = archivo || ""; p.done = p.done || {};
+  save(); S.pc = null; S.pcText = ""; chime(); presGo("bloques");
+}
+
+/* ---------- Paso 3: revisar bloques ---------- */
+function vPresBloques() {
+  const p = pres(), bs = p.bloques, t = PR.asignarTiempo(bs, p.minutos);
+  const rows = bs.map((b, i) => `<div class="panel pb ${b.tipo}" data-bid="${b.id}">
+      <div class="pb-top"><span class="tag ${b.tipo === "idea" ? "quiet" : ""}">${PRES_TIPO[b.tipo]}${b.lamina ? " · lámina " + b.lamina : ""}</span><span class="mono muted">≈ ${t.secs[i]} s</span>
+        <span class="pb-tools"><button class="icon-btn sm" data-act="pbMove" data-bid="${b.id}" data-dir="-1" aria-label="Subir" ${i === 0 ? "disabled" : ""}>↑</button><button class="icon-btn sm" data-act="pbMove" data-bid="${b.id}" data-dir="1" aria-label="Bajar" ${i === bs.length - 1 ? "disabled" : ""}>↓</button><button class="icon-btn sm" data-act="pbDel" data-bid="${b.id}" aria-label="Eliminar bloque">×</button></span></div>
+      <input type="text" class="pb-tit" data-bid="${b.id}" data-f="titulo" value="${esc(b.titulo)}" aria-label="Título del bloque">
+      ${b.apoyo ? `<details class="pb-apoyo"><summary>Texto de la lámina</summary><p>${esc(b.apoyo).replace(/\n/g, "<br>")}</p></details>` : ""}
+      <div class="field"><span class="lbl">Lo que vas a decir</span>
+        <textarea data-bid="${b.id}" data-f="texto" rows="${Math.min(8, Math.max(3, Math.ceil((b.texto || "").length / 48)))}" placeholder="${b.apoyo ? "La lámina solo tiene viñetas: escribe o dicta cómo lo vas a explicar con tus palabras." : "Escribe o dicta lo que vas a decir."}">${esc(b.texto)}</textarea>
+        <div class="row"><button class="btn ghost sm" data-act="pbMic" data-bid="${b.id}" id="mic-${b.id}">${ICON_MIC} Dictar</button>${!b.texto ? `<span class="note warn">Sin guion: practicarás con el texto de la lámina.</span>` : ""}</div></div>
+      <div class="field"><span class="lbl">Palabras clave <span class="muted">(tu ayuda memoria)</span></span>
+        <div class="pb-keys">${(b.claves || []).map(k => `<span class="kchip">${esc(k)}<button data-act="pbKeyDel" data-bid="${b.id}" data-k="${esc(k)}" aria-label="Quitar ${esc(k)}">×</button></span>`).join("")}
+          <input type="text" class="pb-key" data-bid="${b.id}" placeholder="+ agregar" maxlength="30" enterkeyhint="done"></div></div>
+    </div>`).join("");
+  return `<section class="section"><button class="back" data-act="presBack">← Volver</button>
+    <div><p class="eyebrow">${p.planCreado ? "Editar" : "Paso 3 de 3"}</p><h2>Revisa tu presentación</h2>
+      <p class="lead">${bs.length} bloques. ${t.faltan ? `${t.faltan} sin guion.` : `Tu guion dura cerca de ${PR.fmt(t.estimado)}; tienes ${p.minutos}:00 min.`}</p></div>
+    ${t.aviso ? `<p class="fb mid">${esc(t.aviso.texto)}</p>` : ""}
+    <p class="note">La primera parte es tu <b>apertura</b> y la última tu <b>cierre</b>: son las que vas a saber casi de memoria. Lo del medio lo vas a dominar con palabras clave.</p>
+    ${rows}
+    <button class="btn wide" data-act="pbAdd">+ Agregar bloque</button>
+    <button class="btn primary wide" data-act="pbOk">${p.planCreado ? "Guardar y volver al plan" : "Crear mi plan"}</button></section>`;
+}
+function pbFind(id) { const p = pres(); return p.bloques.find(b => b.id === id); }
+
+/* ---------- Plan ---------- */
+function vPresPlan() {
+  const p = pres(), d = daysBetween(today(), p.fecha);
+  if (d < 0) return `<section class="section"><button class="back" data-act="presBack">← Inicio</button>
+    <div><p class="eyebrow">Ya presentaste</p><h2>${esc(p.tema)}</h2><p class="lead">¿Cómo te fue?</p></div>
+    <div class="pw-opts flat">${chipBtn("presFin", "bien", "Me fue bien")}${chipBtn("presFin", "regular", "Más o menos")}${chipBtn("presFin", "mal", "Me costó")}</div>
+    <p class="note">Se guarda en tu historial y puedes preparar la siguiente.</p></section>`;
+  const pl = presPlan(p), all = presSesiones(pl), hechas = all.filter(s => p.done[s.id]).length, hoy = presHoy(p);
+  const days = pl.dias.map(dia => {
+    const isToday = dia.f === today(), past = dia.f < today();
+    return `<div class="pday${isToday ? " today" : ""}"><p class="pday-h"><b>${esc(dia.etiqueta || fechaLarga(dia.f))}</b>${dia.etiqueta && !/Hoy/.test(dia.etiqueta) ? `<span class="muted"> · ${esc(fechaLarga(dia.f))}</span>` : ""}</p>
+      ${dia.ses.map(s => { const ok = !!p.done[s.id];
+        return `<button class="pses${ok ? " ok" : ""}" data-act="presSes" data-ses="${s.id}"><span class="s-icon">${ok ? ICON_CHECK : SES_ICON[s.tipo]}</span><span class="pses-t"><b>${esc(PR.SES[s.tipo].titulo)}${s.n ? " " + s.n : ""}</b><small>${s.min} min${past && !ok ? " · pendiente" : ""}</small></span><span class="arrow">›</span></button>`; }).join("")}</div>`;
+  }).join("");
+  const last = (p.ensayos || []).slice(-1)[0];
+  return `<section class="section"><button class="back" data-act="presBack">← Inicio</button>
+    <div><p class="eyebrow">Mi presentación · ${esc(presCuenta(p))}</p><h2>${esc(p.tema)}</h2><p class="lead">${p.minutos} min · ${p.bloques.length} bloques · ${esc(fechaLarga(p.fecha))}</p></div>
+    ${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
+    <div class="panel"><span class="tag">Plan ${esc(PLAN_NOM[pl.tipo])}</span><p style="margin:0">${esc(PR.PLAN_TXT[pl.tipo])}</p>
+      <span class="barlabel"><span>Sesiones completadas</span><span class="mono">${hechas}/${all.length}</span></span><span class="bar" aria-hidden="true"><i style="width:${all.length ? Math.round(hechas / all.length * 100) : 0}%"></i></span>
+      ${last ? `<p class="note">Último ensayo: ${PR.fmt(last.secs)} de ${p.minutos}:00 · ${last.cov}% de las ideas clave${last.mpm != null ? " · " + last.mpm + " muletillas/min" : ""}.</p>` : ""}</div>
+    ${hoy ? `<button class="btn primary wide" data-act="presSes" data-ses="${hoy.id}">Empezar: ${esc(PR.SES[hoy.tipo].titulo.toLowerCase())}</button>` : `<p class="fb ok">Hoy ya cumpliste tu plan. Si quieres, haz un ensayo extra.</p>`}
+    ${days}
+    <div class="row"><button class="btn" data-act="presSes" data-ses="libre-ensayo">Ensayo libre</button><button class="btn" data-act="presOpen" data-pv="bloques">Editar bloques</button><button class="btn" data-act="presEdit">Fecha y duración</button></div>
+    ${S.confirm === "presDel" ? `<div class="confirm"><span>¿Borrar esta presentación y su plan?</span><button class="btn danger" data-act="presDelYes">Sí, borrar</button><button class="btn ghost" data-act="cancelConfirm">Cancelar</button></div>`
+      : `<button class="linkish" data-act="presDelAsk" style="align-self:flex-start">Borrar presentación</button>`}
+  </section>`;
+}
+
+/* ---------- Sesiones ---------- */
+function presFindSes(id) {
+  if (/^libre-/.test(id)) return { id, tipo: id.split("-")[1], libre: true, min: 6 };
+  return presSesiones(presPlan()).find(s => s.id === id) || null;
+}
+function presStartSes(id) {
+  const s = presFindSes(id); if (!s) { presGo("plan"); return; }
+  const p = pres();
+  const blocks = s.tipo === "ancla" ? p.bloques.filter(b => b.tipo !== "idea") : p.bloques;
+  S.ps = { id, tipo: s.tipo, n: s.n, libre: s.libre, i: 0, nivel: 0, blocks: blocks.map(b => b.id), res: null, phase: "idle", flip: false, sabe: 0, step: 0, frase: 0, cues: s.tipo === "ensayo" && presPlan() && presPlan().tipo === "expres" && (s.n || 1) === 1 };
+  if (s.tipo === "preguntas") S.ps.qs = PR.preguntas(p.bloques, p.tema);
+  presGo("sesion");
+}
+function psHead(titulo, sub) {
+  const se = PR.SES[S.ps.tipo];
+  return `<button class="back" data-act="psExit">← Mi plan</button>
+    <div class="card-head"><span class="s-icon">${SES_ICON[S.ps.tipo]}</span><div><p class="eyebrow">${esc(sub || "Sesión · " + se.min + " min")}</p><h2>${esc(titulo || se.titulo)}</h2></div></div>
+    ${sub ? "" : `<p class="lead" style="margin-top:0">${esc(se.desc)}</p>`}`;
+}
+function fadeHTML(text, nivel, claves) {
+  if (nivel >= 4) return `<p class="fd-none">Dilo sin ayuda. Si te trabas, toca aquí para ver las palabras clave.</p>`;
+  return `<p class="fd">${PR.fade(text, nivel, claves).map(t => t.sp ? t.t : t.key ? `<b class="fd-k">${esc(t.t)}</b>`
+    : t.ini ? `${esc(t.pre)}<span class="fd-i" data-w="${esc(t.core)}">${esc(t.core.charAt(0))}<i>${"_".repeat(Math.max(1, t.core.length - 1))}</i></span>${esc(t.post)}`
+    : t.hid ? `${esc(t.pre)}<span class="fd-h" data-w="${esc(t.core)}">${"_".repeat(Math.max(2, t.core.length))}</span>${esc(t.post)}` : esc(t.t)).join("")}</p>`;
+}
+let presDict = null, presT0 = 0, presTimer = null, presCb = null;
+function presMicStop() { clearInterval(presTimer); presTimer = null; if (presDict && presDict.active) presDict.stop(); }
+function presMic(onEnd, liveId) {
+  presMicStop(); presCb = onEnd;
+  presDict = Dictado({ lang: paisObj().voz, keepAlive: true,
+    onText: t => { S.ps.live = t; const el = document.getElementById(liveId || "psLive"); if (el) el.textContent = t; },
+    onError: code => { S.ps.phase = "idle"; S.ps.micErr = micMsg(code); clearInterval(presTimer); render(); },
+    onEnd: d => { clearInterval(presTimer); if (S.ps && S.ps.phase === "fin") onEnd((S.ps.live || "").trim(), (Date.now() - presT0) / 1000); } });
+  S.ps.live = ""; S.ps.micErr = null; presT0 = Date.now(); S.ps.phase = "rec";
+  presDict.start();
+  if (!presDict.supported) { S.ps.phase = "idle"; S.ps.micErr = micMsg("unsupported"); render(); return false; }
+  return true;
+}
+function presMicFinish() {
+  if (!S.ps) return; S.ps.phase = "fin"; clearInterval(presTimer);
+  const secs = (Date.now() - presT0) / 1000;
+  if (S.ps.timerOnly) { S.ps.timerOnly = false; presEnsayoFin("", secs); return; }
+  if (presDict && presDict.active) presDict.stop(); else if (presCb) presCb((S.ps.live || "").trim(), secs);
+}
+function vPresSesion() {
+  const P = S.ps, p = pres(); if (!P || !p) return "";
+  const t = P.tipo;
+  if (t === "lectura") {
+    return `<section class="section">${psHead()}
+      <div class="panel"><p class="note">Léela completa en voz alta, a ritmo de presentación (no de lectura en silencio). Si quieres, escucha cómo suena primero.</p>
+        ${p.bloques.map(b => `<div class="read-b"><p class="eyebrow">${PRES_TIPO[b.tipo]} · ${esc(b.titulo)}</p><p>${esc(presTxt(b)).replace(/\n/g, "<br>")}</p><button class="btn ghost sm" data-act="psSpeak" data-bid="${b.id}">${ICON_SPEAK} Escuchar</button></div>`).join("")}</div>
+      <button class="btn primary wide" data-act="psDone">La leí en voz alta</button></section>`;
+  }
+  if (t === "bloques" || t === "ancla") {
+    const b = pbFind(P.blocks[P.i]), maxN = t === "ancla" ? 4 : 3, txt = presTxt(b);
+    const res = P.res ? `<div class="fb ${P.res.r >= .7 ? "ok" : P.res.r >= .45 ? "mid" : "no"}"><b>Recordaste ${Math.round(P.res.r * 100)}% del contenido.</b> ${P.res.faltan.length ? "Te faltó: " + P.res.faltan.map(esc).join(", ") + "." : "Dijiste todas las palabras clave."} ${P.res.r < .6 ? "Repite este nivel una vez más." : P.nivel < maxN ? "Bien, quitemos más ayuda." : ""}</div>` : "";
+    return `<section class="section">${psHead(b.titulo, `${PRES_TIPO[b.tipo]} · bloque ${P.i + 1} de ${P.blocks.length}`)}
+      <div class="dotsprog">${P.blocks.map((_, k) => `<i class="${k < P.i ? "done" : ""}"></i>`).join("")}</div>
+      <div class="panel"><div class="qmeta"><span class="tag">Nivel ${P.nivel + 1} de ${maxN + 1} · ${NIVELES[P.nivel]}</span></div>
+        <div class="fd-wrap" data-act="fdPeek">${fadeHTML(txt, P.nivel, b.claves)}</div>
+        ${P.nivel >= 3 ? `<div class="pb-keys">${b.claves.map(k => `<span class="kchip">${esc(k)}</span>`).join("")}</div>` : ""}
+        ${P.phase === "rec" ? `<p class="transcript" id="psLive">${esc(P.live || "")}</p><button class="btn primary" data-act="psMicStop">${ICON_STOP} Listo, lo dije</button>`
+          : `${res}<div class="row">${P.res && P.res.r >= .6 || !P.res ? `<button class="btn primary" data-act="psMicGo">${ICON_MIC} Decirlo en voz alta</button>` : `<button class="btn primary" data-act="psMicGo">${ICON_MIC} Repetir</button>`}
+            <button class="btn" data-act="psNext">${P.nivel < maxN ? "Siguiente nivel" : P.i < P.blocks.length - 1 ? "Siguiente bloque" : "Terminar"}</button></div>`}
+        ${P.micErr ? `<p class="note warn">${esc(P.micErr)} Puedes decirlo igual y tocar «Siguiente».</p>` : ""}
+        <p class="note">Toca una palabra oculta para verla.</p></div></section>`;
+  }
+  if (t === "tarjetas") {
+    const b = pbFind(P.blocks[P.i]);
+    if (!b) return `<section class="section">${psHead()}<div class="panel"><h3>Repaso listo</h3><p>Recordaste bien ${P.sabe} de ${P.blocks.length} bloques.${P.sabe < P.blocks.length ? " Los que te costaron vuelven a aparecer primero en tu próximo ensayo." : ""}</p></div><button class="btn primary wide" data-act="psDone">Terminar</button></section>`;
+    return `<section class="section">${psHead("Tarjetas", `Tarjeta ${P.i + 1} de ${P.blocks.length}`)}
+      <button class="flash${P.flip ? " flip" : ""}" data-act="psFlip">
+        <span class="flash-in"><span class="tag ${b.tipo === "idea" ? "quiet" : ""}">${PRES_TIPO[b.tipo]}</span><h3>${esc(b.titulo)}</h3>
+        ${P.flip ? `<span class="pb-keys">${b.claves.map(k => `<span class="kchip">${esc(k)}</span>`).join("")}</span><span class="note">«${esc(PR.firstSentence(presTxt(b)))}»</span>` : `<span class="note">¿Qué ideas van en este bloque? Dilas en voz alta y toca para comprobar.</span>`}</span></button>
+      ${P.flip ? `<div class="row"><button class="btn primary" data-act="psSabe" data-v="1">La sabía</button><button class="btn" data-act="psSabe" data-v="0">Me costó</button></div>` : ""}</section>`;
+  }
+  if (t === "ensayo") return vPresEnsayo();
+  if (t === "preguntas") {
+    const q = P.qs[P.i];
+    if (!q) return `<section class="section">${psHead()}<div class="panel"><h3>¡Bien!</h3><p>Respondiste ${P.qs.length} preguntas. Una buena respuesta tiene tres partes: la respuesta directa, un dato o ejemplo y una conclusión.</p></div><button class="btn primary wide" data-act="psDone">Terminar</button></section>`;
+    const r = P.res;
+    return `<section class="section">${psHead("Preguntas del profesor", `Pregunta ${P.i + 1} de ${P.qs.length}`)}
+      <div class="panel"><div class="msg them"><div class="who"><span>Profesor</span></div>${esc(q)}</div><button class="btn ghost sm" data-act="psSpeakQ">${ICON_SPEAK} Escuchar</button>
+        ${P.phase === "rec" ? `<p class="transcript" id="psLive">${esc(P.live || "")}</p><button class="btn primary" data-act="psMicStop">${ICON_STOP} Terminé de responder</button>`
+          : r ? `<div class="fb ${r.ok ? "ok" : "mid"}"><b>${r.words} palabras en ${Math.round(r.secs)} s${r.mul ? " · " + r.mul + " muletillas" : ""}.</b> ${r.words < 25 ? "Muy corta: agrega un dato o un ejemplo." : r.secs > 75 ? "Bien desarrollada, pero larga: en una ronda de preguntas, apunta a 30–60 segundos." : "Buen largo para una respuesta."}</div>
+               <div class="row"><button class="btn primary" data-act="psNextQ">Siguiente pregunta</button><button class="btn" data-act="psMicGo">Responder de nuevo</button></div>`
+          : `<p class="note">Responde en voz alta: respuesta directa → un dato o ejemplo → conclusión.</p><div class="row"><button class="btn primary" data-act="psMicGo">${ICON_MIC} Responder</button><button class="btn" data-act="psNextQ">Saltar</button></div>`}
+        ${P.micErr ? `<p class="note warn">${esc(P.micErr)}</p>` : ""}</div></section>`;
+  }
+  if (t === "calentamiento") {
+    const ap = p.bloques[0], frase = PR.firstSentence(presTxt(ap));
+    const steps = [
+      `<h3>1 · Respira</h3><p class="note">Inhala 4 segundos, sostén 4 y exhala lento en 6. Tres veces. Baja el pulso y afirma la voz.</p>
+        <div class="breath${P.breath ? " go" : ""}" aria-hidden="true"><span id="brTxt">${P.breath ? "Inhala" : "Listo"}</span></div>
+        <button class="btn primary" data-act="psBreath" ${P.breath ? "disabled" : ""}>${P.breath ? "Respirando…" : "Empezar"}</button>`,
+      `<h3>2 · Despierta la voz</h3><p class="note">Dilos en voz alta, exagerando cada sílaba.</p>${TRABA.map(x => `<p class="traba">«${esc(x)}»</p>`).join("")}`,
+      `<h3>3 · Tu primera frase</h3><p class="note">Dila tres veces, mirando al frente. Es la que marca el tono de todo lo demás.</p><p class="traba big">«${esc(frase)}»</p>
+        <button class="btn primary" data-act="psFrase">La dije · ${P.frase}/3</button>`];
+    return `<section class="section">${psHead()}
+      <div class="dotsprog">${steps.map((_, k) => `<i class="${k <= P.step ? "done" : ""}"></i>`).join("")}</div>
+      <div class="panel">${steps[P.step]}</div>
+      ${P.step < 2 ? `<button class="btn wide" data-act="psStep">Siguiente</button>` : P.frase >= 3 ? `<button class="btn primary wide" data-act="psDone">Estoy listo</button>` : ""}</section>`;
+  }
+  return "";
+}
+function vPresEnsayo() {
+  const P = S.ps, p = pres(), meta = p.minutos * 60;
+  if (P.phase === "done") {
+    const r = P.res, dif = r.secs - meta, okT = Math.abs(dif) <= meta * 0.1;
+    const largo = r.cov.slice().sort((a, b) => (b.total - b.ok) - (a.total - a.ok))[0];
+    return `<section class="section">${psHead("Resultado del ensayo", P.libre ? "Ensayo libre" : "Ensayo " + (P.n || 1))}
+      <div class="panel"><div class="kpis">
+        <div class="kpi"><b class="${okT ? "good" : "warn"}">${PR.fmt(r.secs).replace(" min", "")}</b><span>de ${p.minutos}:00 · ${okT ? "justo a tiempo" : dif > 0 ? "te pasaste " + Math.round(dif) + " s" : "te faltaron " + Math.round(-dif) + " s"}</span></div>
+        <div class="kpi"><b>${r.covPct}%</b><span>ideas clave dichas</span></div>
+        <div class="kpi"><b>${r.mpm != null ? r.mpm : "—"}</b><span>muletillas por minuto</span></div></div>
+        ${r.ppm ? `<p class="note">Ritmo: ${r.ppm} palabras por minuto ${r.ppm > 170 ? "(rápido: haz pausas al cambiar de bloque)" : r.ppm < 100 ? "(lento: está bien hacer pausas, pero no alargues las frases)" : "(buen ritmo)"}.</p>` : ""}
+        ${r.mulFound ? `<p class="note">Muletillas: ${esc(r.mulFound)}.</p>` : ""}</div>
+      <div class="panel"><h3>Bloque por bloque</h3>${r.cov.map(c => `<div class="cov-row"><span class="cov-ic ${c.ok === c.total ? "ok" : c.ok ? "mid" : "no"}">${c.ok === c.total ? "✓" : c.ok + "/" + c.total}</span><span><b>${esc(c.titulo)}</b>${c.faltan.length ? `<small>Te faltó: ${c.faltan.map(esc).join(", ")}</small>` : ""}</span></div>`).join("")}
+        ${largo && largo.ok < largo.total ? `<p class="note">Para el próximo ensayo, repasa «${esc(largo.titulo)}» con tarjetas.</p>` : ""}</div>
+      ${r.noVoz ? `<p class="note">Sin micrófono solo medimos el tiempo.</p>` : ""}
+      <div class="row"><button class="btn primary" data-act="psDone">Guardar y terminar</button><button class="btn" data-act="psEnsayoAgain">Repetir ensayo</button></div></section>`;
+  }
+  const rec = P.phase === "rec" || P.phase === "fin";
+  return `<section class="section">${psHead(P.libre ? "Ensayo libre" : "Ensayo completo" + (P.n ? " " + P.n : ""))}
+    <div class="panel ensayo">
+      <div class="timer"><b class="mono" id="psClock">0:00</b><span>de ${p.minutos}:00</span></div>
+      <div class="bar tbar" aria-hidden="true"><i id="psBar" style="width:0%"></i></div>
+      ${rec ? `<div class="rec-wrap"><button class="rec-btn live" data-act="psMicStop" aria-label="Terminar ensayo"><span>${ICON_STOP}</span></button><p class="note" style="text-align:center">Presenta de principio a fin. Toca para terminar.</p></div>`
+        : `<div class="rec-wrap"><button class="rec-btn" data-act="psMicGo" aria-label="Empezar ensayo"><span>${ICON_MIC}</span></button><p class="note" style="text-align:center">Ponte de pie, imagina al curso y empieza con tu apertura.</p></div>`}
+      <label class="row" style="align-items:center;gap:8px"><input type="checkbox" id="psCues" ${P.cues ? "checked" : ""}> <span class="note" style="margin:0">Ver palabras clave mientras ensayo</span></label>
+      ${P.cues ? `<div class="cues">${p.bloques.map(b => `<p><b>${esc(b.titulo)}</b> · ${b.claves.map(esc).join(" · ")}</p>`).join("")}</div>` : ""}
+      ${rec ? `<p class="transcript small" id="psLive">${esc(P.live || "")}</p>` : ""}
+      ${P.micErr ? `<p class="note warn">${esc(P.micErr)}</p><button class="btn" data-act="psTimerOnly">Ensayar solo con cronómetro</button>` : ""}</div></section>`;
+}
+function presTick() {
+  const p = pres(); if (!p || !S.ps) return;
+  const s = (Date.now() - presT0) / 1000, meta = p.minutos * 60;
+  const c = document.getElementById("psClock"), b = document.getElementById("psBar");
+  if (c) c.textContent = fmtSec(s);
+  if (b) { b.style.width = Math.min(100, s / meta * 100) + "%"; b.parentElement.classList.toggle("over", s > meta * 1.1); }
+}
+function presEnsayoFin(text, secs) {
+  const p = pres(), cov = PR.cobertura(text, p.bloques);
+  const tot = cov.reduce((a, c) => a + c.total, 0), ok = cov.reduce((a, c) => a + c.ok, 0);
+  const m = text ? M.speechMetrics(text, secs, mulList()) : null;
+  S.ps.res = { secs, cov, covPct: tot ? Math.round(ok / tot * 100) : 0, ppm: m && m.ppm, mpm: m ? m.mpm : null,
+    mulFound: m ? Object.entries(m.mul.found).map(([k, n]) => `«${k}»${n > 1 ? " ×" + n : ""}`).join(", ") : "", noVoz: !text };
+  S.ps.phase = "done"; chime(); render();
+}
+function presDone() {
+  const P = S.ps, p = pres();
+  if (P.tipo === "ensayo" && P.res) { p.ensayos = (p.ensayos || []).concat([{ at: today(), secs: Math.round(P.res.secs), cov: P.res.covPct, ppm: P.res.ppm, mpm: P.res.mpm }]).slice(-30); }
+  if (!P.libre) p.done[P.id] = { at: today() };
+  p.planCreado = true; markDay(); save(); fanfare();
+  S.toast = "Sesión completada. " + (presHoy(p) ? "Sigue con la próxima cuando quieras." : "Por hoy, listo.");
+  S.ps = null; presGo("plan", null, "left");
+}
+function vPres() {
+  const p = pres();
+  if (!p && S.pv !== "crear") { S.pv = "crear"; }
+  if (S.pv === "crear") return vPresCrear();
+  if (S.pv === "cargar") return vPresCargar();
+  if (S.pv === "bloques") return p.bloques && p.bloques.length ? vPresBloques() : vPresCargar();
+  if (S.pv === "sesion" && S.ps) return vPresSesion();
+  return p.bloques && p.bloques.length ? vPresPlan() : vPresCargar();
+}
+function presAct(a, el, ev) {
+  const p = pres();
+  switch (a) {
+    case "presNew": presStartNew(false); return true;
+    case "presEdit": presStartNew(true); return true;
+    case "presOpen": if (el.dataset.ses) presStartSes(el.dataset.ses); else { if (el.dataset.pv === "cargar") { S.pd = null; S.pc = null; S.perr = null; } presGo(el.dataset.pv || "plan"); } return true;
+    case "presBack": {
+      if (S.pv === "sesion" || S.pv === "bloques" && p && p.planCreado) presGo("plan", null, "left");
+      else if (S.pv === "cargar" && S.pd && !S.pd.edit) presGo("crear", null, "left");
+      else if (S.pv === "crear" && S.pd && S.pd.edit) presGo("plan", null, "left");
+      else { presMicStop(); go({ sub: null, tab: "inicio" }, "left"); }
+      return true; }
+    case "pdSet": { const d = S.pd, k = el.dataset.k, v = el.dataset.v; d[k] = k === "fecha" ? v : +v; if (k === "fecha") d.otra = false; render(); return true; }
+    case "pdOtra": S.pd.otra = true; render(); { const f = document.getElementById("pdFecha"); if (f) f.focus(); } return true;
+    case "pdOk": {
+      const d = S.pd, tema = (document.getElementById("pdTema").value || "").trim();
+      if (!tema) { document.getElementById("pdErr").textContent = "Escribe el tema de tu presentación."; return true; }
+      if (!d.fecha || daysBetween(today(), d.fecha) < 0) { document.getElementById("pdErr").textContent = "Elige una fecha de hoy en adelante."; return true; }
+      if (d.edit && p) { Object.assign(p, { tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia }); save(); S.toast = "Plan actualizado a tu nueva fecha y duración."; presGo("plan", null, "left"); }
+      else { progress.pres = { id: "p" + Date.now().toString(36), tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia, bloques: [], done: {}, ensayos: [], creado: today() }; save(); S.pc = null; S.perr = null; presGo("cargar"); }
+      return true; }
+    case "pcMode": S.pc = el.dataset.v; S.perr = null; render(); return true;
+    case "pcBack": S.pc = null; S.perr = null; render(); return true;
+    case "pcUse": {
+      const t = (document.getElementById("pcText") || {}).value || "";
+      if (PR.countWords(t) < 15) { S.perr = "El guion es muy corto. Pega al menos un par de párrafos."; S.pcText = t; render(); return true; }
+      presSetBloques(PR.fromGuion(t), S.pc === "puente" ? "ia" : "texto", ""); return true; }
+    case "pbCopy": {
+      const ta = document.getElementById("pbPrompt");
+      const ok = () => { el.textContent = "¡Copiado! Pégalo en tu IA"; };
+      try { navigator.clipboard.writeText(ta.value).then(ok, () => { ta.select(); document.execCommand("copy"); ok(); }); } catch (e) { ta.select(); try { document.execCommand("copy"); ok(); } catch (e2) {} }
+      return true; }
+    case "pbMove": { const bs = p.bloques, i = bs.findIndex(b => b.id === el.dataset.bid), j = i + +el.dataset.dir; if (j < 0 || j >= bs.length) return true; [bs[i], bs[j]] = [bs[j], bs[i]]; PR.marcarTipos(bs); save(); render(); return true; }
+    case "pbDel": { if (p.bloques.length <= 1) return true; p.bloques = p.bloques.filter(b => b.id !== el.dataset.bid); PR.marcarTipos(p.bloques); save(); render(); return true; }
+    case "pbAdd": { const b = PR.mkBlock("Nueva idea", "", ""); p.bloques.splice(Math.max(1, p.bloques.length - 1), 0, b); PR.marcarTipos(p.bloques); save(); render(); return true; }
+    case "pbKeyDel": { const b = pbFind(el.dataset.bid); b.claves = b.claves.filter(k => k !== el.dataset.k); b.kEdit = true; save(); render(); return true; }
+    case "pbMic": {
+      const b = pbFind(el.dataset.bid), ta = document.querySelector(`textarea[data-bid="${b.id}"]`);
+      if (presDict && presDict.active) { presDict.stop(); return true; }
+      const base = (ta.value || "").trim();
+      presDict = Dictado({ lang: paisObj().voz, keepAlive: true,
+        onText: t => { ta.value = (base ? base + " " : "") + t; },
+        onError: code => { el.innerHTML = ICON_MIC + " Dictar"; alertNote(ta, micMsg(code)); },
+        onEnd: () => { el.innerHTML = ICON_MIC + " Dictar"; b.texto = ta.value.trim(); if (!b.kEdit) b.claves = PR.keywords(b.texto + " " + b.apoyo + " " + b.titulo, 4); save(); render(); } });
+      presDict.start(); if (presDict.active) el.innerHTML = ICON_STOP + " Detener";
+      return true; }
+    case "pbOk": {
+      const t = PR.asignarTiempo(p.bloques, p.minutos);
+      p.planCreado = true; save(); S.toast = t.faltan ? `Plan creado. ${t.faltan} bloques sin guion: practicarás con el texto de la lámina.` : "Plan creado. Empieza por la sesión de hoy.";
+      presGo("plan"); return true; }
+    case "presSes": presStartSes(el.dataset.ses); return true;
+    case "presDelAsk": S.confirm = "presDel"; render(); return true;
+    case "presDelYes": progress.pres = null; save(); S.confirm = null; go({ sub: null, tab: "inicio" }, "left"); return true;
+    case "presFin": progress.presHist = (progress.presHist || []).concat([{ tema: p.tema, fecha: p.fecha, minutos: p.minutos, resultado: el.dataset.v, ensayos: (p.ensayos || []).length }]).slice(-30); progress.pres = null; save(); S.toast = "Guardado. ¡A preparar la siguiente!"; go({ sub: null, tab: "inicio" }, "left"); return true;
+    case "psExit": presMicStop(); try { speechSynthesis.cancel(); } catch (e) {} S.ps = null; presGo("plan", null, "left"); return true;
+    case "psDone": presDone(); return true;
+    case "psSpeak": speak(presTxt(pbFind(el.dataset.bid))); return true;
+    case "psSpeakQ": speak(S.ps.qs[S.ps.i]); return true;
+    case "fdPeek": { const w = ev && ev.target.closest(".fd-h,.fd-i"); if (w) w.classList.add("peek"); else if (S.ps.nivel >= 4) { S.ps.nivel = 3; render(); } return true; }
+    case "psMicGo": {
+      const P = S.ps;
+      if (P.tipo === "ensayo") {
+        const ok = presMic((text, secs) => presEnsayoFin(text, secs));
+        render(); if (ok) { presTimer = setInterval(presTick, 250); presTick(); }
+      } else {
+        const ok = presMic((text, secs) => {
+          if (P.tipo === "preguntas") { const m = M.speechMetrics(text, secs, mulList()); P.res = { words: m.words, secs, mul: m.mul.count, ok: m.words >= 25 && secs <= 75 }; }
+          else { const b = pbFind(P.blocks[P.i]), c = PR.cobertura(text, [b])[0]; P.res = { r: PR.recall(text, presTxt(b)), faltan: c.faltan }; }
+          P.phase = "idle"; render(); });
+        if (ok) render();
+      }
+      return true; }
+    case "psMicStop": presMicFinish(); return true;
+    case "psTimerOnly": { const P = S.ps; P.micErr = null; P.phase = "rec"; P.timerOnly = true; presT0 = Date.now(); render(); presTimer = setInterval(presTick, 250); presTick(); return true; }
+    case "psNext": {
+      const P = S.ps, maxN = P.tipo === "ancla" ? 4 : 3;
+      P.res = null; P.micErr = null;
+      if (P.nivel < maxN) P.nivel++; else if (P.i < P.blocks.length - 1) { P.i++; P.nivel = 0; } else { presDone(); return true; }
+      S.anim = "right"; render(); return true; }
+    case "psFlip": S.ps.flip = true; render(); return true;
+    case "psSabe": { const P = S.ps, b = pbFind(P.blocks[P.i]); if (el.dataset.v === "1") P.sabe++; else { p.dif = p.dif || {}; p.dif[b.id] = (p.dif[b.id] || 0) + 1; save(); }
+      P.i++; P.flip = false; S.anim = "right"; render(); return true; }
+    case "psNextQ": S.ps.i++; S.ps.res = null; S.ps.phase = "idle"; S.anim = "right"; render(); return true;
+    case "psStep": S.ps.step++; S.anim = "right"; render(); return true;
+    case "psFrase": S.ps.frase = Math.min(3, S.ps.frase + 1); if (S.ps.frase === 3) chime(); render(); return true;
+    case "psBreath": {
+      const P = S.ps; P.breath = true; render();
+      const seq = [["Inhala", 4], ["Sostén", 4], ["Exhala", 6]], plan = [].concat(seq, seq, seq); let k = 0;
+      const stepB = () => { const el2 = document.getElementById("brTxt"); if (!S.ps || S.ps !== P) return;
+        if (k >= plan.length) { P.breath = false; if (el2) el2.textContent = "¡Bien!"; P.step = 1; chime(); render(); return; }
+        const [txt, secs] = plan[k++]; if (el2) { el2.textContent = txt; el2.parentElement.dataset.ph = txt; } setTimeout(stepB, secs * 1000); };
+      stepB(); return true; }
+    case "psEnsayoAgain": S.ps.phase = "idle"; S.ps.res = null; S.ps.live = ""; render(); return true;
+  }
+  return false;
+}
+function alertNote(near, msg) { const n = document.createElement("p"); n.className = "note warn"; n.textContent = msg; near.insertAdjacentElement("afterend", n); }
+
 /* ===================== VISTA: INICIO ===================== */
 function vInicio() {
   const p = progress.profile, g = gProg(), lv = levelOf(g), r = recommend(), rp = sProg(r.id), pa = paisObj();
@@ -862,21 +1319,21 @@ function vInicio() {
       ? `<button class="card" data-act="prOpen"><span class="tag">Ya pasó un mes</span><h3>Mide tu avance</h3><span class="meta">Repite la prueba de 60 segundos y compárala con tu punto de partida.</span><span class="cta">Repetir la prueba →</span></button>` : "");
   return `<section class="greet"><div class="avatar" aria-hidden="true">${esc(initials(p.name))}</div>
       <div><p class="eyebrow">${esc(lv.name)} · ${pa.bandera} ${esc(pa.nombre)}</p><h1 style="font-size:clamp(1.7rem,5vw,2.2rem)">Hola, ${esc(p.name)}.</h1></div></section>
-    <section class="section">${banner}${heroPhoto("sm")}
-      <div class="kpis">
-        <div class="kpi"><b>${streak()}</b><span>${streak() === 1 ? "día seguido" : "días seguidos"}</span></div>
-        <div class="kpi"><b>${masteredCount()}/${totalWords()}</b><span>palabras dominadas</span></div>
-        <div class="kpi"><b>${g}%</b><span>progreso total</span></div>
-      </div>
+    <section class="section">${banner}${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
+      ${presCard()}
       ${eventoCard()}
       ${retoCard()}
-      <button class="card feature ${arCls(r.area)}" data-act="open" data-id="${r.id}">
-        <span class="tag">${r.id === p.goal ? "Tu objetivo" : "Recomendado"}</span>
-        <span class="card-head"><span class="s-icon">${iconFor(r.id, r.area)}</span><span><h3>${esc(tx(r.name))}</h3><span class="meta">${esc(tx(r.blurb))}</span></span></span>
-        <span class="barlabel"><span>Dominio</span><span class="mono">${rp}%</span></span>
-        <span class="bar" aria-hidden="true"><i style="width:${rp}%"></i></span>
-        <span class="cta">${rp > 0 ? "Continuar" : "Empezar"} →</span>
+      <div class="kpis">
+        <div class="kpi"><b>${streak()}</b><span>${streak() === 1 ? "día seguido" : "días seguidos"}</span></div>
+        <div class="kpi"><b>${(progress.pres && progress.pres.ensayos ? progress.pres.ensayos.length : 0) + (progress.presHist || []).reduce((a, h) => a + (h.ensayos || 0), 0)}</b><span>ensayos completos</span></div>
+        <div class="kpi"><b>${g}%</b><span>progreso en situaciones</span></div>
+      </div>
+      <button class="card ${arCls(r.area)}" data-act="tab" data-tab="practica">
+        <span class="tag quiet">Más situaciones</span>
+        <span class="card-head"><span class="s-icon">${iconFor(r.id, r.area)}</span><span><h3>Entrevistas, ventas, citas y más</h3><span class="meta">${listReady().length} conversaciones simuladas que reaccionan a lo que dices. Sugerida: ${esc(tx(r.name))}.</span></span></span>
+        <span class="cta">Ver situaciones →</span>
       </button>
+      ${heroPhoto("sm")}
       ${prueba}
       <p class="note">Objetivo: ${esc(goalLbl)}. <button class="linkish" data-act="tab" data-tab="ajustes">Editar perfil</button></p>
     </section>`;
@@ -899,7 +1356,7 @@ function vList() {
       <span class="bar" aria-hidden="true"><i style="width:${p}%"></i></span>
     </button>`;
   }).join("");
-  return `<section class="section"><div><p class="eyebrow">Panel de práctica</p><h2>Elige un escenario</h2>
+  return `<section class="section"><div><p class="eyebrow">Más situaciones</p><h2>Elige una situación</h2>
       <p class="lead">Cada escenario tiene 3 pasos: vocabulario, práctica y una conversación que reacciona a tus respuestas.</p></div>
     <div class="filters" role="toolbar" aria-label="Filtrar por área">${areas.map(x => `<button class="fchip ${x === a ? "on" : ""} ${arCls(x)}" data-act="area" data-area="${esc(x)}" aria-pressed="${x === a}">${esc(x)}</button>`).join("")}</div>
     ${ready.length ? `<div class="grid">${cards}</div>` : `<p class="empty">Todavía no hay escenarios disponibles en ${esc(a)}. Ya vienen en camino.</p>`}
@@ -1224,8 +1681,25 @@ function vAjustes() {
 
 /* ===================== EVENTOS ===================== */
 document.addEventListener("click", onAct);
-app.addEventListener("keydown", e => { if (e.target.id === "pwText" && e.key === "Enter") { e.preventDefault(); pwAnswer(M.cleanSlot(e.target.value)); } });
+app.addEventListener("change", e => {
+  const t = e.target;
+  if ((t.id === "pcFileA" || t.id === "pcFileB") && t.files && t.files[0]) { presImport(t.files[0]); t.value = ""; return; }
+  if (t.id === "pdFecha" && S.pd) { S.pd.fecha = t.value; render(); return; }
+  if (t.id === "psCues" && S.ps) { S.ps.cues = t.checked; render(); if (S.ps.phase === "rec") presTick(); return; }
+  if (t.dataset && t.dataset.bid && t.dataset.f === "texto") { const b = pbFind(t.dataset.bid); if (b && !b.kEdit) { b.claves = PR.keywords(b.texto + " " + b.apoyo + " " + b.titulo, 4); save(); setTimeout(() => { if (S.sub === "pres" && S.pv === "bloques") render(); }, 0); } }
+});
+app.addEventListener("keydown", e => {
+  if (e.target.classList && e.target.classList.contains("pb-key") && e.key === "Enter") {
+    e.preventDefault(); const v = e.target.value.trim(), b = pbFind(e.target.dataset.bid);
+    if (v && b && !b.claves.includes(v)) { b.claves.push(v); b.kEdit = true; save(); render(); const n = document.querySelector(`.pb-key[data-bid="${b.id}"]`); if (n) n.focus(); }
+    return;
+  } if (e.target.id === "pwText" && e.key === "Enter") { e.preventDefault(); pwAnswer(M.cleanSlot(e.target.value)); } });
 app.addEventListener("input", e => {
+  const tg = e.target;
+  if (tg.id === "pdTema" && S.pd) S.pd.tema = tg.value;
+  if (tg.id === "pcText") S.pcText = tg.value;
+  if (tg.id === "pbIns" || tg.id === "pbMat") { S[tg.id] = tg.value; const pp = document.getElementById("pbPrompt"), p0 = pres(); if (pp && p0) pp.value = PR.promptGuion({ tema: p0.tema, minutos: p0.minutos, fecha: fechaLarga(p0.fecha), instrucciones: S.pbIns || "", material: S.pbMat || "", pais: paisObj().nombre }); }
+  if (tg.dataset && tg.dataset.bid && tg.dataset.f) { const b = pbFind(tg.dataset.bid); if (b) { b[tg.dataset.f] = tg.value; presSave(); } }
   if (e.target.id === "pwText" && S.prepW) { S.prepW.ans[e.target.dataset.id] = e.target.value; const pv = document.getElementById("pwPrev"); if (pv) { const st = prepSteps(scenData(S.prepW.sid))[S.prepW.step]; pv.textContent = e.target.value.trim() || st.q.def; } }
   if (e.target.id === "profConf") { const v = +e.target.value; const o = document.getElementById("confOut"); if (o) o.textContent = v + " · " + CONF_LABELS[v]; }
 });
@@ -1241,6 +1715,8 @@ async function openScen(id, anim) {
 function onAct(e) {
   const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
   const a = el.dataset.act;
+  if (/^(pres|pd|pc|pb|ps)/.test(a) && !["psMicGo", "psMicStop", "psDone", "psFrase", "psSabe"].includes(a)) tick();
+  if (presAct(a, el, e)) return;
   if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle", "recStart", "recStop", "pwSave", "escNext", "escPrev", "escVoz"].includes(a)) tick();
   switch (a) {
     case "tab": setTab(el.dataset.tab); break;

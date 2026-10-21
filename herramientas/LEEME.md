@@ -9,3 +9,6 @@ El contenido de `data/` se genera con estos scripts. Para editar un escenario o 
    python3 herramientas/contenido_escenarios.py data
    ```
 3. Revisa que todo esté bien: `node herramientas/pruebas_contenido.js` (debe terminar en `ERRORS 0`).
+
+
+Motor de «Mi presentación»: `node herramientas/pruebas_presentacion.js` (debe terminar en «ERRORS 0»).

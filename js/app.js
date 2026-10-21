@@ -906,6 +906,26 @@ function revHTML() {
     ${P.aprendi ? `<p class="note good-note">${esc(P.aprendi)}</p>` : ""}
     <details class="heard"><summary>Lo que escuché</summary><p class="transcript">${esc(P.dicho || "")}</p></details></div>`;
 }
+/* Navegación libre entre bloques (y niveles): el usuario salta a cualquiera, hacia adelante o atrás. */
+function blockNav() {
+  const P = S.ps, n = P.blocks.length, h = P.hechos || {};
+  return `<nav class="bnav" aria-label="Bloques">
+    <button class="bnav-arr" data-act="psGo" data-i="${P.i - 1}" ${P.i === 0 ? "disabled" : ""} aria-label="Bloque anterior">‹</button>
+    <div class="bnav-dots">${P.blocks.map((id, k) => { const b = pbFind(id);
+      return `<button class="bnav-dot${k === P.i ? " cur" : ""}${h[k] ? " done" : ""}" data-act="psGo" data-i="${k}" aria-label="Bloque ${k + 1}${b ? ": " + esc(b.titulo) : ""}${h[k] ? " (listo)" : ""}" ${k === P.i ? 'aria-current="step"' : ""}><i></i></button>`; }).join("")}</div>
+    <button class="bnav-arr" data-act="psGo" data-i="${P.i + 1}" ${P.i === n - 1 ? "disabled" : ""} aria-label="Bloque siguiente">›</button></nav>`;
+}
+function lvlNav(maxN, nombre) {
+  const P = S.ps;
+  return `<div class="qmeta lnav"><button class="lnav-arr" data-act="psLvl" data-d="-1" ${P.nivel === 0 ? "disabled" : ""} aria-label="Nivel anterior (más ayuda)">‹</button>
+    <span class="tag">Nivel ${P.nivel + 1} de ${maxN + 1} · ${esc(nombre)}</span>
+    <button class="lnav-arr" data-act="psLvl" data-d="1" ${P.nivel >= maxN ? "disabled" : ""} aria-label="Nivel siguiente (menos ayuda)">›</button></div>`;
+}
+function nextLbl(maxN) {
+  const P = S.ps, h = P.hechos || {};
+  return P.nivel < maxN ? "Siguiente nivel" : P.blocks.some((_, k) => k !== P.i && !h[k]) ? "Siguiente bloque" : "Terminar";
+}
+function psReset(P) { presMicStop(); P.res = null; P.micErr = null; P.hz = null; P.escVal = ""; P.escrito = false; P.phase = "idle"; }
 function presTxt(b) { return b.texto && b.texto.trim() ? b.texto : (b.apoyo || b.titulo); }
 function presGo(pv, extra, anim) { leaveSim(); presMicStop(); go(Object.assign({ sub: "pres", pv }, extra || {}), anim || "right"); }
 function presSave() { clearTimeout(presSave.t); presSave.t = setTimeout(save, 300); }
@@ -1112,7 +1132,7 @@ const NIVELES_SIL = ["Léelo con calma", "Completa los huecos", "Más huecos", "
 const TXT_ATTR = 'autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"';
 function vEscrito(b, maxN, txt, resFb) {
   const P = S.ps, n = P.nivel; let body = "", acts = "", extra = "";
-  const next = `<button class="btn" data-act="psNext">${P.nivel < maxN ? "Siguiente nivel" : P.i < P.blocks.length - 1 ? "Siguiente bloque" : "Terminar"}</button>`;
+  const next = `<button class="btn" data-act="psNext">${nextLbl(maxN)}</button>`;
   if (n === 0) {
     body = `${fadeHTML(txt, 0, b.claves)}<p class="note">Léelo mentalmente, como si lo estuvieras diciendo. En el siguiente nivel lo completas de memoria.</p>`;
     acts = next.replace('class="btn"', 'class="btn primary"');
@@ -1137,8 +1157,8 @@ function vEscrito(b, maxN, txt, resFb) {
     acts = `<button class="btn primary" data-act="psEscCheck">${P.res ? "Revisar de nuevo" : "Revisar"}</button>${next}`;
   }
   return `<section class="section">${psHead(b.titulo, `${PRES_TIPO[b.tipo]} · bloque ${P.i + 1} de ${P.blocks.length}`)}
-      <div class="dotsprog">${P.blocks.map((_, k) => `<i class="${k < P.i ? "done" : ""}"></i>`).join("")}</div>
-      <div class="panel"><div class="qmeta"><span class="tag">Nivel ${n + 1} de ${maxN + 1} · ${NIVELES_SIL[n]}</span></div>
+      ${blockNav()}
+      <div class="panel">${lvlNav(maxN, NIVELES_SIL[n])}
         <div class="fd-wrap" data-act="fdPeek">${body}</div>${extra}
         ${resFb}<div class="row">${acts}</div>
         ${n >= 3 ? `<p class="note">Toca una palabra oculta para verla.</p>` : ""}</div></section>`;
@@ -1183,13 +1203,13 @@ function vPresSesion() {
     const res = P.res ? `<div class="fb ${P.res.r >= .7 ? "ok" : P.res.r >= .45 ? "mid" : "no"}"><b>Recordaste ${Math.round(P.res.r * 100)}% del contenido.</b> ${P.res.faltan.length ? "Te faltó: " + P.res.faltan.map(esc).join(", ") + "." : (sil() ? "Escribiste" : "Dijiste") + " todas las palabras clave."} ${P.res.r < .6 ? "Repite este nivel una vez más." : P.nivel < maxN ? "Bien, quitemos más ayuda." : ""}</div>` + revHTML() : "";
     if (sil()) return vEscrito(b, maxN, txt, res);
     return `<section class="section">${psHead(b.titulo, `${PRES_TIPO[b.tipo]} · bloque ${P.i + 1} de ${P.blocks.length}`)}
-      <div class="dotsprog">${P.blocks.map((_, k) => `<i class="${k < P.i ? "done" : ""}"></i>`).join("")}</div>
-      <div class="panel"><div class="qmeta"><span class="tag">Nivel ${P.nivel + 1} de ${maxN + 1} · ${NIVELES[P.nivel]}</span></div>
+      ${blockNav()}
+      <div class="panel">${lvlNav(maxN, NIVELES[P.nivel])}
         <div class="fd-wrap" data-act="fdPeek">${fadeHTML(txt, P.nivel, b.claves)}</div>
         ${P.nivel >= 3 ? `<div class="pb-keys">${b.claves.map(k => `<span class="kchip">${esc(k)}</span>`).join("")}</div>` : ""}
         ${P.phase === "rec" ? `<p class="transcript" id="psLive">${esc(P.live || "")}</p><button class="btn primary" data-act="psMicStop">${ICON_STOP} Listo, lo dije</button>`
           : `${res}<div class="row">${P.res && P.res.r >= .6 || !P.res ? `<button class="btn primary" data-act="psMicGo">${ICON_MIC} Decirlo en voz alta</button>` : `<button class="btn primary" data-act="psMicGo">${ICON_MIC} Repetir</button>`}
-            <button class="btn" data-act="psNext">${P.nivel < maxN ? "Siguiente nivel" : P.i < P.blocks.length - 1 ? "Siguiente bloque" : "Terminar"}</button></div>`}
+            <button class="btn" data-act="psNext">${nextLbl(maxN)}</button></div>`}
         ${P.micErr ? `<p class="note warn">${esc(P.micErr)} Puedes decirlo igual y tocar «Siguiente».</p>` : ""}
         <p class="note">Toca una palabra oculta para verla.</p></div></section>`;
   }
@@ -1200,7 +1220,8 @@ function vPresSesion() {
       <button class="flash${P.flip ? " flip" : ""}" data-act="psFlip">
         <span class="flash-in"><span class="tag ${b.tipo === "idea" ? "quiet" : ""}">${PRES_TIPO[b.tipo]}</span><h3>${esc(b.titulo)}</h3>
         ${P.flip ? `<span class="pb-keys">${b.claves.map(k => `<span class="kchip">${esc(k)}</span>`).join("")}</span><span class="note">«${esc(PR.firstSentence(presTxt(b)))}»</span>` : `<span class="note">¿Qué ideas van en este bloque? ${sil() ? "Recuérdalas mentalmente" : "Dilas en voz alta"} y toca para comprobar.</span>`}</span></button>
-      ${P.flip ? `<div class="row"><button class="btn primary" data-act="psSabe" data-v="1">La sabía</button><button class="btn" data-act="psSabe" data-v="0">Me costó</button></div>` : ""}</section>`;
+      ${P.flip ? `<div class="row"><button class="btn primary" data-act="psSabe" data-v="1">La sabía</button><button class="btn" data-act="psSabe" data-v="0">Me costó</button></div>` : ""}
+      ${P.i > 0 ? `<button class="linkish" data-act="psPrev" style="align-self:flex-start">‹ Tarjeta anterior</button>` : ""}</section>`;
   }
   if (t === "ensayo") return vPresEnsayo();
   if (t === "relevo") return vRelevo();
@@ -1215,7 +1236,8 @@ function vPresSesion() {
                <div class="row"><button class="btn primary" data-act="psNextQ">Siguiente pregunta</button><button class="btn" data-act="${sil() ? "psQRe" : "psMicGo"}">Responder de nuevo</button></div>`
           : sil() ? `<p class="note">Escribe tu respuesta: respuesta directa → un dato o ejemplo → conclusión.</p><label class="sr-only" for="psQEsc">Tu respuesta</label><textarea id="psQEsc" class="esc-ta" rows="5" placeholder="Mi respuesta…" ${TXT_ATTR}></textarea><div class="row"><button class="btn primary" data-act="psQEscOk">Listo</button><button class="btn" data-act="psNextQ">Saltar</button></div>`
           : `<p class="note">Responde en voz alta: respuesta directa → un dato o ejemplo → conclusión.</p><div class="row"><button class="btn primary" data-act="psMicGo">${ICON_MIC} Responder</button><button class="btn" data-act="psNextQ">Saltar</button></div>`}
-        ${P.micErr ? `<p class="note warn">${esc(P.micErr)}</p>` : ""}</div></section>`;
+        ${P.micErr ? `<p class="note warn">${esc(P.micErr)}</p>` : ""}</div>
+      ${P.i > 0 && P.phase !== "rec" ? `<button class="linkish" data-act="psPrev" style="align-self:flex-start">‹ Pregunta anterior</button>` : ""}</section>`;
   }
   if (t === "calentamiento") {
     const ap = p.bloques[0], frase = PR.firstSentence(presTxt(ap));
@@ -1455,14 +1477,30 @@ function presAct(a, el, ev) {
       }
       save(); presEval(); render(); return true; }
     case "psTimerOnly": { const P = S.ps; P.micErr = null; P.phase = "rec"; P.timerOnly = true; presT0 = Date.now(); render(); presTimer = setInterval(presTick, 250); presTick(); return true; }
+    case "psGo": {   /* saltar a un bloque: cada bloque recuerda el nivel en que lo dejaste */
+      const P = S.ps, i = +el.dataset.i; if (!(i >= 0 && i < P.blocks.length) || i === P.i) return true;
+      P.niv = P.niv || {}; P.niv[P.i] = P.nivel; psReset(P);
+      S.anim = i > P.i ? "right" : "left"; P.i = i; P.nivel = P.niv[i] || 0; render(); return true; }
+    case "psLvl": {
+      const P = S.ps, maxN = P.tipo === "ancla" ? 4 : 3, nv = P.nivel + (+el.dataset.d);
+      if (nv < 0 || nv > maxN) return true;
+      psReset(P); S.anim = nv > P.nivel ? "right" : "left"; P.nivel = nv; render(); return true; }
     case "psNext": {
       const P = S.ps, maxN = P.tipo === "ancla" ? 4 : 3;
       P.res = null; P.micErr = null; P.hz = null; P.escVal = ""; P.escrito = false;
-      if (P.nivel < maxN) P.nivel++; else if (P.i < P.blocks.length - 1) { P.i++; P.nivel = 0; } else { presDone(); return true; }
+      P.niv = P.niv || {}; P.hechos = P.hechos || {};
+      if (P.nivel < maxN) P.nivel++;
+      else { P.hechos[P.i] = true; P.niv[P.i] = P.nivel;
+        const sig = P.blocks.findIndex((_, k) => k > P.i && !P.hechos[k]), otro = sig >= 0 ? sig : P.blocks.findIndex((_, k) => !P.hechos[k]);
+        if (otro >= 0) { P.i = otro; P.nivel = P.niv[otro] || 0; } else { presDone(); return true; } }
       S.anim = "right"; render(); return true; }
     case "psFlip": S.ps.flip = true; render(); return true;
-    case "psSabe": { const P = S.ps, b = pbFind(P.blocks[P.i]); if (el.dataset.v === "1") P.sabe++; else { p.dif = p.dif || {}; p.dif[b.id] = (p.dif[b.id] || 0) + 1; save(); }
+    case "psSabe": { const P = S.ps, b = pbFind(P.blocks[P.i]), v = el.dataset.v === "1"; P.sab = P.sab || {};
+      if (!v && P.sab[P.i] !== false) { p.dif = p.dif || {}; p.dif[b.id] = (p.dif[b.id] || 0) + 1; save(); }
+      if (v && P.sab[P.i] === false && p.dif && p.dif[b.id]) { p.dif[b.id]--; save(); }
+      P.sab[P.i] = v; P.sabe = Object.values(P.sab).filter(Boolean).length;
       P.i++; P.flip = false; S.anim = "right"; render(); return true; }
+    case "psPrev": { const P = S.ps; if (P.i > 0) { P.i--; P.flip = false; P.res = null; P.phase = "idle"; presMicStop(); S.anim = "left"; render(); } return true; }
     case "psNextQ": S.ps.i++; S.ps.res = null; S.ps.phase = "idle"; S.anim = "right"; render(); return true;
     case "psStep": S.ps.step++; S.anim = "right"; render(); return true;
     case "psFrase": S.ps.frase = Math.min(3, S.ps.frase + 1); if (S.ps.frase === 3) chime(); render(); return true;

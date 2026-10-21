@@ -316,19 +316,31 @@
       return { t: tok, hid: true, pre, core, post, gone: true };
     });
   }
+  /* Cifras: el reconocedor escribe «0,25», «0,25%» o «0,25 por ciento» indistintamente.
+     Se dejan como un solo token sin «%» («0d25») para que cuenten igual y no se partan en la coma. */
+  function numFix(s) {
+    return String(s || "").replace(/\s*por\s*ciento/gi, "%").replace(/(\d)\.(\d{3})(?!\d)/g, "$1$2")
+      .replace(/(\d)[,.](\d)/g, "$1d$2").replace(/%/g, "");
+  }
   /* Cuánto del texto se recordó al decirlo: palabras con contenido que aparecen en lo dicho. */
   function recall(dicho, texto) {
-    dicho = canonConn(dicho); texto = canonConn(texto);
-    const content = M.tokens(texto).filter(w => w.length >= 4 && !STOP.has(w));
+    dicho = numFix(canonConn(dicho)); texto = numFix(canonConn(texto));
+    const content = M.tokens(texto).filter(w => (w.length >= 4 || /\d/.test(w) && w.length >= 2) && !STOP.has(w));
     if (!content.length) return 1;
-    const said = new Set(M.tokens(dicho).map(w => w.slice(0, 5)));
-    const hit = content.filter(w => said.has(w.slice(0, 5))).length;
+    const said = new Set(M.tokens(dicho).map(w => /\d/.test(w) ? w : w.slice(0, 5)));
+    const hit = content.filter(w => said.has(/\d/.test(w) ? w : w.slice(0, 5))).length;
     return hit / content.length;
+  }
+  /* ¿Se dijo esta palabra clave? Las cifras se comparan exactas («0,2» no vale por «0,25»). */
+  function dijoClave(dicho, k) {
+    const nk = numFix(k);
+    if (/\d/.test(nk)) { const tk = M.tokens(nk), ds = M.tokens(numFix(dicho)); return tk.every(x => ds.includes(x)); }
+    return M.hasStem(dicho, stemOf(k));
   }
   function cobertura(dicho, bs) {
     return bs.map(b => {
       const ks = (b.claves || []);
-      const ok = ks.filter(k => M.hasStem(dicho, stemOf(k)));
+      const ok = ks.filter(k => dijoClave(dicho, k));
       return { id: b.id, titulo: b.titulo, total: ks.length, ok: ok.length, faltan: ks.filter(k => !ok.includes(k)) };
     });
   }

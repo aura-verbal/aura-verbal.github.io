@@ -73,4 +73,14 @@ if (P.alternativas("causa", "porque").includes("debido a")) err("alternativa no 
 if (its.filter(x => x.tipo === "puente").length !== 2) err("puentes");
 if (P.recall("pero la economía creció", "Sin embargo, la economía creció") < 0.99) err("equivalencia de conectores en recall");
 if (P.keywords("Sin embargo, no obstante, en consecuencia el IMACEC creció", 4).some(w => /embargo|obstante|consecuencia/i.test(w))) err("conector como palabra clave");
+// Cifras dichas sin «%» o con «por ciento» cuentan; una cifra distinta no
+const cv = (d, k) => P.cobertura(d, [{ id: "x", titulo: "t", claves: [k] }])[0].ok;
+if (!cv("entre un 0,25 o un 0,75", "0,25%") || !cv("cerca de 0,25 por ciento", "0,25%") || !cv("el 4,5%", "4,5%")) err("cifra sin %");
+if (cv("cerca de 0,2", "0,25%") || cv("subió 25", "0,25%")) err("cifra distinta aceptada");
+if (P.recall("entre 0,25 y 0,75 por ciento", "entre 0,25% y 0,75%") < 0.99) err("recall con cifras");
+// Reconocedor que corrige la frase agregando una palabra: no se duplica
+const M = require("../js/motor.js");
+const tr = M.buildTranscript(["dice que bastante menos entre un 0,25", "dice que es bastante menos entre un 0,25 o un 0,75% es una"]);
+if ((tr.match(/bastante/g) || []).length !== 1) err("frase revisada duplicada", tr);
+if (M.buildTranscript(["hola a todos", "hoy hablaré del agua"]) !== "hola a todos hoy hablaré del agua") err("segmentos distintos se pierden");
 console.log("ERRORS", errors);

@@ -99,12 +99,19 @@
   /* ---------- voz: unir resultados del reconocedor ----------
      Chrome en Android entrega la frase ACUMULADA en cada resultado; si un fragmento nuevo
      empieza igual que el anterior, lo reemplaza en vez de sumarse. */
+  /* Compara por alineación (LCS) y no por posición: si el reconocedor corrige la frase metiendo o quitando
+     una palabra («dice que bastante» → «dice que es bastante»), sigue siendo la misma frase revisada. */
+  function lcs(x, y) {
+    const m = x.length, n = y.length; let prev = new Array(n + 1).fill(0);
+    for (let i = 1; i <= m; i++) { const cur = [0]; for (let j = 1; j <= n; j++) cur[j] = x[i - 1] === y[j - 1] ? prev[j - 1] + 1 : Math.max(prev[j], cur[j - 1]); prev = cur; }
+    return prev[n];
+  }
   function sameStart(a, b) {
     const aw = a.split(" "), bw = b.split(" ");
-    if (bw.length < aw.length) return false;
-    const k = Math.max(1, Math.floor(aw.length * 0.7));
-    let same = 0; for (let i = 0; i < k; i++) if (aw[i] === bw[i]) same++;
-    return same >= Math.ceil(k * 0.8);
+    if (bw.length < aw.length - 1) return false;
+    if (aw.length <= 2) return aw.every((w, i) => w === bw[i]);
+    const k = Math.min(aw.length, 12), ax = aw.slice(0, k), bx = bw.slice(0, k + 2);
+    return lcs(ax, bx) >= Math.ceil(k * 0.8);
   }
   function mergePart(parts, t) {
     const last = parts[parts.length - 1];

@@ -969,19 +969,35 @@ function presCard() {
 function presStartNew(edit) {
   const p = pres();
   S.pd = edit && p ? { tema: p.tema, fecha: p.fecha, minutos: p.minutos, minDia: p.minDia, formato: p.formato || "vivo", otra: false, edit: true }
-    : { tema: "", fecha: addDays(2), minutos: 5, minDia: 30, formato: "vivo", otra: false };
-  presGo("crear");
+    : { tema: "", fecha: addDays(2), minutos: 5, minDia: 30, formato: null, otra: false };
+  presGo(edit ? "crear" : "tipo");
+}
+/* Paso 0: lo primero es qué tipo de presentación es (en vivo o en video), antes del tema y la fecha. */
+function vPresTipo() {
+  return `<section class="section"><button class="back" data-act="presBack">← ${PILAR_NOM[S.presFrom || "presentaciones"]}</button>
+    <div><p class="eyebrow">Nueva presentación</p><h2>¿Qué vas a preparar?</h2></div>
+    <button class="card pilar tipo ar-acad" data-act="pdTipo" data-v="vivo">
+      <span class="card-head"><span class="s-icon big">${ICON_PRES}</span><span><span class="eyebrow ar">En vivo</span><h3>Una disertación</h3></span></span>
+      <span class="meta">La presentas frente al curso o a una comisión. Aura arma tu plan para memorizarla y ensayarla hasta el día.</span>
+      <span class="pill-cta solid">Preparar mi presentación ${ICON_GO}</span></button>
+    <div class="card pilar tipo ar-acad">
+      <span class="card-head"><span class="s-icon big">${ICON_CAM}</span><span><span class="eyebrow ar">Grabada</span><h3>Un video</h3></span></span>
+      <span class="meta">Una tarea en video, por ejemplo para un ramo de inglés. La grabas en Aura con el guion en un teleprompter.</span>
+      <div class="row"><button class="btn primary" data-act="pdTipo" data-v="video">Preparar y grabar</button><button class="btn" data-act="vidOpen" data-from="presentaciones">Solo grabar ahora</button></div>
+      <span class="note" style="margin:0">«Preparar y grabar» arma un plan para aprenderte el guion; «Solo grabar ahora» va directo al teleprompter.</span>
+    </div>
+  </section>`;
 }
 function vPresCrear() {
   const d = S.pd || (S.pd = { tema: "", fecha: addDays(2), minutos: 5, minDia: 30, formato: "vivo" });
   const quick = [["Hoy", addDays(0)], ["Mañana", addDays(1)], ["En 3 días", addDays(3)], ["En una semana", addDays(7)]];
   const isQuick = quick.some(q => q[1] === d.fecha);
-  return `<section class="section"><button class="back" data-act="presBack">← ${d.edit ? "Mi plan" : PILAR_NOM[S.presFrom || "presentaciones"]}</button>
+  return `<section class="section"><button class="back" data-act="presBack">← ${d.edit ? "Mi plan" : "Tipo de presentación"}</button>
     <div><p class="eyebrow">${d.edit ? "Editar" : "Paso 1 de 3"}</p><h2>Tu presentación</h2><p class="lead">Con esto Aura calcula cuánto debes hablar y arma tu plan.</p></div>
     <div class="panel">
       <div class="field"><label for="pdTema">¿Sobre qué es?</label><input type="text" id="pdTema" maxlength="90" placeholder="Ej: El IMACEC de los últimos 6 meses" value="${esc(d.tema)}"></div>
-      <div class="field"><span class="lbl">¿Cómo la presentas?</span><div class="pw-opts flat">${chipBtn("pdSet", "vivo", "En vivo", d.formato !== "video", ' data-k="formato"')}${chipBtn("pdSet", "video", "Grabada en video", d.formato === "video", ' data-k="formato"')}</div>
-        ${d.formato === "video" ? `<span class="note">Al final la grabas en Aura con teleprompter y la guardas en tu celular.</span>` : ""}</div>
+      ${d.edit ? `<div class="field"><span class="lbl">¿Cómo la presentas?</span><div class="pw-opts flat">${chipBtn("pdSet", "vivo", "En vivo", d.formato !== "video", ' data-k="formato"')}${chipBtn("pdSet", "video", "Grabada en video", d.formato === "video", ' data-k="formato"')}</div></div>`
+        : `<p class="tipo-sel">${d.formato === "video" ? ICON_CAM + " <b>Video grabado</b> · al final lo grabas con teleprompter" : ICON_PRES + " <b>Presentación en vivo</b>"} <button class="linkish" data-act="presBack">Cambiar</button></p>`}
       <div class="field"><span class="lbl">¿Cuándo presentas?</span><div class="pw-opts flat">${quick.map(q => chipBtn("pdSet", q[1], q[0], d.fecha === q[1], ' data-k="fecha"')).join("")}${chipBtn("pdOtra", "", "Otra fecha", d.otra || !isQuick)}</div>
         ${d.otra || !isQuick ? `<input type="date" id="pdFecha" min="${today()}" value="${esc(d.fecha)}">` : ""}
         <span class="note">${esc(fechaLarga(d.fecha))}</span></div>
@@ -1385,7 +1401,8 @@ function presDone() {
 }
 function vPres() {
   const p = pres();
-  if (!p && S.pv !== "crear") { S.pv = "crear"; }
+  if (!p && S.pv !== "crear" && S.pv !== "tipo") { S.pv = "tipo"; }
+  if (S.pv === "tipo") return vPresTipo();
   if (S.pv === "crear") return vPresCrear();
   if (S.pv === "cargar") return vPresCargar();
   if (S.pv === "bloques") return p.bloques && p.bloques.length ? vPresBloques() : vPresCargar();
@@ -1396,6 +1413,7 @@ function presAct(a, el, ev) {
   const p = pres();
   switch (a) {
     case "presNew": presStartNew(false); return true;
+    case "pdTipo": if (!S.pd) presStartNew(false); S.pd.formato = el.dataset.v; presGo("crear"); return true;
     case "presNewAsk": S.confirm = "presNueva"; render(); return true;
     case "presNewYes": if (p && p.bloques && p.bloques.length) progress.presHist = (progress.presHist || []).concat([{ tema: p.tema, fecha: p.fecha, minutos: p.minutos, resultado: "", ensayos: (p.ensayos || []).length }]).slice(-30);
       progress.pres = null; S.confirm = null; save(); presStartNew(false); return true;
@@ -1405,6 +1423,7 @@ function presAct(a, el, ev) {
       if (S.pv === "sesion" || S.pv === "bloques" && p && p.planCreado) presGo("plan", null, "left");
       else if (S.pv === "cargar" && S.pd && !S.pd.edit) presGo("crear", null, "left");
       else if (S.pv === "crear" && S.pd && S.pd.edit) presGo("plan", null, "left");
+      else if (S.pv === "crear" && S.pd && !S.pd.edit) presGo("tipo", null, "left");
       else { presMicStop(); go({ sub: null, tab: S.presFrom || "presentaciones" }, "left"); }
       return true; }
     case "pdSet": { const d = S.pd, k = el.dataset.k, v = el.dataset.v; d[k] = k === "fecha" || k === "formato" ? v : +v; if (k === "fecha") d.otra = false; render(); return true; }
@@ -1414,7 +1433,7 @@ function presAct(a, el, ev) {
       if (!tema) { document.getElementById("pdErr").textContent = "Escribe el tema de tu presentación."; return true; }
       if (!d.fecha || daysBetween(today(), d.fecha) < 0) { document.getElementById("pdErr").textContent = "Elige una fecha de hoy en adelante."; return true; }
       if (d.edit && p) { Object.assign(p, { tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia, formato: d.formato || "vivo" }); save(); S.toast = "Plan actualizado a tu nueva fecha y duración."; presGo("plan", null, "left"); }
-      else { progress.pres = { id: "p" + Date.now().toString(36), tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia, formato: d.formato || "vivo", bloques: [], done: {}, ensayos: [], creado: today() }; save(); S.pc = null; S.perr = null; presGo("cargar"); }
+      else { progress.pres = { id: "p" + Date.now().toString(36), tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia, formato: d.formato === "video" ? "video" : "vivo", bloques: [], done: {}, ensayos: [], creado: today() }; save(); S.pc = null; S.perr = null; presGo("cargar"); }
       return true; }
     case "pcMode": S.pc = el.dataset.v; S.perr = null; render(); return true;
     case "pcBack": S.pc = null; S.perr = null; render(); return true;
@@ -1736,8 +1755,8 @@ function presBtnAttrs() {
 function pilarCards() {
   const p = pres(), pendiente = p && (!p.bloques || !p.bloques.length), paso = p && !pendiente && daysBetween(today(), p.fecha) < 0;
   return `<button class="card pilar ar-acad" ${presBtnAttrs()}>
-      <span class="card-head"><span class="s-icon big">${ICON_PRES}</span><span><span class="eyebrow ar">Presentaciones</span><h3>${pendiente ? esc(p.tema || "Mi presentación") : paso ? "¿Cómo te fue?" : "Una disertación"}</h3></span></span>
-      <span class="meta">${pendiente ? "Te falta cargar tu presentación o tu guion para crear el plan." : paso ? `Cuéntanos cómo te fue con «${esc(p.tema)}» y prepara la siguiente.` : "Sube tu PowerPoint, Canva o guion. Aura arma tu plan hasta el día de la presentación."}</span>
+      <span class="card-head"><span class="s-icon big">${ICON_PRES}</span><span><span class="eyebrow ar">Presentaciones</span><h3>${pendiente ? esc(p.tema || "Mi presentación") : paso ? "¿Cómo te fue?" : "Una presentación o un video"}</h3></span></span>
+      <span class="meta">${pendiente ? "Te falta cargar tu presentación o tu guion para crear el plan." : paso ? `Cuéntanos cómo te fue con «${esc(p.tema)}» y prepara la siguiente.` : "En vivo o grabada. Sube tu PowerPoint, Canva o guion y Aura arma tu plan hasta la fecha."}</span>
       <span class="pill-cta solid">${pendiente ? "Continuar" : paso ? "Contar" : "Empezar"} ${ICON_GO}</span></button>
     <button class="card pilar ar-lab" data-act="tab" data-tab="entrevistas">
       <span class="card-head"><span class="s-icon big">${ICON_ENT}</span><span><span class="eyebrow ar">Entrevistas</span><h3>Una entrevista de trabajo</h3></span></span>

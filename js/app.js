@@ -548,6 +548,7 @@ function renderNow() {
   else if (S.sub === "pais") html = vPais(false);
   else if (S.sub === "reto") html = vReto();
   else if (S.sub === "pres") html = vPres();
+  else if (S.sub === "video") html = vVideo();
   else if (S.tab === "inicio") html = vInicio();
   else if (S.tab === "presentaciones") html = vPresHub();
   else if (S.tab === "entrevistas") html = vEntrevistas();
@@ -564,6 +565,7 @@ function renderNow() {
   if (S.tab === "practica" && S.view === "results") requestAnimationFrame(() => requestAnimationFrame(() => { const b = document.getElementById("newBar"); if (b) b.style.width = b.dataset.w + "%"; }));
   if (scrollTurn) { const el = document.getElementById("turnoActual"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
   if (S.sub === "prueba" || S.ob === "prueba") paintPrueba();
+  if (S.sub === "video") vidAfterRender(); else if (Vid.stream) vidStop();
   if (S.prepW && S.prepW.fresh) {
     S.prepW.fresh = false;
     const now = document.getElementById("pwNow");
@@ -573,7 +575,7 @@ function renderNow() {
 }
 /* Pestaña que se marca en la barra: el flujo de presentación es de Presentaciones; un escenario, de su pilar. */
 function navTab() {
-  if (S.sub === "pres") return "presentaciones";
+  if (S.sub === "pres" || S.sub === "video") return "presentaciones";
   if (S.sub === "prueba") return "progreso";
   if (S.tab === "practica") return pilarDe(S.sid);
   return S.tab;
@@ -586,7 +588,7 @@ function setTab(t) {
   if (t === "practica" && (S.view === "results" || S.view === "loading")) S.view = "list";
   go({ tab: t, sub: null }, dir);
 }
-function leaveSim() { presMicStop(); escStop(); clearTimeout(pwTimer); stopDictado(); recReset(); stopPrueba(); try { speechSynthesis.cancel(); } catch (e) {} }
+function leaveSim() { vidStop(); presMicStop(); escStop(); clearTimeout(pwTimer); stopDictado(); recReset(); stopPrueba(); try { speechSynthesis.cancel(); } catch (e) {} }
 
 /* ===================== PERFIL ===================== */
 function profileForm(p, cta) {
@@ -966,18 +968,20 @@ function presCard() {
 /* ---------- Paso 1: datos ---------- */
 function presStartNew(edit) {
   const p = pres();
-  S.pd = edit && p ? { tema: p.tema, fecha: p.fecha, minutos: p.minutos, minDia: p.minDia, otra: false, edit: true }
-    : { tema: "", fecha: addDays(2), minutos: 5, minDia: 30, otra: false };
+  S.pd = edit && p ? { tema: p.tema, fecha: p.fecha, minutos: p.minutos, minDia: p.minDia, formato: p.formato || "vivo", otra: false, edit: true }
+    : { tema: "", fecha: addDays(2), minutos: 5, minDia: 30, formato: "vivo", otra: false };
   presGo("crear");
 }
 function vPresCrear() {
-  const d = S.pd || (S.pd = { tema: "", fecha: addDays(2), minutos: 5, minDia: 30 });
+  const d = S.pd || (S.pd = { tema: "", fecha: addDays(2), minutos: 5, minDia: 30, formato: "vivo" });
   const quick = [["Hoy", addDays(0)], ["Mañana", addDays(1)], ["En 3 días", addDays(3)], ["En una semana", addDays(7)]];
   const isQuick = quick.some(q => q[1] === d.fecha);
-  return `<section class="section"><button class="back" data-act="presBack">← ${d.edit ? "Mi plan" : "Inicio"}</button>
+  return `<section class="section"><button class="back" data-act="presBack">← ${d.edit ? "Mi plan" : PILAR_NOM[S.presFrom || "presentaciones"]}</button>
     <div><p class="eyebrow">${d.edit ? "Editar" : "Paso 1 de 3"}</p><h2>Tu presentación</h2><p class="lead">Con esto Aura calcula cuánto debes hablar y arma tu plan.</p></div>
     <div class="panel">
       <div class="field"><label for="pdTema">¿Sobre qué es?</label><input type="text" id="pdTema" maxlength="90" placeholder="Ej: El IMACEC de los últimos 6 meses" value="${esc(d.tema)}"></div>
+      <div class="field"><span class="lbl">¿Cómo la presentas?</span><div class="pw-opts flat">${chipBtn("pdSet", "vivo", "En vivo", d.formato !== "video", ' data-k="formato"')}${chipBtn("pdSet", "video", "Grabada en video", d.formato === "video", ' data-k="formato"')}</div>
+        ${d.formato === "video" ? `<span class="note">Al final la grabas en Aura con teleprompter y la guardas en tu celular.</span>` : ""}</div>
       <div class="field"><span class="lbl">¿Cuándo presentas?</span><div class="pw-opts flat">${quick.map(q => chipBtn("pdSet", q[1], q[0], d.fecha === q[1], ' data-k="fecha"')).join("")}${chipBtn("pdOtra", "", "Otra fecha", d.otra || !isQuick)}</div>
         ${d.otra || !isQuick ? `<input type="date" id="pdFecha" min="${today()}" value="${esc(d.fecha)}">` : ""}
         <span class="note">${esc(fechaLarga(d.fecha))}</span></div>
@@ -1107,6 +1111,7 @@ function vPresPlan() {
       ${last ? `<p class="note">Último ensayo: ${PR.fmt(last.secs)} de ${p.minutos}:00 · ${last.cov}% de las ideas clave${last.mpm != null ? " · " + last.mpm + " muletillas/min" : ""}.</p>` : ""}</div>
     <div class="panel sil-panel">${sw("silencio", "Modo silencioso", "Para el metro, la micro o la biblioteca: en vez de hablar, escribes de memoria. El ensayo completo sigue siendo en voz alta.")}</div>
     ${hoy ? `<button class="btn primary wide" data-act="presSes" data-ses="${hoy.id}">Empezar: ${esc(PR.SES[hoy.tipo].titulo.toLowerCase())}</button>` : `<p class="fb ok">Hoy ya cumpliste tu plan. Si quieres, haz un ensayo extra.</p>`}
+    ${p.formato === "video" ? `<div class="panel vid-cta"><div><h3>Tu presentación es un video</h3><p class="note">Cuando te sientas listo, grábala con tu guion en el teleprompter. Puedes grabar todas las veces que quieras.</p></div><button class="btn wide" data-act="vidOpen" data-from="pres">${SES_ICON.ensayo} Grabar con teleprompter</button></div>` : ""}
     ${days}
     <div class="row"><button class="btn" data-act="presSes" data-ses="libre-ensayo">Ensayo libre</button><button class="btn" data-act="presOpen" data-pv="bloques">Editar bloques</button><button class="btn" data-act="presEdit">Fecha y duración</button></div>
     ${S.confirm === "presDel" ? `<div class="confirm"><span>¿Borrar esta presentación y su plan?</span><button class="btn danger" data-act="presDelYes">Sí, borrar</button><button class="btn ghost" data-act="cancelConfirm">Cancelar</button></div>`
@@ -1402,14 +1407,14 @@ function presAct(a, el, ev) {
       else if (S.pv === "crear" && S.pd && S.pd.edit) presGo("plan", null, "left");
       else { presMicStop(); go({ sub: null, tab: S.presFrom || "presentaciones" }, "left"); }
       return true; }
-    case "pdSet": { const d = S.pd, k = el.dataset.k, v = el.dataset.v; d[k] = k === "fecha" ? v : +v; if (k === "fecha") d.otra = false; render(); return true; }
+    case "pdSet": { const d = S.pd, k = el.dataset.k, v = el.dataset.v; d[k] = k === "fecha" || k === "formato" ? v : +v; if (k === "fecha") d.otra = false; render(); return true; }
     case "pdOtra": S.pd.otra = true; render(); { const f = document.getElementById("pdFecha"); if (f) f.focus(); } return true;
     case "pdOk": {
       const d = S.pd, tema = (document.getElementById("pdTema").value || "").trim();
       if (!tema) { document.getElementById("pdErr").textContent = "Escribe el tema de tu presentación."; return true; }
       if (!d.fecha || daysBetween(today(), d.fecha) < 0) { document.getElementById("pdErr").textContent = "Elige una fecha de hoy en adelante."; return true; }
-      if (d.edit && p) { Object.assign(p, { tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia }); save(); S.toast = "Plan actualizado a tu nueva fecha y duración."; presGo("plan", null, "left"); }
-      else { progress.pres = { id: "p" + Date.now().toString(36), tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia, bloques: [], done: {}, ensayos: [], creado: today() }; save(); S.pc = null; S.perr = null; presGo("cargar"); }
+      if (d.edit && p) { Object.assign(p, { tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia, formato: d.formato || "vivo" }); save(); S.toast = "Plan actualizado a tu nueva fecha y duración."; presGo("plan", null, "left"); }
+      else { progress.pres = { id: "p" + Date.now().toString(36), tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia, formato: d.formato || "vivo", bloques: [], done: {}, ensayos: [], creado: today() }; save(); S.pc = null; S.perr = null; presGo("cargar"); }
       return true; }
     case "pcMode": S.pc = el.dataset.v; S.perr = null; render(); return true;
     case "pcBack": S.pc = null; S.perr = null; render(); return true;
@@ -1546,10 +1551,179 @@ function presAct(a, el, ev) {
 }
 function alertNote(near, msg) { const n = document.createElement("p"); n.className = "note warn"; n.textContent = msg; near.insertAdjacentElement("afterend", n); }
 
+/* ===================== VIDEO CON TELEPROMPTER =====================
+   Para tareas en video (y, más adelante, el video currículum): el guion avanza solo arriba de la pantalla,
+   cerca del lente, mientras la cámara graba. Todo queda en el celular: el video nunca sale de ahí.
+   El texto no sigue la voz: en Android el reconocimiento y la grabación pelean por el micrófono. */
+const Vid = { stream: null, mr: null, chunks: [], blob: null, url: null, mime: "", t0: 0, timer: null, raf: 0, pos: 0, run: false, last: 0, cd: 0, cdTimer: null };
+function vidCfg() { const c = progress.video || (progress.video = { texto: "", wpm: 130, size: "m", mirror: true, cam: "user" }); return c; }
+function vidMime() {
+  const c = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+  try { return c.find(x => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(x)) || ""; } catch (e) { return ""; }
+}
+function vidSupported() { return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder); }
+function guionDePres(p) { return (p.bloques || []).map(b => presTxt(b)).filter(Boolean).join("\n\n"); }
+function vidOpen(from) {
+  const c = vidCfg(), p = pres();
+  if (from === "pres" && p && p.bloques && p.bloques.length) c.texto = guionDePres(p);
+  S.vidFrom = from || (["inicio", "presentaciones", "entrevistas"].includes(S.tab) ? S.tab : "presentaciones");
+  S.vid = { fase: "editor", err: null };
+  leaveSim(); go({ sub: "video" }, "right");
+}
+function vidRelease() {
+  cancelAnimationFrame(Vid.raf); Vid.raf = 0; Vid.run = false; clearInterval(Vid.timer); clearInterval(Vid.cdTimer); Vid.cd = 0;
+  try { if (Vid.mr && Vid.mr.state !== "inactive") { Vid.mr.onstop = null; Vid.mr.stop(); } } catch (e) {}
+  Vid.mr = null;
+  if (Vid.stream) { Vid.stream.getTracks().forEach(tr => tr.stop()); Vid.stream = null; }
+  document.body.classList.remove("vid-full");
+}
+function vidStop() { vidRelease(); if (Vid.url) { URL.revokeObjectURL(Vid.url); Vid.url = null; } Vid.blob = null; }
+async function vidCamara() {
+  const c = vidCfg(), ta = document.getElementById("vidTxt");
+  if (ta) c.texto = ta.value; save();
+  if (PR.countWords(c.texto) < 5) { S.vid.err = "Pega tu guion primero (al menos unas frases)."; render(); return; }
+  if (!vidSupported()) { S.vid.err = "Este navegador no puede grabar video. Prueba con Chrome en Android o Safari en iPhone."; render(); return; }
+  vidRelease();
+  try {
+    Vid.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: c.cam, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
+  } catch (e) {
+    try { Vid.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: c.cam }, audio: true }); }
+    catch (e2) { S.vid.err = e2 && e2.name === "NotAllowedError" ? "Aura necesita permiso para usar la cámara y el micrófono. Actívalo en el candado de la barra de direcciones." : "No pudimos abrir la cámara."; render(); return; }
+  }
+  if (Vid.url) { URL.revokeObjectURL(Vid.url); Vid.url = null; } Vid.blob = null;
+  Vid.pos = 0; S.vid = { fase: "camara", err: null, rec: false }; document.body.classList.add("vid-full"); render();
+}
+function vidAfterRender() {
+  if (S.sub !== "video" || !S.vid) return;
+  const v = document.getElementById("vidCam"); if (v && Vid.stream && v.srcObject !== Vid.stream) { v.srcObject = Vid.stream; v.muted = true; v.play().catch(() => {}); }
+  const box = document.getElementById("tpBox"); if (box) box.scrollTop = Vid.pos;
+  const pv = document.getElementById("vidPlay"); if (pv && Vid.url && !pv.src) pv.src = Vid.url;
+}
+/* Velocidad: el texto recorre todo su alto en el tiempo que tomaría decirlo a ese ritmo. */
+function tpSpeed() {
+  const box = document.getElementById("tpBox"), c = vidCfg(); if (!box) return 0;
+  const alto = Math.max(1, box.scrollHeight - box.clientHeight), secs = Math.max(5, PR.countWords(c.texto) / c.wpm * 60);
+  return alto / secs;
+}
+function tpLoop(now) {
+  const box = document.getElementById("tpBox");
+  if (!box || !Vid.run) { Vid.raf = 0; return; }
+  const dt = Vid.last ? (now - Vid.last) / 1000 : 0; Vid.last = now;
+  Vid.pos = Math.min(box.scrollHeight - box.clientHeight, Vid.pos + tpSpeed() * dt); box.scrollTop = Vid.pos;
+  Vid.raf = requestAnimationFrame(tpLoop);
+}
+function tpRun(on) { Vid.run = on; Vid.last = 0; cancelAnimationFrame(Vid.raf); if (on) Vid.raf = requestAnimationFrame(tpLoop); const b = document.getElementById("tpBox"); if (b) b.classList.toggle("paused", !on); }
+function vidCuenta() {
+  if (!Vid.stream) return;
+  Vid.pos = 0; const box = document.getElementById("tpBox"); if (box) box.scrollTop = 0;
+  Vid.cd = 3; const el = document.getElementById("vidCd"); if (el) { el.textContent = "3"; el.hidden = false; }
+  clearInterval(Vid.cdTimer);
+  Vid.cdTimer = setInterval(() => { Vid.cd--; const e2 = document.getElementById("vidCd");
+    if (Vid.cd > 0) { if (e2) e2.textContent = Vid.cd; return; }
+    clearInterval(Vid.cdTimer); if (e2) e2.hidden = true; vidGrabar(); }, 1000);
+}
+function vidGrabar() {
+  const mime = vidMime(), o = { videoBitsPerSecond: 2500000, audioBitsPerSecond: 128000 }; if (mime) o.mimeType = mime;
+  Vid.chunks = [];
+  try { Vid.mr = new MediaRecorder(Vid.stream, o); } catch (e) { try { Vid.mr = new MediaRecorder(Vid.stream); } catch (e2) { S.vid.err = "No se pudo iniciar la grabación."; render(); return; } }
+  Vid.mime = Vid.mr.mimeType || mime || "video/webm";
+  Vid.mr.ondataavailable = e => { if (e.data && e.data.size) Vid.chunks.push(e.data); };
+  Vid.mr.onstop = () => {
+    Vid.blob = new Blob(Vid.chunks, { type: Vid.mime.split(";")[0] }); Vid.url = URL.createObjectURL(Vid.blob);
+    const secs = (Date.now() - Vid.t0) / 1000; vidRelease(); markDay(); save();
+    S.vid = { fase: "revision", secs, err: null }; S.anim = "up"; render();
+  };
+  Vid.mr.start(1000); Vid.t0 = Date.now(); S.vid.rec = true;
+  const b = document.getElementById("vidRecBtn"); if (b) { b.disabled = false; b.classList.add("live"); b.setAttribute("aria-label", "Terminar grabación"); b.dataset.act = "vidFin"; }
+  const lbl = document.getElementById("vidClock"); if (lbl) lbl.hidden = false;
+  clearInterval(Vid.timer); Vid.timer = setInterval(() => { const l = document.getElementById("vidClock"); if (l) l.textContent = "● " + fmtSec((Date.now() - Vid.t0) / 1000); }, 250);
+  tpRun(true);
+}
+function vidExt() { return /mp4/.test(Vid.mime) ? "mp4" : "webm"; }
+function vidNombre() { const d = new Date(), z = n => String(n).padStart(2, "0"); return `aura-video-${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}.${vidExt()}`; }
+async function vidGuardar() {
+  if (!Vid.blob) return;
+  const file = new File([Vid.blob], vidNombre(), { type: Vid.blob.type });
+  try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: "Mi video" }); return; } }
+  catch (e) { if (e && e.name === "AbortError") return; }
+  vidDescargar();
+}
+function vidDescargar() {
+  if (!Vid.url) return;
+  const a = document.createElement("a"); a.href = Vid.url; a.download = vidNombre(); document.body.appendChild(a); a.click(); a.remove();
+  S.vid.bajado = true; render();
+}
+const TP_SIZE = { s: "Pequeña", m: "Mediana", l: "Grande" };
+function vVideo() {
+  const c = vidCfg(), V = S.vid || (S.vid = { fase: "editor" }), words = PR.countWords(c.texto), back = S.vidFrom === "pres" ? "Mi plan" : PILAR_NOM[S.vidFrom] || "Presentaciones";
+  if (V.fase === "camara") {
+    const parr = String(c.texto).split(/\n\s*\n/).map(x => x.trim()).filter(Boolean);
+    return `<div class="vid-stage" role="dialog" aria-label="Grabar video con teleprompter">
+      <video id="vidCam" class="${c.mirror && c.cam === "user" ? "mirror" : ""}" playsinline muted autoplay></video>
+      <div id="tpBox" class="tp tp-${c.size}" data-act="tpToggle" aria-label="Teleprompter: toca para pausar o seguir"><div class="tp-pad"></div>${parr.map(x => `<p>${esc(x)}</p>`).join("")}<div class="tp-pad end"></div></div>
+      <div id="vidCd" class="vid-cd" hidden>3</div>
+      <div class="vid-bar">
+        <button class="vid-ic" data-act="vidCerrar" aria-label="Cerrar cámara">×</button>
+        <button class="vid-ic" data-act="vidFlip" aria-label="Cambiar cámara" ${V.rec ? "disabled" : ""}>⟲</button>
+      </div>
+      <div class="vid-speed"><button class="vid-ic sm" data-act="tpVel" data-d="-10" aria-label="Más lento">−</button><span id="tpVel">${c.wpm} ppm</span><button class="vid-ic sm" data-act="tpVel" data-d="10" aria-label="Más rápido">+</button></div>
+      <span id="vidClock" class="vid-clock" ${V.rec ? "" : "hidden"}>● 0:00</span>
+      <button id="vidRecBtn" class="vid-rec${V.rec ? " live" : ""}" data-act="${V.rec ? "vidFin" : "vidGo"}" aria-label="${V.rec ? "Terminar grabación" : "Empezar a grabar"}"><span></span></button>
+      ${V.err ? `<p class="vid-err">${esc(V.err)}</p>` : ""}
+    </div>`;
+  }
+  if (V.fase === "revision") {
+    const mb = Vid.blob ? (Vid.blob.size / 1048576).toFixed(1) : "0";
+    return `<section class="section"><button class="back" data-act="vidBack">← ${esc(back)}</button>
+      <div><p class="eyebrow">Tu video</p><h2>¿Cómo quedó?</h2><p class="lead">${fmtSec(V.secs || 0)} min · ${mb} MB · ${vidExt().toUpperCase()}</p></div>
+      <video id="vidPlay" class="vid-play" controls playsinline></video>
+      <div class="row"><button class="btn primary" data-act="vidGuardar">Guardar o compartir</button><button class="btn" data-act="vidOtra">Grabar otra vez</button></div>
+      <p class="note">${navigator.canShare ? "En Android elige Google Fotos o Drive para que quede en tu galería; en iPhone, «Guardar video»." : "Se descargará el archivo a tu celular."} <button class="linkish" data-act="vidBajar">Descargar el archivo</button></p>
+      ${vidExt() === "webm" ? `<p class="note warn">Tu celular grabó en formato WebM. Se ve bien en Google Fotos y Drive, pero algunas apps, como WhatsApp o Instagram, podrían no aceptarlo.</p>` : ""}
+      ${V.bajado ? `<p class="toast">Descargado. Búscalo en la carpeta Descargas o en tu galería.</p>` : ""}
+      <p class="note">El video queda solo en tu celular: Aura no lo sube a ninguna parte. Si sales de esta pantalla sin guardarlo, se pierde.</p>
+    </section>`;
+  }
+  return `<section class="section"><button class="back" data-act="vidBack">← ${esc(back)}</button>
+    <div><p class="eyebrow">Video con teleprompter</p><h2>Grabar un video</h2><p class="lead">Pega tu guion. Mientras grabas, el texto avanza solo arriba de la pantalla, cerca de la cámara, para que no se note que lees.</p></div>
+    <div class="panel">
+      <div class="field"><label for="vidTxt">Tu guion</label><textarea id="vidTxt" class="esc-ta" rows="8" placeholder="Pega aquí lo que vas a decir. Deja una línea en blanco entre párrafos.">${esc(c.texto)}</textarea>
+        <span class="note" id="vidInfo">${words ? `${words} palabras · unos ${PR.fmt(words / c.wpm * 60)} a ${c.wpm} palabras por minuto` : "Funciona con guiones en cualquier idioma, por ejemplo para un ramo de inglés."}</span></div>
+      <div class="field"><span class="lbl">Velocidad del texto</span><div class="pw-opts flat">${[[110, "Lenta"], [130, "Normal"], [150, "Rápida"]].map(o => chipBtn("vidSet", o[0], o[1] + " · " + o[0], c.wpm === o[0], ' data-k="wpm"')).join("")}</div>
+        <span class="note">Durante la grabación puedes ajustarla con − y +, y tocar el texto para pausarlo.</span></div>
+      <div class="field"><span class="lbl">Tamaño de letra</span><div class="pw-opts flat">${Object.entries(TP_SIZE).map(([k, l]) => chipBtn("vidSet", k, l, c.size === k, ' data-k="size"')).join("")}</div></div>
+      <div class="field"><span class="lbl">Cámara</span><div class="pw-opts flat">${chipBtn("vidSet", "user", "Frontal", c.cam === "user", ' data-k="cam"')}${chipBtn("vidSet", "environment", "Trasera", c.cam === "environment", ' data-k="cam"')}</div></div>
+      ${V.err ? `<p class="fb no">${esc(V.err)}</p>` : ""}
+      <button class="btn primary wide" data-act="vidCam">${ICON_PLAY} Abrir la cámara</button>
+      <p class="note">Consejo: apoya el celular a la altura de los ojos, con luz de frente, y mira el lente al empezar y al cerrar cada idea.</p>
+    </div></section>`;
+}
+function vidAct(a, el) {
+  const c = vidCfg();
+  switch (a) {
+    case "vidOpen": vidOpen(el.dataset.from); return true;
+    case "vidBack": { const f = S.vidFrom; vidStop(); S.vid = null; if (f === "pres" && pres()) presGo("plan", null, "left"); else go({ sub: null, tab: PILAR_NOM[f] ? f : "presentaciones" }, "left"); return true; }
+    case "vidSet": { const ta = document.getElementById("vidTxt"); if (ta) c.texto = ta.value; const k = el.dataset.k; c[k] = k === "wpm" ? +el.dataset.v : el.dataset.v; save(); render(); return true; }
+    case "vidCam": vidCamara(); return true;
+    case "vidGo": vidCuenta(); el.disabled = true; return true;
+    case "vidFin": { try { if (Vid.mr && Vid.mr.state !== "inactive") Vid.mr.stop(); } catch (e) {} tpRun(false); return true; }
+    case "vidCerrar": vidRelease(); S.vid = { fase: "editor", err: null }; render(); return true;
+    case "vidFlip": c.cam = c.cam === "user" ? "environment" : "user"; save(); vidCamara(); return true;
+    case "tpToggle": if (S.vid && S.vid.rec) tpRun(!Vid.run); else if (!Vid.cd) { Vid.pos = Math.max(0, Vid.pos - 80); const b = document.getElementById("tpBox"); if (b) b.scrollTop = Vid.pos; } return true;
+    case "tpVel": { c.wpm = Math.max(80, Math.min(200, c.wpm + (+el.dataset.d))); save(); const l = document.getElementById("tpVel"); if (l) l.textContent = c.wpm + " ppm"; return true; }
+    case "vidGuardar": vidGuardar(); return true;
+    case "vidBajar": vidDescargar(); return true;
+    case "vidOtra": vidCamara(); return true;
+  }
+  return false;
+}
+
 /* ===================== VISTA: INICIO ===================== */
 /* Inicio responde una sola pregunta: ¿qué tienes que preparar? Con un plan en curso, muestra la cuenta regresiva y la sesión de hoy. */
 const ICON_PRES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8M7 12l3-3 2 2 4-4"/></svg>';
 const ICON_ENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/></svg>';
+const ICON_CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>';
 const ICON_GO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 function presActiva() { const p = pres(); return p && p.bloques && p.bloques.length && daysBetween(today(), p.fecha) >= 0 ? p : null; }
 function presBtnAttrs() {
@@ -1617,6 +1791,7 @@ function vPresHub() {
       <div class="grid2">${sim("disertacion", "Preguntas del profesor", "Disertación en clases")}${sim("presentacion", "Defensa de proyecto", "Presentación ante comisión")}</div></div>
     <div class="stack" style="gap:8px"><h3>Herramientas</h3>
       <div class="panel tools">
+        <button class="tool-row" data-act="vidOpen" data-from="presentaciones"><span class="s-icon">${ICON_CAM}</span><span class="hoy-t">Grabar un video con teleprompter</span><span class="note" style="margin:0">Nuevo</span></button>
         <button class="tool-row" data-act="presSes" data-ses="libre-relevo" ${conB ? "" : "disabled"}><span class="s-icon">${SES_ICON.relevo}</span><span class="hoy-t">Relevo de conectores</span><span class="note" style="margin:0">3 min</span></button>
         <button class="tool-row" data-act="presSes" data-ses="libre-ensayo" ${conB ? "" : "disabled"}><span class="s-icon">${SES_ICON.ensayo}</span><span class="hoy-t">Ensayo libre cronometrado</span><span class="note" style="margin:0">${p ? p.minutos : 5} min</span></button>
         ${sw("silencio", "Modo silencioso", "Para el metro, la micro o la biblioteca: escribes en vez de hablar.")}
@@ -2029,6 +2204,7 @@ function onAct(e) {
   const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
   const a = el.dataset.act;
   if (/^(pres|pd|pc|pb|ps)/.test(a) && !["psMicGo", "psMicStop", "psDone", "psFrase", "psSabe"].includes(a)) tick();
+  if (vidAct(a, el)) return;
   if (presAct(a, el, e)) return;
   if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle", "recStart", "recStop", "pwSave", "escNext", "escPrev", "escVoz"].includes(a)) tick();
   switch (a) {

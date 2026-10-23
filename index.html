@@ -524,6 +524,71 @@ mark.miss{background:color-mix(in srgb, var(--bad) 14%, transparent);color:var(-
 .bnav-arr:disabled,.lnav-arr:disabled{opacity:.35;cursor:default}
 .lnav{display:flex;align-items:center;gap:8px}
 .lnav-arr{width:30px;height:30px;font-size:1.1rem}
+/* ---------- Dos pilares (rediseño 23-oct-2026) ---------- */
+.top-set{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);display:grid;place-items:center;padding:0}
+.top-set svg{width:20px;height:20px}
+.top-set.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.home{gap:16px}
+.home-q{font-size:clamp(1.8rem,7vw,2.3rem);line-height:1.12}
+.card.pilar{border-left:1px solid var(--line);border-top:5px solid var(--ac);border-radius:18px;padding:20px;gap:12px;cursor:pointer}
+.card.pilar:hover{border-left-color:var(--line)}
+.card.pilar h3{font-size:1.3rem}
+.card.pilar .meta{font-size:.95rem;line-height:1.5}
+.s-icon.big{width:48px;height:48px;border-radius:14px}
+.s-icon.big svg{width:26px;height:26px}
+.pill-cta{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 18px;border-radius:99px;border:1.5px solid var(--ac);color:var(--ac);font-weight:700;font-size:.95rem}
+.pill-cta svg{width:16px;height:16px}
+.pill-cta.solid{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.how3{list-style:none;margin:4px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center;font-size:.82rem;color:var(--muted)}
+.how3 li{display:flex;flex-direction:column;align-items:center;gap:6px}
+.how3 span{width:28px;height:28px;border-radius:50%;background:var(--surface-2);color:var(--accent);display:grid;place-items:center;font-weight:700}
+.card.home-plan{border-left:1px solid color-mix(in srgb, var(--accent) 50%, var(--line));border-top:5px solid var(--ac);border-radius:18px;padding:20px;gap:12px;cursor:pointer}
+.card.home-plan h2{font-size:1.45rem;line-height:1.15;margin:2px 0}
+.hp-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.count-ring{flex:none;width:72px;height:72px;border-radius:50%;border:3px solid var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.count-ring b{font-family:var(--font-display);font-size:1.6rem;color:var(--accent)}
+.count-ring small{font-size:.7rem;color:var(--muted);margin-top:2px}
+.hp-go{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border-radius:14px;background:linear-gradient(180deg,var(--gold-light) -40%,var(--accent) 55%,var(--gold-dark) 160%);color:var(--accent-ink);font-weight:700;text-align:center;padding:0 12px}
+.hp-go svg{width:18px;height:18px;flex:none}
+.hoy-row,.tool-row{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--fg);font:inherit;text-align:left;width:100%}
+.hoy-row.cur{border:1.5px solid var(--accent)}
+.hoy-row.ok .hoy-t{color:var(--muted);text-decoration:line-through}
+.hoy-ck{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;color:var(--good)}
+.hoy-row.cur .hoy-ck{border-color:var(--accent)}
+.hoy-row.ok .hoy-ck{border:0}
+.hoy-ck svg{width:24px;height:24px}
+.hoy-t{flex-grow:1;font-weight:700;font-size:.95rem}
+.link-card{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;border:1px dashed var(--ac);background:none;color:var(--fg);font:inherit;text-align:left;width:100%}
+.link-card .arrow{color:var(--ac);font-size:1.4rem}
+.hub-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.hub-head .eyebrow.ar{text-transform:uppercase}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.card.mini{padding:14px;gap:6px;cursor:pointer}
+.card.mini .s-icon{width:36px;height:36px}
+.panel.tools{padding:6px;gap:0}
+.panel.tools .tool-row{border:0;border-bottom:1px solid var(--surface-2);border-radius:0;background:none}
+.panel.tools .tool-row:disabled{opacity:.5}
+.panel.tools .tool-row .s-icon{width:34px;height:34px}
+.panel.tools .setting{padding:10px 14px}
+.hist-row{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--surface-2)}
+.hist-row b.good{color:var(--good)} .hist-row b.warn{color:var(--bad)}
+.pasos{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.paso{display:flex;gap:12px;padding:14px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.paso.on{border:1.5px solid var(--ac)}
+.paso-n{flex:none;width:32px;height:32px;border-radius:50%;background:color-mix(in srgb, var(--ac) 14%, var(--surface));color:var(--ac);display:grid;place-items:center;font-weight:700}
+.paso.on .paso-n{background:var(--ac);color:var(--bg)}
+.paso-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{padding:2px 8px;border-radius:99px;background:var(--surface-2);color:var(--muted);font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.badge.ok{background:var(--good-soft);color:var(--good)}
+.btn.lab{background:var(--area-lab);border-color:var(--area-lab);color:var(--bg)}
+.btn.lab-ghost{border:1.5px solid var(--area-lab);color:var(--area-lab);background:var(--surface)}
+details.extra{border:1px dashed var(--line);border-radius:14px;background:color-mix(in srgb, var(--surface) 55%, transparent);padding:0 16px}
+details.extra summary{display:flex;align-items:center;gap:10px;min-height:56px;cursor:pointer;list-style:none}
+details.extra summary::-webkit-details-marker{display:none}
+details.extra summary .stack{flex-grow:1}
+details.extra summary .arrow{transition:transform .2s;font-size:1.3rem;color:var(--muted)}
+details.extra[open] summary .arrow{transform:rotate(90deg)}
+.extra-chips{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:16px}
 .fd-none{margin:0;padding:22px 16px;border:1px dashed var(--line);border-radius:12px;text-align:center;color:var(--muted);cursor:pointer}
 .flash{display:block;width:100%;min-height:220px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);box-shadow:var(--elev);padding:22px;text-align:left}
 .flash-in{display:flex;flex-direction:column;gap:12px}
@@ -579,15 +644,15 @@ mark.con{background:color-mix(in srgb, var(--area-lab) 16%, transparent);color:i
 <body>
 <header class="top"><div class="wrap">
   <button class="brand" data-act="brand" aria-label="Ir al inicio"><span class="mark" aria-hidden="true">Aa</span>Aura <small>confianza verbal</small></button>
-  <span class="pill" id="levelPill">Aura</span>
+  <button class="top-set" data-act="tab" data-tab="ajustes" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
 </div></header>
 <main class="wrap" id="app" aria-live="polite"><div class="loading"><span class="mark" aria-hidden="true">Aa</span></div></main>
 <nav class="nav" aria-label="Secciones">
   <div class="nav-in">
-    <button data-act="tab" data-tab="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>Inicio</button>
-    <button data-act="tab" data-tab="practica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-5.4A8 8 0 1 1 21 12z"/></svg>Situaciones</button>
+    <button data-act="tab" data-tab="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
+    <button data-act="tab" data-tab="presentaciones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8"/></svg>Presentaciones</button>
+    <button data-act="tab" data-tab="entrevistas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>Entrevistas</button>
     <button data-act="tab" data-tab="progreso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16v-4"/><path d="M11 16V7"/><path d="M16 16v-6"/><path d="M20 16V4"/></svg>Progreso</button>
-    <button data-act="tab" data-tab="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>Ajustes</button>
   </div>
 </nav>
 <script src="js/motor.js"></script>

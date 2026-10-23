@@ -7,7 +7,11 @@ const M = window.AuraMotor;
 /* ===================== CONSTANTES ===================== */
 const KEY = "aura.v1";
 const DEFAULT_SETTINGS = { sound: true, clicks: true, autoSpeak: false, dark: false, narra: true };
-const TABS = ["inicio", "practica", "progreso", "ajustes"];
+const TABS = ["inicio", "presentaciones", "entrevistas", "progreso", "ajustes"];
+/* Dos pilares: cada escenario conversacional vuelve a su pilar; los demás quedan como «Práctica extra» en Progreso. */
+const PILAR = { presentacion: "presentaciones", disertacion: "presentaciones", entrevista: "entrevistas", practica: "entrevistas" };
+const PILAR_NOM = { presentaciones: "Presentaciones", entrevistas: "Entrevistas", progreso: "Progreso", inicio: "Inicio" };
+const pilarDe = id => PILAR[id] || "progreso";
 const GOALS = [
   { id: "presentacion", label: "Presentar con seguridad" },
   { id: "entrevista", label: "Brillar en entrevistas" },
@@ -536,7 +540,6 @@ function render() {
   try { renderNow(); } finally { rendering = false; }
 }
 function renderNow() {
-  document.getElementById("levelPill").textContent = levelOf(gProg()).name;
   const onb = !progress.profile || !!S.obPrueba;
   document.body.classList.toggle("onboarding", onb);
   let html;
@@ -546,6 +549,8 @@ function renderNow() {
   else if (S.sub === "reto") html = vReto();
   else if (S.sub === "pres") html = vPres();
   else if (S.tab === "inicio") html = vInicio();
+  else if (S.tab === "presentaciones") html = vPresHub();
+  else if (S.tab === "entrevistas") html = vEntrevistas();
   else if (S.tab === "progreso") html = vProgreso();
   else if (S.tab === "ajustes") html = vAjustes();
   else html = S.view === "list" ? vList() : S.view === "loading" ? vLoading() : S.view === "scenario" ? vScenario()
@@ -554,7 +559,8 @@ function renderNow() {
   const scrollTurn = S.scrollTurn; S.scrollTurn = false;
   if (S.anim) window.scrollTo({ top: 0 });
   S.anim = null; S.toast = null;
-  document.querySelectorAll(".nav button").forEach(b => { const on = b.dataset.tab === S.tab; b.classList.toggle("on", on); if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  const nt = navTab();
+  document.querySelectorAll(".nav button, .top [data-tab]").forEach(b => { const on = b.dataset.tab === nt; b.classList.toggle("on", on); if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
   if (S.tab === "practica" && S.view === "results") requestAnimationFrame(() => requestAnimationFrame(() => { const b = document.getElementById("newBar"); if (b) b.style.width = b.dataset.w + "%"; }));
   if (scrollTurn) { const el = document.getElementById("turnoActual"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
   if (S.sub === "prueba" || S.ob === "prueba") paintPrueba();
@@ -564,6 +570,13 @@ function renderNow() {
     if (now && S.prepW.step >= 0) { const r = now.getBoundingClientRect(); if (r.bottom > innerHeight - 90 || r.top < 70) now.scrollIntoView({ behavior: "smooth", block: "center" }); }
   }
   animateCounts();
+}
+/* Pestaña que se marca en la barra: el flujo de presentación es de Presentaciones; un escenario, de su pilar. */
+function navTab() {
+  if (S.sub === "pres") return "presentaciones";
+  if (S.sub === "prueba") return "progreso";
+  if (S.tab === "practica") return pilarDe(S.sid);
+  return S.tab;
 }
 function go(patch, anim) { Object.assign(S, patch); S.anim = anim || "up"; render(); }
 function setTab(t) {
@@ -818,7 +831,7 @@ function vReto() {
       <div class="panel"><span class="eyebrow">Reto de hoy</span><h2><span class="mono">${ok}/${n}</span> correctas</h2><p class="lead">${msg}</p>
         <div class="kpis two"><div class="kpi"><b>${st}</b><span>${st === 1 ? "día seguido" : "días seguidos"}</span></div><div class="kpi"><b>${retosCount()}</b><span>${retosCount() === 1 ? "reto completado" : "retos completados"}</span></div></div>
         ${weekStrip()}</div>
-      <div class="row"><button class="btn primary" data-act="tab" data-tab="inicio">Volver al inicio</button><button class="btn" data-act="tab" data-tab="practica">Ir a los escenarios</button></div></section>`;
+      <div class="row"><button class="btn primary" data-act="tab" data-tab="inicio">Volver al inicio</button><button class="btn" data-act="tab" data-tab="presentaciones">Ir a los escenarios</button></div></section>`;
   }
   const q = R.qs[R.i], answered = R.answered !== null;
   const right = q.kind === "mul" ? q.f.m : q.w.pro;
@@ -927,7 +940,7 @@ function nextLbl(maxN) {
 }
 function psReset(P) { presMicStop(); P.res = null; P.micErr = null; P.hz = null; P.escVal = ""; P.escrito = false; P.phase = "idle"; }
 function presTxt(b) { return b.texto && b.texto.trim() ? b.texto : (b.apoyo || b.titulo); }
-function presGo(pv, extra, anim) { leaveSim(); presMicStop(); go(Object.assign({ sub: "pres", pv }, extra || {}), anim || "right"); }
+function presGo(pv, extra, anim) { if (S.sub !== "pres") S.presFrom = ["inicio", "presentaciones"].includes(S.tab) ? S.tab : "presentaciones"; leaveSim(); presMicStop(); go(Object.assign({ sub: "pres", pv }, extra || {}), anim || "right"); }
 function presSave() { clearTimeout(presSave.t); presSave.t = setTimeout(save, 300); }
 function chipBtn(act, v, label, on, extra) { return `<button class="pw-opt${on ? " on" : ""}" data-act="${act}" data-v="${esc(v)}"${extra || ""}>${esc(label)}</button>`; }
 function fechaLarga(iso) { try { return new Date(iso + "T12:00:00").toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long" }); } catch (e) { return iso; } }
@@ -1074,7 +1087,7 @@ function pbFind(id) { const p = pres(); return p.bloques.find(b => b.id === id);
 /* ---------- Plan ---------- */
 function vPresPlan() {
   const p = pres(), d = daysBetween(today(), p.fecha);
-  if (d < 0) return `<section class="section"><button class="back" data-act="presBack">← Inicio</button>
+  if (d < 0) return `<section class="section"><button class="back" data-act="presBack">← ${PILAR_NOM[S.presFrom || "presentaciones"]}</button>
     <div><p class="eyebrow">Ya presentaste</p><h2>${esc(p.tema)}</h2><p class="lead">¿Cómo te fue?</p></div>
     <div class="pw-opts flat">${chipBtn("presFin", "bien", "Me fue bien")}${chipBtn("presFin", "regular", "Más o menos")}${chipBtn("presFin", "mal", "Me costó")}</div>
     <p class="note">Se guarda en tu historial y puedes preparar la siguiente.</p></section>`;
@@ -1086,7 +1099,7 @@ function vPresPlan() {
         return `<button class="pses${ok ? " ok" : ""}" data-act="presSes" data-ses="${s.id}"><span class="s-icon">${ok ? ICON_CHECK : SES_ICON[s.tipo]}</span><span class="pses-t"><b>${esc(PR.SES[s.tipo].titulo)}${s.n ? " " + s.n : ""}</b><small>${s.min} min${past && !ok ? " · pendiente" : ""}</small></span><span class="arrow">›</span></button>`; }).join("")}</div>`;
   }).join("");
   const last = (p.ensayos || []).slice(-1)[0];
-  return `<section class="section"><button class="back" data-act="presBack">← Inicio</button>
+  return `<section class="section"><button class="back" data-act="presBack">← ${PILAR_NOM[S.presFrom || "presentaciones"]}</button>
     <div><p class="eyebrow">Mi presentación · ${esc(presCuenta(p))}</p><h2>${esc(p.tema)}</h2><p class="lead">${p.minutos} min · ${p.bloques.length} bloques · ${esc(fechaLarga(p.fecha))}</p></div>
     ${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
     <div class="panel"><span class="tag">Plan ${esc(PLAN_NOM[pl.tipo])}</span><p style="margin:0">${esc(PR.PLAN_TXT[pl.tipo])}</p>
@@ -1378,13 +1391,16 @@ function presAct(a, el, ev) {
   const p = pres();
   switch (a) {
     case "presNew": presStartNew(false); return true;
+    case "presNewAsk": S.confirm = "presNueva"; render(); return true;
+    case "presNewYes": if (p && p.bloques && p.bloques.length) progress.presHist = (progress.presHist || []).concat([{ tema: p.tema, fecha: p.fecha, minutos: p.minutos, resultado: "", ensayos: (p.ensayos || []).length }]).slice(-30);
+      progress.pres = null; S.confirm = null; save(); presStartNew(false); return true;
     case "presEdit": presStartNew(true); return true;
     case "presOpen": if (el.dataset.ses) presStartSes(el.dataset.ses); else { if (el.dataset.pv === "cargar") { S.pd = null; S.pc = null; S.perr = null; } presGo(el.dataset.pv || "plan"); } return true;
     case "presBack": {
       if (S.pv === "sesion" || S.pv === "bloques" && p && p.planCreado) presGo("plan", null, "left");
       else if (S.pv === "cargar" && S.pd && !S.pd.edit) presGo("crear", null, "left");
       else if (S.pv === "crear" && S.pd && S.pd.edit) presGo("plan", null, "left");
-      else { presMicStop(); go({ sub: null, tab: "inicio" }, "left"); }
+      else { presMicStop(); go({ sub: null, tab: S.presFrom || "presentaciones" }, "left"); }
       return true; }
     case "pdSet": { const d = S.pd, k = el.dataset.k, v = el.dataset.v; d[k] = k === "fecha" ? v : +v; if (k === "fecha") d.otra = false; render(); return true; }
     case "pdOtra": S.pd.otra = true; render(); { const f = document.getElementById("pdFecha"); if (f) f.focus(); } return true;
@@ -1531,36 +1547,100 @@ function presAct(a, el, ev) {
 function alertNote(near, msg) { const n = document.createElement("p"); n.className = "note warn"; n.textContent = msg; near.insertAdjacentElement("afterend", n); }
 
 /* ===================== VISTA: INICIO ===================== */
+/* Inicio responde una sola pregunta: ¿qué tienes que preparar? Con un plan en curso, muestra la cuenta regresiva y la sesión de hoy. */
+const ICON_PRES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8M7 12l3-3 2 2 4-4"/></svg>';
+const ICON_ENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/></svg>';
+const ICON_GO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+function presActiva() { const p = pres(); return p && p.bloques && p.bloques.length && daysBetween(today(), p.fecha) >= 0 ? p : null; }
+function presBtnAttrs() {
+  const p = pres();
+  if (!p) return 'data-act="presNew"';
+  if (!p.bloques || !p.bloques.length) return 'data-act="presOpen" data-pv="cargar"';
+  const hoy = presHoy(p);
+  return daysBetween(today(), p.fecha) < 0 || !hoy ? 'data-act="presOpen" data-pv="plan"' : `data-act="presOpen" data-pv="sesion" data-ses="${hoy.id}"`;
+}
+function pilarCards() {
+  const p = pres(), pendiente = p && (!p.bloques || !p.bloques.length), paso = p && !pendiente && daysBetween(today(), p.fecha) < 0;
+  return `<button class="card pilar ar-acad" ${presBtnAttrs()}>
+      <span class="card-head"><span class="s-icon big">${ICON_PRES}</span><span><span class="eyebrow ar">Presentaciones</span><h3>${pendiente ? esc(p.tema || "Mi presentación") : paso ? "¿Cómo te fue?" : "Una disertación"}</h3></span></span>
+      <span class="meta">${pendiente ? "Te falta cargar tu presentación o tu guion para crear el plan." : paso ? `Cuéntanos cómo te fue con «${esc(p.tema)}» y prepara la siguiente.` : "Sube tu PowerPoint, Canva o guion. Aura arma tu plan hasta el día de la presentación."}</span>
+      <span class="pill-cta solid">${pendiente ? "Continuar" : paso ? "Contar" : "Empezar"} ${ICON_GO}</span></button>
+    <button class="card pilar ar-lab" data-act="tab" data-tab="entrevistas">
+      <span class="card-head"><span class="s-icon big">${ICON_ENT}</span><span><span class="eyebrow ar">Entrevistas</span><h3>Una entrevista de trabajo</h3></span></span>
+      <span class="meta">Descubre tus fortalezas y debilidades, arma tus respuestas y ensaya por voz.</span>
+      <span class="pill-cta">Empezar ${ICON_GO}</span></button>`;
+}
+function presHomeCard(p) {
+  const d = daysBetween(today(), p.fecha), pl = presPlan(p), all = presSesiones(pl), hechas = all.filter(s => p.done[s.id]).length, hoy = presHoy(p);
+  const pc = all.length ? Math.round(hechas / all.length * 100) : 0;
+  return `<button class="card pres-hero home-plan ar-acad" data-act="presOpen" data-pv="${hoy ? "sesion" : "plan"}" ${hoy ? `data-ses="${hoy.id}"` : ""}>
+      <span class="hp-top"><span><span class="eyebrow ar">Tu próxima presentación</span><h2>${esc(p.tema)}</h2><span class="meta">${esc(fechaLarga(p.fecha))} · ${p.minutos} min</span></span>
+        <span class="count-ring" aria-label="${d === 0 ? "Hoy presentas" : d === 1 ? "Presentas mañana" : "Faltan " + d + " días"}"><b>${d === 0 ? "Hoy" : d}</b>${d === 0 ? "" : `<small>${d === 1 ? "día" : "días"}</small>`}</span></span>
+      <span class="barlabel"><span>Plan ${esc(PLAN_NOM[pl.tipo])}</span><span class="mono">${hechas} de ${all.length} sesiones</span></span><span class="bar" aria-hidden="true"><i style="width:${pc}%"></i></span>
+      <span class="hp-go">${hoy ? `${ICON_PLAY} Seguir con la sesión de hoy · ${hoy.min} min` : "Hoy ya cumpliste. Ver mi plan"}</span></button>`;
+}
+function hoyList(p) {
+  const pl = presPlan(p), dia = pl && pl.dias.find(x => x.f === today()); if (!dia) return "";
+  const hoy = presHoy(p);
+  return `<div class="stack" style="gap:6px"><h3>Hoy</h3>${dia.ses.map(s => { const ok = !!p.done[s.id], cur = hoy && hoy.id === s.id;
+    return `<button class="hoy-row${ok ? " ok" : ""}${cur ? " cur" : ""}" data-act="presOpen" data-ses="${s.id}"><span class="hoy-ck" aria-hidden="true">${ok ? ICON_CHECK : ""}</span><span class="hoy-t">${esc(PR.SES[s.tipo].titulo)}${s.n ? " " + s.n : ""}</span><span class="note" style="margin:0">${s.min} min</span></button>`; }).join("")}</div>`;
+}
 function vInicio() {
-  const p = progress.profile, g = gProg(), lv = levelOf(g), r = recommend(), rp = sProg(r.id), pa = paisObj();
-  const goalLbl = (GOALS.find(x => x.id === p.goal) || {}).label || "";
+  const p = progress.profile, pa = paisObj(), act = presActiva(), st = streak();
   const banner = S.paisAuto && !progress.dismiss.paisBanner
     ? `<div class="banner"><span class="flag" aria-hidden="true">${pa.bandera}</span><p>Aura ahora se adapta a tu país: <b>${esc(pa.nombre)}</b>. <button class="linkish" data-act="paisOpen">Cambiar</button></p><button class="x" data-act="dismissPais" aria-label="Cerrar aviso">×</button></div>` : "";
-  const bl = progress.baselines;
-  const prueba = !bl.length
-    ? `<button class="card" data-act="prOpen"><span class="tag">60 segundos</span><h3>Mide tu punto de partida</h3><span class="meta">Preséntate por voz y descubre tu ritmo y tus muletillas. Así verás tu avance real.</span><span class="cta">Hacer la prueba →</span></button>`
-    : (daysBetween(bl[bl.length - 1].d, today()) >= 30
-      ? `<button class="card" data-act="prOpen"><span class="tag">Ya pasó un mes</span><h3>Mide tu avance</h3><span class="meta">Repite la prueba de 60 segundos y compárala con tu punto de partida.</span><span class="cta">Repetir la prueba →</span></button>` : "");
-  return `<section class="greet"><div class="avatar" aria-hidden="true">${esc(initials(p.name))}</div>
-      <div><p class="eyebrow">${esc(lv.name)} · ${pa.bandera} ${esc(pa.nombre)}</p><h1 style="font-size:clamp(1.7rem,5vw,2.2rem)">Hola, ${esc(p.name)}.</h1></div></section>
-    <section class="section">${banner}${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
-      ${presCard()}
-      ${eventoCard()}
-      ${retoCard()}
-      <div class="kpis">
-        <div class="kpi"><b>${streak()}</b><span>${streak() === 1 ? "día seguido" : "días seguidos"}</span></div>
-        <div class="kpi"><b>${(progress.pres && progress.pres.ensayos ? progress.pres.ensayos.length : 0) + (progress.presHist || []).reduce((a, h) => a + (h.ensayos || 0), 0)}</b><span>ensayos completos</span></div>
-        <div class="kpi"><b>${g}%</b><span>progreso en situaciones</span></div>
-      </div>
-      <button class="card ${arCls(r.area)}" data-act="tab" data-tab="practica">
-        <span class="tag quiet">Más situaciones</span>
-        <span class="card-head"><span class="s-icon">${iconFor(r.id, r.area)}</span><span><h3>Entrevistas, ventas, citas y más</h3><span class="meta">${listReady().length} conversaciones simuladas que reaccionan a lo que dices. Sugerida: ${esc(tx(r.name))}.</span></span></span>
-        <span class="cta">Ver situaciones →</span>
-      </button>
-      ${heroPhoto("sm")}
-      ${prueba}
-      <p class="note">Objetivo: ${esc(goalLbl)}. <button class="linkish" data-act="tab" data-tab="ajustes">Editar perfil</button></p>
+  const hola = `<p class="note" style="margin:0">Hola, ${esc(p.name)}${st > 0 ? ` · <b style="color:var(--accent)">${st} ${st === 1 ? "día seguido" : "días seguidos"}</b>` : ""}</p>`;
+  if (act) return `<section class="section home">${banner}${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}${hola}
+      ${presHomeCard(act)}
+      ${hoyList(act)}
+      <button class="link-card ar-lab" data-act="tab" data-tab="entrevistas"><span class="s-icon">${ICON_ENT}</span><span class="stack" style="gap:2px"><b>¿También tienes una entrevista?</b><span class="note" style="margin:0">Prepárala en paralelo</span></span><span class="arrow">›</span></button>
     </section>`;
+  return `<section class="section home">${banner}${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
+      <div class="stack" style="gap:6px">${hola}<h1 class="home-q">¿Qué tienes que preparar?</h1></div>
+      ${pilarCards()}
+      <ol class="how3"><li><span>1</span>Dinos la fecha</li><li><span>2</span>Aura arma tu plan</li><li><span>3</span>Practica cada día</li></ol>
+    </section>`;
+}
+
+/* ===================== VISTA: PILARES ===================== */
+function vPresHub() {
+  const p = pres(), hist = (progress.presHist || []).slice().reverse(), conB = p && p.bloques && p.bloques.length;
+  const RES = { bien: "Me fue bien", regular: "Más o menos", mal: "Me costó" };
+  const sim = (id, titulo, sub) => { const m = meta(id); if (!m || !m.ready) return "";
+    return `<button class="card mini ar-acad" data-act="open" data-id="${id}"><span class="s-icon">${iconFor(id, m.area)}</span><b>${titulo}</b><span class="note" style="margin:0">${sub}</span></button>`; };
+  return `<section class="section">${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
+    <div class="hub-head ar-acad"><div><p class="eyebrow ar">Pilar 1</p><h2>Presentaciones</h2></div>
+      ${p ? `<button class="btn primary" data-act="presNewAsk">+ Nueva</button>` : ""}</div>
+    ${S.confirm === "presNueva" ? `<div class="confirm"><span>¿Empezar una nueva? «${esc(p.tema || "Tu presentación")}» pasa a tu historial.</span><button class="btn primary" data-act="presNewYes">Sí, nueva</button><button class="btn ghost" data-act="cancelConfirm">Cancelar</button></div>` : ""}
+    ${presCard()}
+    <div class="stack" style="gap:8px"><div><h3>Simula frente al público</h3><p class="note" style="margin:2px 0 0">Practica las preguntas que vienen después de presentar.</p></div>
+      <div class="grid2">${sim("disertacion", "Preguntas del profesor", "Disertación en clases")}${sim("presentacion", "Defensa de proyecto", "Presentación ante comisión")}</div></div>
+    <div class="stack" style="gap:8px"><h3>Herramientas</h3>
+      <div class="panel tools">
+        <button class="tool-row" data-act="presSes" data-ses="libre-relevo" ${conB ? "" : "disabled"}><span class="s-icon">${SES_ICON.relevo}</span><span class="hoy-t">Relevo de conectores</span><span class="note" style="margin:0">3 min</span></button>
+        <button class="tool-row" data-act="presSes" data-ses="libre-ensayo" ${conB ? "" : "disabled"}><span class="s-icon">${SES_ICON.ensayo}</span><span class="hoy-t">Ensayo libre cronometrado</span><span class="note" style="margin:0">${p ? p.minutos : 5} min</span></button>
+        ${sw("silencio", "Modo silencioso", "Para el metro, la micro o la biblioteca: escribes en vez de hablar.")}
+      </div>
+      ${conB ? "" : `<p class="note" style="margin:0">Relevo y Ensayo libre se activan cuando cargas tu presentación.</p>`}</div>
+    ${hist.length ? `<div class="stack" style="gap:6px"><h3>Ya presentaste</h3>${hist.slice(0, 5).map(h => `<div class="hist-row"><span>${esc(h.tema)} · ${esc(fechaLarga(h.fecha))}</span><b class="${h.resultado === "bien" ? "good" : h.resultado === "mal" ? "warn" : ""}">${RES[h.resultado] || ""}</b></div>`).join("")}</div>` : ""}
+  </section>`;
+}
+function vEntrevistas() {
+  const step = (n, titulo, desc, estado, extra) => `<li class="paso${estado === "on" ? " on" : ""}"><span class="paso-n">${n}</span><div class="stack" style="gap:6px;min-width:0">
+      <div class="paso-h"><b>${titulo}</b><span class="badge ${estado === "on" ? "ok" : ""}">${estado === "on" ? "Disponible" : "Próximamente"}</span></div>
+      <span class="meta">${desc}</span>${extra || ""}</div></li>`;
+  const simBtns = ["entrevista", "practica"].filter(id => meta(id) && meta(id).ready).map((id, i) => { const rec = progress.sims[id] || {};
+    return `<button class="btn${i === 0 ? " primary lab" : " lab-ghost"}" data-act="open" data-id="${id}">${id === "entrevista" ? "Entrevista de trabajo" : "Entrevista de práctica"}${rec.best ? ` · mejor ${rec.best}` : ""}</button>`; }).join("");
+  return `<section class="section">${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
+    <div class="hub-head ar-lab"><div><p class="eyebrow ar">Pilar 2</p><h2>Entrevistas</h2><p class="lead" style="margin:4px 0 0">Llega a tu entrevista sabiendo qué decir, en cuatro pasos.</p></div></div>
+    ${eventoCard()}
+    <ol class="pasos ar-lab">
+      ${step(1, "Conócete", "Test guiado de fortalezas y debilidades. Marca con cuáles te identificas y con cuáles no.", "pronto")}
+      ${step(2, "Arma tus respuestas", "«Cuéntame de ti», tu mayor debilidad, un logro y un conflicto, con estructura.", "pronto")}
+      ${step(3, "Simula la entrevista", "Responde por voz y mira cómo reacciona el entrevistador.", "on", `<div class="row">${simBtns}</div>`)}
+      ${step(4, "Pitch y video currículum", "Tu presentación de 60 segundos: guion, ensayo cronometrado y grabación.", "pronto")}
+    </ol>
+  </section>`;
 }
 
 /* ===================== VISTA: PRÁCTICA ===================== */
@@ -1595,7 +1675,7 @@ function vScenario() {
   const s = scen(), pers = persOf(s.id), mins = Math.max(3, Math.round(s.turnos * 0.75));
   const rows = s.words.map(w => { const b = Math.min(3, progress.words[w.id] || 0);
     return `<div class="vrow"><span class="from">${esc(w.col)}</span><span class="arrow">→</span><span class="to">${esc(w.pro)}<span class="alt">también: ${esc(w.alt)}</span></span><span class="dots" title="${b} de 3 aciertos">${[0, 1, 2].map(i => `<i class="${i < b ? "on" : ""}"></i>`).join("")}</span></div>`; }).join("");
-  return `<section class="section"><button class="back" data-act="list">← Escenarios</button>
+  return `<section class="section"><button class="back" data-act="list">← ${PILAR_NOM[pilarDe(S.sid)]}</button>
     <div class="card-head ${arCls(s.area)}"><span class="s-icon">${iconFor(s.id, s.area)}</span><div><p class="eyebrow ar">${esc(s.area)} · ${esc(s.who)}</p><h2>${esc(s.name)}</h2></div></div>
     ${stepper("open")}
     ${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
@@ -1837,7 +1917,7 @@ function baselineCard() {
     <div class="row"><button class="btn${since >= 30 ? " primary" : ""}" data-act="prOpen">Repetir la prueba</button>${since < 30 ? `<span class="note">Te recomendamos repetirla en ${30 - since} días.</span>` : ""}</div></div>`;
 }
 function vProgreso() {
-  const g = gProg(), lv = levelOf(g), p = progress.profile;
+  const p = progress.profile;
   const sims = Object.values(progress.sims).reduce((a, x) => a + (x.attempts || 0), 0);
   const voiced = progress.history.filter(e => e.ppm);
   const avgPpm = voiced.length ? Math.round(voiced.reduce((a, e) => a + e.ppm, 0) / voiced.length) : null;
@@ -1849,26 +1929,31 @@ function vProgreso() {
       <span class="barlabel"><span style="color:var(--fg);font-weight:700">${esc(tx(s.name))}</span><span class="mono">${sp}%</span></span>
       <span class="bar" aria-hidden="true"><i style="width:${sp}%"></i></span>
       <span class="barlabel"><span>${m}/${s.n} palabras</span><span>${rec.best ? "mejor: " + rec.best + (rec.lastFin ? " · último: " + FIN_NAME[rec.lastFin].toLowerCase() : "") : "sin simular"}</span></span></div></div>`; }).join("");
-  return `<section class="ring-row"><div class="ring" style="--p:${g}" role="img" aria-label="Progreso total ${g}%"><span><b class="mono">${g}%</b><small>progreso total</small></span></div>
-      <div><p class="eyebrow">Tu nivel</p><h2>${esc(lv.name)}</h2><p class="note" style="margin-top:4px">${lv.next ? `Te faltan ${lv.next[0] - g} puntos para <b style="color:var(--accent)">${esc(lv.next[1])}</b>.` : "Llegaste al nivel máximo."}</p></div></section>
-    <section class="section">
-      <div class="kpis two">
-        <div class="kpi"><b>${masteredCount()}/${totalWords()}</b><span>palabras dominadas</span></div>
-        <div class="kpi"><b>${sims}</b><span>simulaciones completadas</span></div>
-        <div class="kpi"><b>${streak()}</b><span>${streak() === 1 ? "día seguido practicando" : "días seguidos practicando"}</span></div>
-        <div class="kpi"><b>${bestStreak()}</b><span>tu mejor racha (días)</span></div>
-        <div class="kpi"><b>${retosCount()}</b><span>retos diarios completados</span></div>
-        <div class="kpi"><b>${p ? p.confStart + " → " + p.confNow : "—"}</b><span>confianza (1 a 5): inicio → hoy</span></div>
+  const pr = pres(), hist = progress.presHist || [], nPres = hist.length + (pr && pr.bloques && pr.bloques.length ? 1 : 0);
+  const ens = (pr && pr.ensayos || []).slice(-5).reverse();
+  const nEnt = ["entrevista", "practica"].reduce((a, id) => a + ((progress.sims[id] || {}).attempts || 0), 0);
+  const extra = listReady().filter(s => pilarDe(s.id) === "progreso");
+  return `<section class="section"><div><p class="eyebrow">Tu avance</p><h2>Progreso</h2></div>
+      <div class="kpis">
+        <div class="kpi"><b>${streak()}</b><span>${streak() === 1 ? "día seguido" : "días seguidos"}</span></div>
+        <div class="kpi"><b>${nPres}</b><span>${nPres === 1 ? "presentación preparada" : "presentaciones preparadas"}</span></div>
+        <div class="kpi"><b>${nEnt}</b><span>${nEnt === 1 ? "entrevista simulada" : "entrevistas simuladas"}</span></div>
       </div>
-      <div class="panel"><div><h3>Tu semana</h3><p class="note">✓ reto diario completado · • practicaste sin hacer el reto. Cualquier práctica mantiene tu racha.</p></div>${weekStrip()}</div>
+      <div class="panel"><div><h3>Tus ensayos</h3><p class="note">Ensayos completos de tu presentación actual: tiempo, ideas clave dichas y muletillas.</p></div>
+        ${ens.length ? ens.map(e => `<div class="hist-row"><span>${esc(e.at)} · ${PR.fmt(e.secs)}</span><span>${e.cov}% ideas${e.mpm != null ? " · " + e.mpm + " mul/min" : ""}</span></div>`).join("")
+          : `<p class="empty">Cuando hagas un ensayo completo de tu presentación, aparece aquí.</p>`}</div>
+      <div class="panel"><div><h3>Tu semana</h3><p class="note">Los días que practicaste. Cualquier práctica mantiene tu racha (mejor racha: ${bestStreak()} días).</p></div>${weekStrip()}</div>
       ${baselineCard()}
       <div class="panel"><div><h3>Últimas simulaciones</h3><p class="note">Puntaje de cada intento (0 a 100).</p></div>${scoresChart()}</div>
-      <div class="panel"><h3>Por escenario</h3>${rows}</div>
+      <div class="panel"><h3>Simulaciones por escenario</h3>${rows}</div>
       <div class="panel"><h3>Tu voz en las simulaciones</h3>
         ${avgPpm ? `<div class="kpis two"><div class="kpi"><b>${avgPpm}</b><span>palabras por minuto (ideal ${M.PPM_RANGE[0]}–${M.PPM_RANGE[1]})</span></div><div class="kpi"><b>${avgMpm}</b><span>muletillas por minuto</span></div></div>`
         : `<p class="empty">Responde por voz en los turnos libres de una simulación para medir tu ritmo y tus muletillas.</p>`}
       </div>
-      ${p ? `<p class="note">¿Sientes que ganaste confianza? Actualízala en <button class="linkish" data-act="tab" data-tab="ajustes">Ajustes</button>.</p>` : ""}
+      ${extra.length ? `<details class="extra"><summary><span class="stack" style="gap:2px"><b>Práctica extra</b><span class="note" style="margin:0">Escenarios con guion fijo · beta</span></span><span class="arrow" aria-hidden="true">›</span></summary>
+        <p class="note">Para soltarte en otras situaciones. No se adaptan a tu caso.</p>
+        <div class="extra-chips">${extra.map(s => `<button class="fchip ${arCls(s.area)}" data-act="open" data-id="${s.id}">${esc(tx(s.name))}</button>`).join("")}</div></details>` : ""}
+      ${p ? `<p class="note">¿Sientes que ganaste confianza (${p.confStart} → ${p.confNow})? Actualízala en <button class="linkish" data-act="tab" data-tab="ajustes">Ajustes</button>.</p>` : ""}
     </section>`;
 }
 
@@ -1998,7 +2083,7 @@ function onAct(e) {
       save(); if (R.correct >= R.qs.length - 1) fanfare(); else chime();
       S.anim = "up"; render(); break; }
     case "area": S.area = el.dataset.area; render(); break;
-    case "list": leaveSim(); go({ tab: "practica", view: "list" }, "left"); break;
+    case "list": leaveSim(); go({ tab: pilarDe(S.sid), view: "list" }, "left"); break;
     case "open": { const back = ["practice", "sim", "results"].includes(S.view) && S.tab === "practica"; openScen(el.dataset.id || S.sid, back ? "left" : "right"); break; }
     case "pers": progress.pers[S.sid] = el.dataset.p; save(); render(); break;
     case "startPractice": if (el.dataset.id) S.sid = el.dataset.id; leaveSim(); startPractice(); break;

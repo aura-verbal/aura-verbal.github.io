@@ -116,6 +116,45 @@
     });
     return { kind: "guion", text: lines.join("\n").replace(/\n{3,}/g, "\n\n") };
   }
+  /* ---------- Currículum: texto plano, respetando dos columnas ----------
+     Muchas plantillas de CV (Canva, Word) usan una columna lateral. Si se juntan los textos por altura,
+     el título «Idiomas» de la izquierda queda pegado a una viñeta de la derecha. Por eso cada fila se corta
+     donde hay un hueco grande, y si la página tiene una segunda columna con texto corrido, se lee primero
+     la izquierda completa y después la derecha. */
+  async function readCvPdf(file) {
+    await loadScript("js/vendor/pdf.min.js");
+    const lib = root.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = "js/vendor/pdf.worker.min.js";
+    const pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise, out = [];
+    for (let i = 1; i <= Math.min(pdf.numPages, 6); i++) {
+      const pg = await pdf.getPage(i), W = pg.getViewport({ scale: 1 }).width, tc = await pg.getTextContent(), rows = [];
+      tc.items.forEach(it => {
+        const s = (it.str || "").replace(/\s+/g, " "); if (!s.trim()) return;
+        const y = Math.round(it.transform[5]), h = Math.abs(it.transform[3]) || it.height || 10;
+        let r = rows.find(r => Math.abs(r.y - y) <= Math.max(2, h * 0.4));
+        if (!r) { r = { y, parts: [] }; rows.push(r); }
+        r.parts.push({ x: it.transform[4], w: it.width || s.length * h * 0.5, s, h });
+      });
+      rows.sort((a, b) => b.y - a.y);
+      const segs = [];
+      rows.forEach(r => { r.parts.sort((a, b) => a.x - b.x); let cur = null;
+        r.parts.forEach(p => { if (cur && p.x - cur.fin > Math.max(24, p.h * 2.5)) { segs.push(cur); cur = null; }
+          if (!cur) cur = { y: r.y, x: p.x, fin: p.x + p.w, s: p.s }; else { cur.s += (p.x - cur.fin > 1 ? " " : "") + p.s; cur.fin = p.x + p.w; } });
+        if (cur) segs.push(cur); });
+      const corte = W * 0.3, der = segs.filter(s => s.x >= corte && s.s.trim().split(" ").length >= 4 && s.s.trim().length > 25);
+      const dosCol = der.length >= 6 && segs.filter(s => s.x < corte && s.fin < W * 0.5).length >= 6;
+      const lin = dosCol ? segs.filter(s => s.x < corte).concat(segs.filter(s => s.x >= corte)) : rows.map(r => ({ s: segs.filter(s => s.y === r.y).map(s => s.s).join("  ") }));
+      out.push(lin.map(s => s.s.replace(/\s+/g, " ").trim()).filter(Boolean).join("\n"));
+    }
+    return { text: out.join("\n"), paginas: pdf.numPages };
+  }
+  async function readCv(file) {
+    const name = (file.name || "").toLowerCase();
+    if (name.endsWith(".pdf") || file.type === "application/pdf") return readCvPdf(file);
+    if (name.endsWith(".docx")) { const r = await readDocx(file); return { text: r.text, paginas: 0 }; }
+    if (name.endsWith(".txt") || /^text\//.test(file.type)) return { text: await file.text(), paginas: 0 };
+    if (name.endsWith(".doc")) throw new Error("doc");
+    throw new Error("formato");
+  }
   async function importFile(file) {
     const name = (file.name || "").toLowerCase();
     if (name.endsWith(".pptx")) return readPptx(file);
@@ -125,5 +164,5 @@
     if (name.endsWith(".ppt") || name.endsWith(".doc") || name.endsWith(".key")) return { kind: "antiguo" };
     return { kind: "desconocido" };
   }
-  root.AuraImport = { importFile, readPptx, readPdf, readDocx };
+  root.AuraImport = { importFile, readPptx, readPdf, readDocx, readCv };
 })(typeof window !== "undefined" ? window : globalThis);

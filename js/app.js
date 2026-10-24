@@ -1815,10 +1815,13 @@ function vPitch() {
     const okT = Math.abs(secs - meta) <= meta * 0.15;
     const CHECK = [["fondo", "Fondo claro y ordenado"], ["luz", "Luz de frente (una ventana o lámpara frente a ti, no detrás)"], ["altura", "Celular fijo a la altura de los ojos (trípode o unos libros)"],
       ["ropa", "Ropa acorde a la empresa a la que postulas"], ["mirada", "Miras al lente en el saludo y en el cierre"], ["final", "Pantalla final con tu nombre, teléfono, correo y LinkedIn"]];
-    return `<section class="section"><button class="back" data-act="ptPaso" data-d="-1">← Editar respuestas</button>
+    return `<section class="section">${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}<button class="back" data-act="ptPaso" data-d="-1">← Editar respuestas</button>
       <div><p class="eyebrow">${esc((PT.TIPOS[p.tipo] || PT.TIPOS.video).nombre)}</p><h2>Tu pitch</h2></div>
       <div class="kpis two"><div class="kpi"><b class="${okT ? "good" : "warn"}">${PR.fmt(secs)}</b><span>de ${PR.fmt(meta)} recomendados</span></div><div class="kpi"><b>${PT.words(txt)}</b><span>palabras</span></div></div>
       ${revs.length ? `<div class="panel"><h3>Antes de grabar</h3>${revs.map(r => `<p class="fb ${r.nivel === "no" ? "no" : r.nivel === "mid" ? "mid" : "ok"}" style="margin:0">${esc(r.txt)}</p>`).join("")}</div>` : `<p class="fb ok">Tu relato tiene las 7 partes y está dentro del tiempo.</p>`}
+      ${(() => { const c = cvData(), sug = c ? cvSugerencias() : [];
+        if (!c) return `<p class="note" style="margin:0">¿Tienes CV? <button class="linkish" data-act="entIr" data-v="cv" data-from="pitch">Súbelo</button> y te decimos qué tienes ahí y no estás usando en tu pitch.</p>`;
+        return sug.length ? `<div class="panel"><h3>De tu CV, y no está en tu pitch</h3>${cvSugHTML(sug)}</div>` : ""; })()}
       <div class="field"><label for="ptGuion">Tu guion (puedes editarlo)</label><textarea id="ptGuion" class="esc-ta" rows="12">${esc(txt)}</textarea>
         ${p.editado ? `<span class="note">Lo editaste a mano. <button class="linkish" data-act="ptRegen">Volver a armarlo desde tus respuestas</button></span>` : `<span class="note">Si cambias tus respuestas, el guion se vuelve a armar solo.</span>`}</div>
       <div class="row"><button class="btn primary" data-act="vidOpen" data-from="pitch">${ICON_CAM} ${p.tipo === "video" ? "Grabar con teleprompter" : "Practicar con teleprompter"}</button>
@@ -2112,7 +2115,93 @@ function vEnt() {
   if (v === "resp") return vResp();
   if (v === "respEdit") return vRespEdit();
   if (v === "pract") return vPract();
+  if (v === "cv") return vCv();
   S.sub = null; return vEntrevistas();
+}
+/* ---------- Tu CV: leerlo, compararlo con el pitch y revisarlo ----------
+   El CV se lee y se analiza dentro del celular (js/cv.js). Nada se agrega solo: cada sugerencia se confirma. */
+const CVM = window.AuraCV, PRO = window.AuraPro;
+const ICON_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+function cvData() { const c = perfil().cv; return c && t2(c.texto) ? c : null; }
+function cvInfo() { const c = cvData(); return c ? CVM.extraer(c.texto, { paginas: c.paginas }) : null; }
+const cvKey = s => s.id + "|" + s.txt.slice(0, 60);
+function cvSugerencias() {
+  const c = cvData(); if (!c) return [];
+  return CVM.compararPitch(cvInfo(), pitchData(), perfil()).filter(s => !(c.descartes || []).includes(cvKey(s)));
+}
+function cvSugHTML(list) {
+  return list.map((s, i) => `<div class="cv-sug"><p>${esc(s.txt)}</p><div class="row">${s.acciones.map((a, j) => `<button class="btn sm${j ? "" : " primary"}" data-act="cvAplicar" data-i="${i}" data-j="${j}">${esc(a.lbl)}</button>`).join("")}
+    <button class="linkish" data-act="cvDescartar" data-i="${i}">No aplica</button></div></div>`).join("");
+}
+function proCards(ids) {
+  return ids.map(id => { const f = PRO.FUNCIONES[id]; return `<div class="pro-card lock"><span class="tag">${ICON_LOCK} Aura Pro · próximamente</span><p><b>${esc(f.nombre)}.</b> ${esc(f.desc)}</p>
+    <button class="btn sm" disabled aria-disabled="true">${ICON_LOCK} Disponible con Aura Pro</button></div>`; }).join("");
+}
+function vCv() {
+  const E = S.ev, c = cvData(), back = E.from === "pitch" ? ["cvVolver", "Tu pitch"] : ["entSalir", "Entrevistas"];
+  const head = entHead("Tu CV", "Pitch y video currículum", back[0], back[1]) + (S.toast ? `<p class="toast">${esc(S.toast)}</p>` : "");
+  const subir = (lbl, cls) => `<label class="${cls}" for="cvFile">${lbl}</label><input type="file" id="cvFile" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" class="sr-only">`;
+  const err = E.err ? `<p class="fb no" style="margin:0">${esc(E.err)}</p>` : "";
+  if (E.cargando) return `<section class="section">${head}<p class="lead">Leyendo tu CV…</p></section>`;
+  if (!c) return `<section class="section">${head}
+    <p class="lead" style="margin:0">Súbelo y Aura busca lo que tienes en tu CV y no estás aprovechando en tu pitch. También te dice qué mejorar en el CV.</p>${err}
+    ${subir(`<span class="card-head"><span class="s-icon">${SES_ICON.lectura}</span><span><h3>Subir mi CV</h3><span class="meta">PDF o Word (.docx).</span></span></span>`, "card load-opt")}
+    ${E.pegar ? `<div class="field"><label for="cvPegar">Pega el texto de tu CV</label><textarea id="cvPegar" class="esc-ta" rows="10" placeholder="Copia todo el texto de tu CV y pégalo aquí."></textarea></div><button class="btn primary wide" data-act="cvPegarOk">Usar este texto</button>`
+      : `<button class="card load-opt" data-act="cvPegar"><span class="card-head"><span class="s-icon">${SES_ICON.bloques}</span><span><h3>Pegar el texto</h3><span class="meta">Si tu CV es una imagen o no se lee bien.</span></span></span></button>`}
+    <p class="note">Tu CV se queda en este celular: Aura no lo sube a ningún servidor.</p>
+    ${proCards(["cvReescribir", "cvOferta"])}</section>`;
+  const cv = cvInfo(), pp = progress.pitch, hayPitch = pp && t2(pp.carrera), sug = cvSugerencias(), revs = CVM.revisar(cv, perfil(), pp), bl = CVM.bloques(perfil(), pp);
+  const chips = cv.herramientas.map(h => h.nombre).concat(cv.idiomas.map(i => i.nombre)).map(x => `<span class="kchip">${esc(x)}</span>`).join("");
+  const copia = (k, titulo, cuerpo) => `<div class="cv-blk"><div class="cv-blk-h"><b>${titulo}</b><button class="btn sm" data-act="cvCopy" data-b="${k}">Copiar</button></div>${cuerpo}</div>`;
+  return `<section class="section">${head}${err}
+    <div class="panel"><p style="margin:0"><b>${esc(c.nombre || "Tu CV")}</b><br><span class="note" style="margin:0">${cv.paginas} ${cv.paginas === 1 ? "página" : "páginas"} · ${cv.palabras} palabras · ${cv.cargos.length} ${cv.cargos.length === 1 ? "cargo" : "cargos"} con fechas · ${cv.cifras.length} resultados con números</span></p>
+      ${chips ? `<div class="pb-keys">${chips}</div>` : ""}
+      ${cv.palabras < 60 ? `<p class="fb mid" style="margin:0">Casi no encontramos texto: tu CV parece una imagen. Expórtalo como PDF con texto (en Canva: Descargar → PDF estándar) o pega el texto.</p>` : `<p class="note" style="margin:0">Si falta algo, puede ser por el diseño del archivo. Puedes pegar el texto en su lugar.</p>`}</div>
+    <h3 class="cv-h">Para tu pitch</h3>
+    ${!hayPitch ? `<p class="note" style="margin:0">Arma tu pitch y aquí verás lo que tu CV tiene y tu pitch no.</p><button class="btn primary" data-act="ptOpen">Armar mi pitch</button>`
+      : sug.length ? cvSugHTML(sug) + `<button class="btn" data-act="ptOpen" data-fin="1">Ver mi pitch</button>` : `<p class="fb ok" style="margin:0">Tu pitch ya aprovecha lo principal de tu CV.</p>`}
+    <h3 class="cv-h">Revisión de tu CV</h3>
+    ${revs.length ? revs.map(r => `<div class="fb ${r.n === "no" ? "no" : r.n === "mid" ? "mid" : "ok"} cv-rev"><span>${esc(r.txt)}</span>${r.ej.length ? `<small>Por ejemplo: ${r.ej.map(x => "«" + esc(x) + "»").join(" · ")}</small>` : ""}</div>`).join("") : `<p class="fb ok" style="margin:0">No encontramos problemas con nuestras reglas. ¡Buen CV!</p>`}
+    <p class="note" style="margin:0">La revisión usa reglas simples: puede equivocarse. Tú decides qué cambiar.</p>
+    <h3 class="cv-h">Para copiar a tu CV</h3>
+    <p class="note" style="margin:0">Armado con tu autodiagnóstico, tus logros y tu pitch. Tus debilidades no van en el CV: son para la entrevista.</p>
+    ${bl.perfil ? copia("perfil", "Perfil profesional", `<p>${esc(bl.perfil)}</p>`) : `<p class="note" style="margin:0">Arma tu pitch para generar tu perfil profesional.</p>`}
+    ${bl.competencias.length ? copia("competencias", "Competencias", `<p>${esc(bl.competencias.join(" · "))}</p>`) : ""}
+    ${bl.logros.length ? copia("logros", "Logros como viñetas", `<ul>${bl.logros.map(l => `<li>${esc(l)}</li>`).join("")}</ul>`) : ""}
+    ${proCards(["cvReescribir", "cvOferta", "cvProfunda"])}
+    <div class="row">${subir("Cambiar mi CV", "btn")}<button class="btn danger" data-act="cvBorrar">Borrar mi CV</button></div>
+  </section>`;
+}
+async function cvImport(file) {
+  const E = S.ev; E.err = null; E.cargando = true; render();
+  try {
+    const r = await window.AuraImport.readCv(file), txt = t2(r.text);
+    if (txt.split(/\s+/).length < 30) E.err = "No pudimos leer el texto de tu CV: parece una imagen. Expórtalo como PDF con texto, súbelo en Word o pega el texto.";
+    else { perfil().cv = { nombre: file.name, paginas: r.paginas || 0, texto: r.text.slice(0, 30000), fecha: today(), descartes: [] }; save(); }
+  } catch (e) {
+    E.err = e.message === "doc" ? "Ese es un Word antiguo (.doc). Guárdalo como .docx o PDF y súbelo de nuevo." : e.message === "formato" ? "Sube tu CV en PDF o Word (.docx)." : "No pudimos leer ese archivo. Prueba con otro formato o pega el texto.";
+  }
+  E.cargando = false; render();
+}
+function cvAct(a, el) {
+  const p = perfil(), pp = pitchData();
+  switch (a) {
+    case "cvPegar": S.ev.pegar = true; render(); return true;
+    case "cvPegarOk": { const v = (document.getElementById("cvPegar") || {}).value || "";
+      if (t2(v).split(/\s+/).length < 30) { S.ev.err = "Pega el texto completo de tu CV (con tus secciones)."; render(); return true; }
+      p.cv = { nombre: "CV pegado", paginas: 0, texto: v.slice(0, 30000), fecha: today(), descartes: [] }; S.ev.err = null; S.ev.pegar = false; save(); render(); return true; }
+    case "cvBorrar": delete p.cv; S.ev.pegar = false; save(); render(); return true;
+    case "cvVolver": S.pt = { paso: PT_PASOS.length }; leaveSim(); go({ sub: "pitch" }, "left"); return true;
+    case "cvDescartar": { const s = cvSugerencias()[+el.dataset.i]; if (s) { p.cv.descartes = (p.cv.descartes || []).concat([cvKey(s)]); save(); render(); } return true; }
+    case "cvAplicar": { const s = cvSugerencias()[+el.dataset.i], ac = s && s.acciones[+el.dataset.j]; if (!ac) return true;
+      if (ac.k === "exp") { S.pt = { paso: PT_PASOS.findIndex(x => x.k === "experiencia") }; leaveSim(); go({ sub: "pitch" }, "right"); return true; }
+      const k = CVM.aplicar(ac, pp, p); if (k === "logro") p.cv.descartes = (p.cv.descartes || []).concat([cvKey(s)]); save();
+      S.toast = k === "logro" ? "Guardado en tus logros: complétalo con el momento y el resultado." : pp.editado ? "Agregado a tus respuestas del pitch. Como editaste el guion a mano, usa «Volver a armarlo» para verlo." : "Listo, quedó en tu pitch.";
+      render(); return true; }
+    case "cvCopy": { const bl = CVM.bloques(p, pp), b = el.dataset.b, txt = b === "perfil" ? bl.perfil : b === "competencias" ? bl.competencias.join(" · ") : bl.logros.map(l => "• " + l).join("\n");
+      try { navigator.clipboard.writeText(txt).then(() => { el.textContent = "¡Copiado!"; }, () => {}); } catch (e) {} return true; }
+  }
+  return false;
 }
 function entMicGo() {
   const E = S.ev; E.live = ""; E.micErr = null; E.rec = true; entT0 = Date.now();
@@ -2139,7 +2228,7 @@ let respSubT = 0;
 function entAct(a, el) {
   const p = perfil();
   switch (a) {
-    case "entIr": entGo(el.dataset.v, el.dataset.v === "comps" && Object.keys(p.comps).length >= 6 ? { res: true } : {}); return true;
+    case "entIr": entGo(el.dataset.v, el.dataset.v === "comps" && Object.keys(p.comps).length >= 6 ? { res: true } : el.dataset.from ? { from: el.dataset.from } : {}); return true;
     case "entSalir": entMicStop(); go({ sub: null, tab: "entrevistas" }, "left"); return true;
     case "estPick": { const E = S.ev, i = E.i || 0; p.estilo.resp[i] = el.dataset.v; save();
       if (i < EN.PREG_ESTILO.length - 1) { E.i = i + 1; S.anim = "right"; } else { E.rehacer = false; chime(); S.anim = "up"; } render(); return true; }
@@ -2290,7 +2379,8 @@ function vEntrevistas() {
           `<button class="btn primary lab" data-act="simGo" ${nr ? "" : "disabled"}>${ICON_MIC} Simulación con tus respuestas</button>${nr ? "" : `<span class="note" style="margin:0">Arma al menos una respuesta en el paso 2.</span>`}
           <span class="note" style="margin:6px 0 0">O practica con un entrevistador que reacciona a lo que dices:</span><div class="row">${simBtns}</div>`); })()}
       ${step(4, "Pitch y video currículum", "Arma tu presentación personal en 7 partes y grábala con teleprompter. Sirve para el «cuéntame de ti» y para tu video currículum.", "on",
-        (() => { const pp = progress.pitch, listo = pp && pp.carrera && pp.busco; return `<div class="row"><button class="btn primary lab" data-act="ptOpen"${listo ? ' data-fin="1"' : ""}>${listo ? "Ver mi pitch" : "Armar mi pitch"}</button>${listo ? `<span class="note" style="margin:0">${esc((PT.TIPOS[pp.tipo] || PT.TIPOS.video).nombre)} · ${PR.fmt(PT.segundos(pitchTexto(pp)))}</span>` : ""}</div>`; })())}
+        (() => { const pp = progress.pitch, listo = pp && pp.carrera && pp.busco, c = cvData(), ns = c ? cvSugerencias().length : 0;
+          return `<div class="sub-list"><button class="sub-row" data-act="entIr" data-v="cv"><span class="hoy-ck" aria-hidden="true">${c ? ICON_CHECK : ""}</span><span class="stack" style="gap:1px;flex-grow:1"><b>Tu CV</b><small class="muted">${c ? (ns ? ns + (ns === 1 ? " sugerencia" : " sugerencias") + " para tu pitch" : "Revisión y bloques para copiar") : "Súbelo y te decimos qué no estás aprovechando"}</small></span><span class="arrow">›</span></button></div><div class="row"><button class="btn primary lab" data-act="ptOpen"${listo ? ' data-fin="1"' : ""}>${listo ? "Ver mi pitch" : "Armar mi pitch"}</button>${listo ? `<span class="note" style="margin:0">${esc((PT.TIPOS[pp.tipo] || PT.TIPOS.video).nombre)} · ${PR.fmt(PT.segundos(pitchTexto(pp)))}</span>` : ""}</div>`; })())}
     </ol>
   </section>`;
 }
@@ -2648,6 +2738,7 @@ app.addEventListener("change", e => {
   if (e.target.dataset && e.target.dataset.ptck) { const p = pitchData(); p.check[e.target.dataset.ptck] = e.target.checked; save(); return; }
   const t = e.target;
   if ((t.id === "pcFileA" || t.id === "pcFileB") && t.files && t.files[0]) { presImport(t.files[0]); t.value = ""; return; }
+  if (t.id === "cvFile" && t.files && t.files[0]) { cvImport(t.files[0]); t.value = ""; return; }
   if (t.id === "pdFecha" && S.pd) { S.pd.fecha = t.value; render(); return; }
   if (t.id === "psCues" && S.ps) { S.ps.cues = t.checked; render(); if (S.ps.phase === "rec") presTick(); return; }
   if (t.dataset && t.dataset.bid && t.dataset.f === "texto") { const b = pbFind(t.dataset.bid); if (b && !b.kEdit) { b.claves = PR.keywords(b.texto + " " + b.apoyo + " " + b.titulo, 4); save(); setTimeout(() => { if (S.sub === "pres" && S.pv === "bloques") render(); }, 0); } }
@@ -2715,6 +2806,7 @@ function onAct(e) {
   if (vidAct(a, el)) return;
   if (ptAct(a, el)) return;
   if (entAct(a, el)) return;
+  if (cvAct(a, el)) return;
   if (presAct(a, el, e)) return;
   if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle", "recStart", "recStop", "pwSave", "escNext", "escPrev", "escVoz"].includes(a)) tick();
   switch (a) {

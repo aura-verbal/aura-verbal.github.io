@@ -20,7 +20,10 @@
         `3) 3 viñetas reescritas para esta oferta, 4) una línea de perfil adaptada.\n\nOFERTA:\n${d.oferta || "[falta la oferta]"}\n\nCV:\n${d.cv}` },
     cvProfunda: { nombre: "Revisión profunda con IA", desc: "Una lectura completa de tu CV, tu pitch y tus respuestas: contradicciones, lo que no aprovechas y cómo contarlo en la entrevista.",
       prompt: d => `${REGLAS}\nRevisa en conjunto el CV, el pitch y las respuestas de entrevista de esta persona. Señala contradicciones entre ellos, ` +
-        `experiencias del CV que no aprovecha al hablar y 3 mejoras concretas para cada uno.\n\nCV:\n${d.cv}\n\nPITCH:\n${d.pitch || ""}\n\nRESPUESTAS:\n${d.respuestas || ""}` }
+        `experiencias del CV que no aprovecha al hablar y 3 mejoras concretas para cada uno.\n\nCV:\n${d.cv}\n\nPITCH:\n${d.pitch || ""}\n\nRESPUESTAS:\n${d.respuestas || ""}` },
+    presPreguntas: { nombre: "Preguntas del profesor con IA", desc: "La IA lee tu presentación completa y te hace preguntas mucho más precisas, como las haría un profesor que conoce el tema, y comenta tus respuestas.",
+      prompt: d => `${REGLAS}\nActúa como el profesor que evalúa esta presentación oral${d.ramo ? " del ramo " + d.ramo : ""}. Haz 6 preguntas que un profesor exigente haría ` +
+        `después de escucharla: de comprensión, de profundidad, sobre los datos y sus fuentes, y una crítica. Solo sobre lo que dice la presentación.\n\nTEMA: ${d.tema || ""}\n\nPRESENTACIÓN:\n${d.texto || ""}` }
   };
   const AuraPro = {
     activo: false, ENDPOINT: null, FUNCIONES,

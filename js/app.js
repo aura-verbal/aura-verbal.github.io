@@ -1351,7 +1351,8 @@ function vPresSesion() {
   if (t === "preguntas") {
     const q = P.qs[P.i];
     if (!q) return `<section class="section">${psHead()}<div class="panel"><h3>¡Bien!</h3><p>Respondiste ${P.qs.length} preguntas. Una buena respuesta tiene tres partes: la respuesta directa, un dato o ejemplo y una conclusión.</p></div>
-      <div class="row"><button class="btn primary" data-act="psDone">Terminar</button>${P.libre ? `<button class="btn" data-act="presSes" data-ses="libre-preguntas">Otras preguntas</button>` : ""}</div></section>`;
+      <div class="row"><button class="btn primary" data-act="psDone">Terminar</button>${P.libre ? `<button class="btn" data-act="presSes" data-ses="libre-preguntas">Otras preguntas</button>` : ""}</div>
+      ${proCards(["presPreguntas"])}</section>`;
     const r = P.res, esc2 = sil() || P.qEsc;
     return `<section class="section">${psHead("Preguntas del profesor", `Pregunta ${P.i + 1} de ${P.qs.length} · sobre «${pres().tema || "tu presentación"}»`)}
       <div class="panel"><div class="msg them"><div class="who"><span>Profesor</span></div>${esc(q.q)}</div><button class="btn ghost sm" data-act="psSpeakQ">${ICON_SPEAK} Escuchar</button>
@@ -2512,6 +2513,7 @@ function vPresHub() {
     <button class="card q-card ar-acad" ${conB ? 'data-act="presSes" data-ses="libre-preguntas"' : 'data-act="presNew"'}><span class="card-head"><span class="s-icon">${SES_ICON.preguntas}</span>
       <span class="stack" style="gap:2px"><b>Preguntas del profesor</b><span class="note" style="margin:0">${conB ? `Preguntas que te podrían hacer sobre «${esc(p.tema || "tu presentación")}». Respóndelas en voz alta o por escrito.` : "Crea tu presentación y te preparamos las preguntas que te podrían hacer."}</span></span></span>
       <span class="pill-cta solid">${conB ? "Practicar" : "Crear mi presentación"} ${ICON_GO}</span></button>
+    ${proCards(["presPreguntas"])}
     <div class="stack" style="gap:8px"><h3>Herramientas</h3>
       <div class="panel tools">
         <button class="tool-row" data-act="vidOpen" data-from="presentaciones"><span class="s-icon">${ICON_CAM}</span><span class="hoy-t">Grabar un video con teleprompter</span><span class="note" style="margin:0">Nuevo</span></button>

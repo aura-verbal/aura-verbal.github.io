@@ -33,6 +33,26 @@
   function frag(s) { s = t(s).replace(/[.;,\s]+$/, ""); return s && /^(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]|[AYOE] [a-záéíóúñ])/.test(s) ? s[0].toLowerCase() + s.slice(1) : s; }
   function cap(s) { s = t(s); return s ? s[0].toUpperCase() + s.slice(1) : s; }
   function lista(xs) { xs = xs.filter(Boolean); return xs.length <= 1 ? (xs[0] || "") : xs.slice(0, -1).join(", ") + " y " + xs[xs.length - 1]; }
+  /* Igual que en entrevista.js: «ingeniería civil industrial» → «estudiante de Ingeniería civil industrial». */
+  const CARRERA_NOMBRE = /^(ingenier[ií]a|t[eé]cnico en|t[eé]cnica en|licenciatura|pedagog[ií]a|administraci[oó]n|contabilidad|contador[ae]? auditor|derecho|medicina|psicolog[ií]a|enfermer[ií]a|arquitectura|dise[ñn]o|periodismo|kinesiolog[ií]a|nutrici[oó]n|odontolog[ií]a|trabajo social|publicidad|econom[ií]a|agronom[ií]a|bachillerato|programa de)/i;
+  /* Nombres propios escritos en minúscula: «ingenieria civil industrial» → «Ingeniería Civil Industrial»,
+     «universidad mayor» → «la Universidad Mayor». Solo se toca si todo venía en minúscula. */
+  const TILDES = { ingenieria: "ingeniería", tecnico: "técnico", tecnica: "técnica", administracion: "administración", psicologia: "psicología", economia: "economía",
+    pedagogia: "pedagogía", enfermeria: "enfermería", kinesiologia: "kinesiología", nutricion: "nutrición", odontologia: "odontología", informatica: "informática",
+    mecanica: "mecánica", electrica: "eléctrica", electronica: "electrónica", quimica: "química", logistica: "logística", gestion: "gestión", comunicacion: "comunicación",
+    construccion: "construcción", agronomia: "agronomía", biologia: "biología", matematica: "matemática", fisica: "física", catolica: "católica", tecnologica: "tecnológica" };
+  const MENORES = /^(de|del|la|el|las|los|y|en|e)$/;
+  function nombrePropio(s) {
+    s = t(s); if (!s || s !== s.toLowerCase()) return s;
+    return s.split(" ").map((w, i) => { w = TILDES[w] || w; return i && MENORES.test(w) ? w : w[0].toUpperCase() + w.slice(1); }).join(" ");
+  }
+  function institucion(s) {
+    s = nombrePropio(s); return /^(universidad|pontificia|instituto|centro|escuela|academia)\b/i.test(s) ? "la " + s : s;
+  }
+  function carreraFrase(carrera, etapa) {
+    const c = frag(carrera); if (!c || !CARRERA_NOMBRE.test(c)) return c;
+    return (/egres|titul|licenciad/i.test(t(etapa)) ? "egresado de " : "estudiante de ") + nombrePropio(c).replace(/^([a-záéíóúñ])/, m => m.toUpperCase());
+  }
   function words(s) { return t(s) ? t(s).split(" ").length : 0; }
 
   /* Cada parte del relato por separado: así la app muestra la frase de cada paso mientras se escribe. */
@@ -42,12 +62,13 @@
     const comps = (p.comps || []).map(t).filter(Boolean);
     const o = {};
     o.saludo = t(p.nombre) ? `${t(p.saludo) || "Buenos días"}. Mi nombre es ${t(p.nombre)}${p.tipo === "video" ? ", y es un gusto presentarme" : ""}.` : "";
-    o.formacion = t(p.carrera) ? `Soy ${frag(p.carrera)}${t(p.inst) ? " en " + frag(p.inst) : ""}${t(p.etapa) ? ", " + frag(p.etapa) : ""}${t(p.enfasis) ? ", con formación en " + frag(p.enfasis) : ""}.` : "";
+    o.formacion = t(p.carrera) ? `Soy ${carreraFrase(p.carrera, p.etapa)}${t(p.inst) ? " en " + institucion(frag(p.inst)) : ""}${t(p.etapa) ? ", " + frag(p.etapa) : ""}${t(p.enfasis) ? ", con formación en " + frag(p.enfasis) : ""}.` : "";
     const VERBO = ["me he desempeñado", "trabajé", "sumé experiencia"];
     o.experiencia = exp.length ? (exp.length > 1 ? "He trabajado en distintos rubros. " : "") + exp.map((e, i) => t(e.rubro)
       ? `En ${frag(e.rubro)} ${VERBO[i % 3]} ${frag(e.que) || "en distintas funciones"}.` : cap(frag(e.que)) + ".").join(" ") : "";
     o.competencias = comps.length ? `En ese camino he desarrollado ${NUM[comps.length] || comps.length} ${comps.length === 1 ? "competencia que me define" : "competencias que me definen"}: ${lista(comps.map(c => frag(c)))}.` : "";
-    o.transicion = t(p.motivo) ? `Esa experiencia me mostró algo que hoy guía mi carrera: ${frag(p.motivo)}.${t(p.momento) ? " Lo viví cuando " + frag(p.momento) + "." : ""}` : "";
+    o.transicion = t(p.motivo) ? `Esa experiencia me mostró algo que hoy guía mi carrera: ${frag(p.motivo)}.${t(p.momento) ? " Lo viví cuando " + frag(p.momento) + "." : ""}`
+      : t(p.momento) ? `Un logro que me representa: ${frag(p.momento)}.` : "";
     o.futuro = t(p.busco) ? `Hoy me interesa ${frag(p.busco)}${t(p.aporte) ? ", donde pueda aportar " + frag(p.aporte) : ""}.` : "";
     o.cierre = p.tipo === "contacto" ? "Ese es mi plan. ¿Qué opinas? ¿Qué consejo me darías para lograrlo?"
       : p.tipo === "presentacion" ? "Por eso esta oportunidad calza con lo que busco, y me encantaría contarles más. Muchas gracias."

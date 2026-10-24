@@ -1831,7 +1831,7 @@ function vPitch() {
       ${revs.length ? `<div class="panel"><h3>Antes de grabar</h3>${revs.map(r => `<p class="fb ${r.nivel === "no" ? "no" : r.nivel === "mid" ? "mid" : "ok"}" style="margin:0">${esc(r.txt)}</p>`).join("")}</div>` : `<p class="fb ok">Tu relato tiene las 7 partes y está dentro del tiempo.</p>`}
       ${(() => { const c = cvData(), sug = c ? cvSugerencias() : [];
         if (!c) return `<p class="note" style="margin:0">¿Tienes CV? <button class="linkish" data-act="entIr" data-v="cv" data-from="pitch">Súbelo</button> y te decimos qué tienes ahí y no estás usando en tu pitch.</p>`;
-        return sug.length || S.cvHecho ? `<div class="panel"><h3>De tu CV, y no está en tu pitch</h3>${cvHechoHTML("pitch")}${cvSugHTML(sug, "pitch")}</div>` : ""; })()}
+        return sug.length || S.cvHecho ? `<div class="panel"><h3>De tu CV, y no está en tu pitch</h3>${cvHechoHTML("pitch")}${cvSugHTML(sug, "pitch")}${cvBarHTML()}</div>` : ""; })()}
       <div class="field"><label for="ptGuion">Tu guion (puedes editarlo)</label><textarea id="ptGuion" class="esc-ta" rows="12">${esc(p.guionBorrador != null ? p.guionBorrador : txt)}</textarea>
         <div id="ptSave">${ptSaveHTML(p)}</div></div>
       <div class="row"><button class="btn primary" data-act="vidOpen" data-from="pitch">${ICON_CAM} ${p.tipo === "video" ? "Grabar con teleprompter" : "Practicar con teleprompter"}</button>
@@ -2150,11 +2150,28 @@ function cvSugHTML(list, ctx) {
       ? `<button class="btn sm" data-act="cvAplicar" data-i="${i}" data-j="${j}">${esc(a.lbl)} ›</button>`
       : `<button class="pw-opt cv-pick${cur === j ? " on" : ""}" data-act="cvSel" data-i="${i}" data-j="${j}" aria-pressed="${cur === j}">${cur === j ? "✓ " : "+ "}${esc(a.lbl)}</button>`).join("")}
       <button class="linkish" data-act="cvDescartar" data-i="${i}">No aplica</button></div></div>`; }).join("");
-  const barra = n ? `<div class="cv-update"><button class="btn primary wide" data-act="cvActualizar">Actualizar mi pitch (${n} ${n === 1 ? "cambio" : "cambios"})</button>
-      ${pp.editado || pp.guionBorrador != null ? `<span class="note" style="margin:0">Editaste tu guion a mano: al actualizar se vuelve a armar desde tus respuestas.</span>` : ""}</div>`
-    : list.length ? `<p class="note" style="margin:0">Marca lo que quieres sumar y después actualiza tu pitch de una vez.</p>` : "";
-  return items + barra;
+  return items + (list.length && !n ? `<p class="note" style="margin:0">Marca lo que quieres sumar y después actualiza tu pitch de una vez.</p>` : "");
 }
+/* Selecciones de los bloques «Para copiar a tu CV» (perfil, competencias, logros) que también se pueden sumar al pitch. */
+const norm2 = s => CVM.norm(s);
+const listaY = xs => xs.length <= 1 ? (xs[0] || "") : xs.slice(0, -1).join(", ") + " y " + xs[xs.length - 1];
+function cvBlkSel() { return Object.keys(S.cvSel || {}).filter(k => /^blk:/.test(k) && S.cvSel[k] != null); }
+function cvCompsNuevas() {
+  const pp = pitchData(), ya = (pp.comps || []).map(norm2), out = [];
+  cvBlkSel().forEach(k => { const bl = CVM.bloques(perfil(), pp);
+    const add = k === "blk:perfil" ? bl.fortalezas : /^blk:comp:/.test(k) ? [k.slice(9)] : [];
+    add.forEach(c => { if (!ya.includes(norm2(c)) && !out.some(x => norm2(x) === norm2(c))) out.push(c); }); });
+  return out;
+}
+function cvBarHTML() {
+  const list = cvSugerencias(), sel = S.cvSel || {}, n = list.filter(s => sel[cvKey(s)] != null).length + cvBlkSel().length, pp = pitchData();
+  if (!n) return "";
+  const total = (pp.comps || []).length + cvCompsNuevas().length;
+  return `<div class="cv-update"><button class="btn primary wide" data-act="cvActualizar">Actualizar mi pitch (${n} ${n === 1 ? "cambio" : "cambios"})</button>
+    ${total > 5 ? `<span class="note" style="margin:0">Quedarás con ${total} competencias en tu pitch: con 3 a 5 se recuerdan mejor.</span>` : ""}
+    ${pp.editado || pp.guionBorrador != null ? `<span class="note" style="margin:0">Editaste tu guion a mano: al actualizar se vuelve a armar desde tus respuestas.</span>` : ""}</div>`;
+}
+const selBlk = k => !!(S.cvSel && S.cvSel[k] != null);
 function cvHechoHTML(ctx) {
   const h = S.cvHecho; if (!h) return "";
   const txt = [h.n ? `Tu pitch se actualizó con ${h.n} ${h.n === 1 ? "cambio" : "cambios"}.` : "", h.logros ? `Guardamos ${h.logros === 1 ? "un logro" : h.logros + " logros"} para que lo${h.logros === 1 ? "" : "s"} completes.` : ""].filter(Boolean).join(" ");
@@ -2178,7 +2195,7 @@ function vCv() {
       : `<button class="card load-opt" data-act="cvPegar"><span class="card-head"><span class="s-icon">${SES_ICON.bloques}</span><span><h3>Pegar el texto</h3><span class="meta">Si tu CV es una imagen o no se lee bien.</span></span></span></button>`}
     <p class="note">Tu CV se queda en este celular: Aura no lo sube a ningún servidor.</p>
     ${proCards(["cvReescribir", "cvOferta"])}</section>`;
-  const cv = cvInfo(), pp = progress.pitch, hayPitch = pp && t2(pp.carrera), sug = cvSugerencias(), revs = CVM.revisar(cv, perfil(), pp), bl = CVM.bloques(perfil(), pp);
+  const cv = cvInfo(), pp = progress.pitch || {}, hayPitch = !!t2(pp.carrera), sug = cvSugerencias(), revs = CVM.revisar(cv, perfil(), pp), bl = CVM.bloques(perfil(), pp);
   const chips = cv.herramientas.map(h => h.nombre).concat(cv.idiomas.map(i => i.nombre)).map(x => `<span class="kchip">${esc(x)}</span>`).join("");
   const copia = (k, titulo, cuerpo) => `<div class="cv-blk"><div class="cv-blk-h"><b>${titulo}</b><button class="btn sm" data-act="cvCopy" data-b="${k}">Copiar</button></div>${cuerpo}</div>`;
   return `<section class="section">${head}${err}
@@ -2193,11 +2210,16 @@ function vCv() {
     <p class="note" style="margin:0">La revisión usa reglas simples: puede equivocarse. Tú decides qué cambiar.</p>
     <h3 class="cv-h">Para copiar a tu CV</h3>
     <p class="note" style="margin:0">Armado con tu autodiagnóstico, tus logros y tu pitch. Tus debilidades no van en el CV: son para la entrevista.</p>
-    ${bl.perfil ? copia("perfil", "Perfil profesional", `<p>${esc(bl.perfil)}</p>`) : `<p class="note" style="margin:0">Arma tu pitch para generar tu perfil profesional.</p>`}
-    ${bl.competencias.length ? copia("competencias", "Competencias", `<p>${esc(bl.competencias.join(" · "))}</p>`) : ""}
-    ${bl.logros.length ? copia("logros", "Logros como viñetas", `<ul>${bl.logros.map(l => `<li>${esc(l)}</li>`).join("")}</ul>`) : ""}
+    ${bl.perfil ? copia("perfil", "Perfil profesional", `<p>${esc(bl.perfil)}</p>${(() => { const ya = (pp.comps || []).map(norm2), faltan = bl.fortalezas.filter(c => !ya.includes(norm2(c)));
+        return faltan.length ? `<button class="pw-opt cv-pick${selBlk("blk:perfil") ? " on" : ""}" data-act="cvSel" data-k="blk:perfil" aria-pressed="${selBlk("blk:perfil")}">${selBlk("blk:perfil") ? "✓ " : "+ "}Agregar a mi pitch</button><small class="muted">Suma a tu pitch tus fortalezas: ${esc(listaY(faltan.map(c => c.toLowerCase())))}.</small>`
+          : `<small class="muted">${ICON_CHECK} Tus fortalezas ya están en tu pitch.</small>`; })()}`) : `<p class="note" style="margin:0">Arma tu pitch para generar tu perfil profesional.</p>`}
+    ${bl.competencias.length ? copia("competencias", "Competencias", `<p>${esc(bl.competencias.join(" · "))}</p>${hayPitch ? `<small class="muted">Toca las que quieras sumar a tu pitch:</small><div class="cv-opts">${bl.competencias.map(c => (pp.comps || []).some(x => norm2(x) === norm2(c))
+        ? `<span class="kchip ya">✓ ${esc(c)}</span>` : `<button class="pw-opt cv-pick${selBlk("blk:comp:" + c) ? " on" : ""}" data-act="cvSel" data-k="blk:comp:${esc(c)}">${selBlk("blk:comp:" + c) ? "✓ " : "+ "}${esc(c)}</button>`).join("")}</div>` : ""}`) : ""}
+    ${bl.logros.length ? copia("logros", "Logros como viñetas", `<ul class="cv-logros">${bl.logros.map((l, i) => { const k = "blk:logro:" + i, es = t2(pp.momento) && norm2(l).startsWith(norm2(pp.momento).slice(0, 25));
+        return `<li>${esc(l)}${hayPitch ? `<br>${es ? `<small class="muted">${ICON_CHECK} Es el momento concreto de tu pitch.</small>` : `<button class="pw-opt cv-pick${selBlk(k) ? " on" : ""}" data-act="cvSel" data-k="${k}">${selBlk(k) ? "✓ " : "+ "}Usar en mi pitch</button>`}` : ""}</li>`; }).join("")}</ul>`) : ""}
     ${proCards(["cvReescribir", "cvOferta", "cvProfunda"])}
     <div class="row">${subir("Cambiar mi CV", "btn")}<button class="btn danger" data-act="cvBorrar">Borrar mi CV</button></div>
+    ${hayPitch ? cvBarHTML() : ""}
   </section>`;
 }
 async function cvImport(file) {
@@ -2223,11 +2245,20 @@ function cvAct(a, el) {
     case "cvDescartar": { const s = cvSugerencias()[+el.dataset.i]; if (s) { p.cv.descartes = (p.cv.descartes || []).concat([cvKey(s)]); if (S.cvSel) delete S.cvSel[cvKey(s)]; save(); render(); } return true; }
     case "cvAplicar": { const s = cvSugerencias()[+el.dataset.i], ac = s && s.acciones[+el.dataset.j];
       if (ac && ac.k === "exp") { S.pt = { paso: PT_PASOS.findIndex(x => x.k === "experiencia") }; leaveSim(); go({ sub: "pitch" }, "right"); } return true; }
-    case "cvSel": { const s = cvSugerencias()[+el.dataset.i]; if (!s) return true; const sel = S.cvSel || (S.cvSel = {}), k = cvKey(s), j = +el.dataset.j;
+    case "cvSel": { const sel = S.cvSel || (S.cvSel = {});
+      if (el.dataset.k) { const k = el.dataset.k, on = sel[k] != null;
+        if (/^blk:logro:/.test(k)) Object.keys(sel).forEach(x => { if (/^blk:logro:/.test(x)) sel[x] = null; });   // un solo momento concreto
+        sel[k] = on ? null : 1; S.cvHecho = null; render(); return true; }
+      const s = cvSugerencias()[+el.dataset.i]; if (!s) return true; const k = cvKey(s), j = +el.dataset.j;
       sel[k] = sel[k] === j ? null : j; S.cvHecho = null; render(); return true; }
     case "cvActualizar": { const sel = S.cvSel || {}, list = cvSugerencias(); let n = 0, logros = 0;
+      const nuevas = cvCompsNuevas(), blks = cvBlkSel();
       list.forEach(s => { const j = sel[cvKey(s)], ac = j != null && s.acciones[j]; if (!ac) return;
         if (CVM.aplicar(ac, pp, p) === "logro") { logros++; p.cv.descartes = (p.cv.descartes || []).concat([cvKey(s)]); } else n++; });
+      if (nuevas.length) { pp.comps = pp.comps || []; nuevas.forEach(c => { if (!pp.comps.some(x => norm2(x) === norm2(c))) pp.comps.push(c); }); }
+      n += blks.filter(k => !/^blk:logro:/.test(k)).length;
+      blks.filter(k => /^blk:logro:/.test(k)).forEach(k => { const l = p.logros.filter(x => EN.fraseLogro(x))[+k.slice(10)], f = l && EN.fraseLogro(l).replace(/\.$/, "");
+        if (f) { pp.momento = f[0].toLowerCase() + f.slice(1); n++; } });
       if (n) { pp.editado = false; pp.guion = ""; delete pp.guionBorrador; }
       S.cvSel = {}; S.cvHecho = { n, logros }; save(); render();
       const d = document.getElementById("cvDone"); if (d) d.scrollIntoView({ block: "center", behavior: "smooth" }); return true; }

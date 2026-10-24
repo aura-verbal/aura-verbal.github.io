@@ -39,7 +39,7 @@ if (!cv.telefono || cv.linkedin || cv.nombre !== "Camila Soto Pérez" || !cv.est
 // Revisión
 const perfil = { clave: ["plan", "resp"], logros: [{ m: "x", a: "Organicé la bodega por categorías", r: "que encontráramos los productos en la mitad del tiempo", comps: [] }] };
 const rv = C.revisar(cv, perfil), ids = rv.map(r => r.id);
-["email2", "linkedin", "relleno", "cifras", "verbos", "nivel-Portugués", "refs", "personales", "comps", "logros"].forEach(id => { if (!ids.includes(id)) err("revisión falta", id, ids); });
+["email2", "linkedin", "relleno", "verbos", "nivel-Portugués", "refs", "personales", "comps", "logros"].forEach(id => { if (!ids.includes(id)) err("revisión falta", id, ids); });
 ["email", "tel", "perfil", "largo"].forEach(id => { if (ids.includes(id)) err("revisión sobra", id); });
 if (rv[0].n === "tip") err("orden de la revisión");
 if (!/planificación y organización/.test(rv.find(r => r.id === "comps").txt) || /responsabilidad/.test(rv.find(r => r.id === "comps").txt) === false && false) err("comps falta texto");
@@ -71,4 +71,12 @@ if (C.tipoSeccion("EXPERIENCIA LABORAL:") !== "experiencia" || C.tipoSeccion("##
 if (C.tipoSeccion("Experiencia en atención de clientes en retail durante dos años") !== null) err("frase larga no es sección");
 const pm = { comps: ["Responsabilidad", "Manejo de Excel, Power BI y Python"] }; C.aplicar({ k: "comp", v: "Manejo de AMPL y Excel" }, pm, {});
 if (pm.comps.join(" | ") !== "Responsabilidad | Manejo de Excel, Power BI, Python y AMPL") err("fusión de herramientas", pm.comps);
+// Viñetas cortadas en dos líneas se unen; «ruta» no se confunde con «RUT»; fechas con mes
+const cv3 = C.extraer("EXPERIENCIA LABORAL\nChofer – Derco  Ene. 2025 – Mar. 2025\n• Rediseñé la ruta de despacho, logrando entregar al 100% de los\nclientes dentro de la jornada.\n• Organicé el stock durante Cyber y\nNavidad sin interrupciones.\n• Atendí público y cerré ventas directas en el local\n• Controlé la caja y el cierre de turno diario", { paginas: 1 });
+if (cv3.cargos[0] !== "Chofer – Derco") err("cargo con meses", cv3.cargos);
+if (cv3.cifras[0] !== "Rediseñé la ruta de despacho, logrando entregar al 100% de los clientes dentro de la jornada.") err("cifra unida", cv3.cifras);
+if (!cv3.vinetas.includes("Organicé el stock durante Cyber y Navidad sin interrupciones.")) err("viñeta unida", cv3.vinetas);
+if (!C.revisar(cv3, {}).some(r => r.id === "cifras")) err("cifras en viñetas sin número");
+// Pitch editado a mano: cuenta lo que dice el guion guardado
+if (C.textoPitch({ editado: true, guion: "Hola", comps: ["Manejo de Excel"] }).includes("excel")) err("pitch editado");
 console.log("ERRORS", errors);

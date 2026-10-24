@@ -58,10 +58,22 @@
   ];
   const IDIOMAS = [["Inglés", /ingl[eé]s/i], ["Portugués", /portugu[eé]s/i], ["Francés", /franc[eé]s/i], ["Alemán", /alem[aá]n/i], ["Italiano", /italiano/i], ["Chino mandarín", /(chino|mandar[ií]n)/i], ["Japonés", /japon[eé]s/i], ["Coreano", /coreano/i]];
   const NIVEL = /(b[aá]sico|intermedio( alto| bajo)?|avanzado|nativo|fluido|bilingüe|biling[uü]e|\b[abc][12]\b|toeic|toefl|ielts|cambridge)/i;
-  const FECHAS = /((19|20)\d\d)\s*(?:[-–—]|a|al|hasta)\s*((19|20)\d\d|actual(idad)?|presente|hoy|la fecha)/i;
+  const MES = "(?:ene|feb|mar|abr|may|jun|jul|ago|sep|sept|oct|nov|dic)[a-záéíóú]*\\.?";
+  // «2023 – Actual», «Oct. 2025 – Ene. 2026», «2019 – May. 2023»
+  const FECHAS = new RegExp("(?:" + MES + "\\s*)?((19|20)\\d\\d)\\s*(?:[-–—]|a|al|hasta)\\s*(?:" + MES + "\\s*)?((19|20)\\d\\d|actual(idad)?|presente|hoy|la fecha)", "i");
   const CIFRA = /(\d+[.,]?\d*\s*%|\$\s?\d|\d+\s*(clientes|personas|trabajadores|colaboradores|productos|skus?|unidades|horas|d[ií]as|minutos|semanas|meses|ventas|pedidos|despachos|tiendas|locales|proyectos|estudiantes|alumnos|m(illones)?\b|mm\b|uf\b|k\b))/i;
   const ES_FECHA_O_TEL = /^(\+?56)?[\s\d()-]{8,}$|^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/;
 
+  /* Une las líneas cortadas por el ancho de la página: una línea que empieza en minúscula sigue a la anterior. */
+  function unir(ls) {
+    const out = [];
+    ls.forEach(l => { const s = t(l); if (!s) return; const vin = VIN.test(s), c = limpia(s), prev = out[out.length - 1];
+      const sigue = prev && !vin && !/[.:]$/.test(prev.s) && !tipoSeccion(s) && !FECHAS.test(s)
+        && (/^[a-záéíóúñ(]/.test(c) || (prev.vin && c.replace(/[^A-ZÁÉÍÓÚÑ]/g, "").length < c.replace(/[^A-Za-záéíóúñÁÉÍÓÚÑ]/g, "").length * 0.5));
+      if (sigue) prev.s = t(prev.s + " " + c);
+      else out.push({ s: c, vin }); });
+    return out;
+  }
   function extraer(texto, meta) {
     const sec = secciones(texto), todo = String(texto || ""), lineas = todo.split(/\r?\n/).map(t).filter(Boolean);
     const herramientas = HERRAMIENTAS.filter(([, re]) => re.test(todo)).map(([n, re]) => {
@@ -76,14 +88,17 @@
     const cursos = (sec.cursos || []).map(limpia).filter(l => l.length > 6 && !ES_FECHA_O_TEL.test(l))
       .concat(lineas.filter(l => /\b(curso|certificaci[oó]n|certificado|diplomado|bootcamp)\b/i.test(l) && !tipoSeccion(l)).map(limpia))
       .filter((x, i, a) => a.indexOf(x) === i).slice(0, 8);
-    const zona = (sec.experiencia || []).concat(sec.proyectos || [], sec.voluntariado || [], sec.logros || []);
-    const vinetas = zona.filter(l => limpia(l).length > 25 && !FECHAS.test(l)).map(limpia);
-    const cifras = lineas.filter(l => CIFRA.test(l) && !FECHAS.test(l) && !ES_FECHA_O_TEL.test(l) && !/@|tel[eé]fono|celular|rut|\+56/i.test(l)).map(limpia)
+    const zona = unir((sec.experiencia || []).concat(sec.proyectos || [], sec.voluntariado || [], sec.logros || []));
+    // Si el CV usa viñetas (•, -), solo esas cuentan; si no, cualquier línea larga sin fechas.
+    const conMarca = zona.filter(u => u.vin), vinetas = (conMarca.length >= 3 ? conMarca : zona).map(u => u.s).filter(s => s.length > 25 && !FECHAS.test(s));
+    const cifras = unir(lineas).map(u => u.s).filter(l => CIFRA.test(l) && !FECHAS.test(l) && !ES_FECHA_O_TEL.test(l) && !/@|tel[eé]fono|celular|\brut\b|\+56/i.test(l)).map(limpia)
       .filter(l => l.split(" ").length >= 4).slice(0, 6);
     const cargos = (sec.experiencia || []).map((l, i, a) => { if (!FECHAS.test(l)) return null;
-      let s = t(l.replace(FECHAS, "").replace(/[()|,–—-]+\s*$/, "").replace(/^\s*[()|,–—-]+/, ""));
+      let s = t(l.replace(FECHAS, "").replace(/[(|,–—-]+\s*$/, "").replace(/^\s*[)|,–—-]+/, ""));
+      if (/\)\s*$/.test(s) && !s.includes("(")) s = s.replace(/\)\s*$/, "");
       if (s.split(" ").length < 2 && a[i - 1] && !FECHAS.test(a[i - 1])) s = t(a[i - 1] + " " + s);
-      return s.length > 3 ? s.replace(/\s*[|–—-]\s*$/, "") : null; }).filter(Boolean).slice(0, 5);
+      s = t(s.replace(new RegExp("\\s*\\(?" + MES + "\\s*$", "i"), "").replace(/\s*[|–—-]\s*$/, "").replace(/\s*\(\s*$/, ""));
+      return s.length > 3 ? s : null; }).filter(Boolean).slice(0, 6);
     const email = (todo.match(/[\w.+-]+@[\w-]+\.[\w.]+/) || [""])[0];
     const nombre = (lineas.find(l => !/\d|@|http|www/i.test(l) && l.split(" ").length >= 2 && l.split(" ").length <= 5 && !tipoSeccion(l)) || "");
     const palabras = t(todo) ? t(todo).split(" ").length : 0;
@@ -140,7 +155,9 @@
   /* ---------- 4. Comparación con el pitch ---------- */
   function textoPitch(p) {
     p = p || {};
-    return norm([p.carrera, p.inst, p.etapa, p.enfasis, (p.exp || []).map(e => e && (e.rubro + " " + e.que)).join(" "), (p.comps || []).join(" "), p.motivo, p.momento, p.busco, p.aporte, p.editado ? p.guion : ""].join(" "));
+    // Si el guion se editó a mano, lo que cuenta es lo que de verdad dice el guion guardado.
+    if (p.editado && t(p.guion)) return norm(p.guion);
+    return norm([p.carrera, p.inst, p.etapa, p.enfasis, (p.exp || []).map(e => e && (e.rubro + " " + e.que)).join(" "), (p.comps || []).join(" "), p.motivo, p.momento, p.busco, p.aporte].join(" "));
   }
   function compararPitch(cv, pitch, perfil) {
     const P = pitch || {}, hay = textoPitch(P), out = [], add = (id, txt, acciones) => out.push({ id, txt, acciones });
@@ -158,7 +175,7 @@
     });
     // El pitch resume la experiencia por rubro y área: basta con que una palabra del cargo ya esté para darlo por cubierto.
     const GEN = /^(asistente|ayudante|apoyo|encargad[oa]|practica|practicante|analista|trabajador[a]?|part|time|empresa)$/;
-    cv.cargos.filter(c => !norm(c).split(/[^a-z0-9ñ]+/).some(w => w.length >= 4 && !GEN.test(w) && hay.includes(w))).slice(0, 2).forEach((c, i) => add("cargo" + i, `Tu CV menciona «${c}» y no aparece en tu experiencia del pitch.`, [{ k: "exp", v: c, lbl: "Revisar mi experiencia" }]));
+    cv.cargos.filter(c => !norm(c).split(/[^a-z0-9ñ]+/).some(w => w.length >= 4 && !GEN.test(w) && hay.includes(w.length >= 7 ? w.slice(0, 5) : w))).slice(0, 2).forEach((c, i) => add("cargo" + i, `Tu CV menciona «${c}» y no aparece en tu experiencia del pitch.`, [{ k: "exp", v: c, lbl: "Revisar mi experiencia" }]));
     if (!t(P.enfasis) && cv.cursos.length) add("curso", `Tienes cursos o certificaciones (${cv.cursos.slice(0, 2).map(x => "«" + x.slice(0, 50) + "»").join(", ")}) que pueden ir en «formación en…».`,
       [{ k: "enfasis", v: cursoCorto(cv.cursos[0]), lbl: "Usar el primero" }]);
     return out;
@@ -187,7 +204,8 @@
     const comps = (P.clave || []).map(id => EN.COMP_IDX[id] && EN.COMP_IDX[id].nombre).filter(Boolean)
       .concat((p.comps || []).map(t)).filter((c, i, a) => c && a.findIndex(x => norm(x) === norm(c)) === i).slice(0, 6);
     const rubros = (p.exp || []).map(e => e && frag(e.rubro)).filter(Boolean);
-    if (t(p.carrera)) out.perfil = [cap(frag(p.carrera)) + (t(p.inst) ? " en " + t(p.inst) : "") + (t(p.etapa) ? ", " + frag(p.etapa) : "") + (rubros.length ? ", con experiencia en " + lista(rubros) : "") + ".",
+    out.fortalezas = comps.slice(0, 3);
+    if (t(p.carrera)) out.perfil = [cap(EN.carreraFrase(p.carrera, p.etapa)) + (t(p.inst) ? " en " + EN.institucion(t(p.inst)) : "") + (t(p.etapa) ? ", " + frag(p.etapa) : "") + (rubros.length ? ", con experiencia en " + lista(rubros) : "") + ".",
       comps.length ? `Entre mis fortalezas están ${lista(comps.slice(0, 3).map(c => EN.conArticulo(c)))}.` : "",
       t(p.busco) ? `Busco ${frag(p.busco)}${t(p.aporte) ? ", donde pueda aportar " + frag(p.aporte) : ""}.` : ""].filter(Boolean).join(" ");
     out.competencias = comps;
@@ -195,7 +213,7 @@
     return out;
   }
 
-  const API = { secciones, tipoSeccion, extraer, revisar, compararPitch, aplicar, bloques, enCV, norm, HERRAMIENTAS };
+  const API = { unir, textoPitch, secciones, tipoSeccion, extraer, revisar, compararPitch, aplicar, bloques, enCV, norm, HERRAMIENTAS };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   else root.AuraCV = API;
 })(typeof window !== "undefined" ? window : globalThis);

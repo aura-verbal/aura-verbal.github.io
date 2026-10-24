@@ -123,8 +123,31 @@
   /* Verbo en pasado al inicio: regulares (-é, -í) e irregulares frecuentes (propuse, reduje, hice…). */
   const VERBO_RE = /^(?:[A-ZÁÉÍÓÚa-záéíóúñ]+(?:é|í)|(?:pro|dis|com|im|su)?puse|(?:re|con|pro|intro|tra)duje|(?:ob|man|con|de|re)?tuve|hice|rehice|dije|traje|estuve|anduve|supe|quise|pude|vine|fui|di|vi)(?=[\s,.;]|$)/i;
   function fraseLogro(l) {
-    if (!l) return ""; const a = t(l.a).replace(/[.;,\s]+$/, ""), r = frag(l.r);
-    if (!a) return ""; return cap(a) + (r ? (/^(logr|consigu|obten)/i.test(r) ? ", " : ", logrando ") + r : "") + ".";
+    if (!l) return ""; const a = t(l.a).replace(/[.;,\s]+$/, ""), r = frag(l.r).replace(/^que ([A-ZÁÉÍÓÚÑ])(?=[a-záéíóúñ])/, (m, c) => "que " + c.toLowerCase());
+    if (!a) return "";
+    // «…, logrando que…» solo si el resultado no empieza con un verbo en pasado («conseguí…» → «…, y conseguí…»).
+    const union = /^(logr|consigu|conseg|obten|obtuv)/i.test(r) && !VERBO_RE.test(r) ? ", " : VERBO_RE.test(r) ? ", y " : ", logrando ";
+    return cap(a) + (r ? union + r : "") + ".";
+  }
+  /* «ingeniería civil industrial» es el nombre de la carrera: la persona es «estudiante de…» (o «egresado de…»). */
+  const CARRERA_NOMBRE = /^(ingenier[ií]a|t[eé]cnico en|t[eé]cnica en|licenciatura|pedagog[ií]a|administraci[oó]n|contabilidad|contador[ae]? auditor|derecho|medicina|psicolog[ií]a|enfermer[ií]a|arquitectura|dise[ñn]o|periodismo|kinesiolog[ií]a|nutrici[oó]n|odontolog[ií]a|trabajo social|publicidad|econom[ií]a|agronom[ií]a|bachillerato|programa de)/i;
+  /* Nombres propios escritos en minúscula: «ingenieria civil industrial» → «Ingeniería Civil Industrial»,
+     «universidad mayor» → «la Universidad Mayor». Solo se toca si todo venía en minúscula. */
+  const TILDES = { ingenieria: "ingeniería", tecnico: "técnico", tecnica: "técnica", administracion: "administración", psicologia: "psicología", economia: "economía",
+    pedagogia: "pedagogía", enfermeria: "enfermería", kinesiologia: "kinesiología", nutricion: "nutrición", odontologia: "odontología", informatica: "informática",
+    mecanica: "mecánica", electrica: "eléctrica", electronica: "electrónica", quimica: "química", logistica: "logística", gestion: "gestión", comunicacion: "comunicación",
+    construccion: "construcción", agronomia: "agronomía", biologia: "biología", matematica: "matemática", fisica: "física", catolica: "católica", tecnologica: "tecnológica" };
+  const MENORES = /^(de|del|la|el|las|los|y|en|e)$/;
+  function nombrePropio(s) {
+    s = t(s); if (!s || s !== s.toLowerCase()) return s;
+    return s.split(" ").map((w, i) => { w = TILDES[w] || w; return i && MENORES.test(w) ? w : w[0].toUpperCase() + w.slice(1); }).join(" ");
+  }
+  function institucion(s) {
+    s = nombrePropio(s); return /^(universidad|pontificia|instituto|centro|escuela|academia)\b/i.test(s) ? "la " + s : s;
+  }
+  function carreraFrase(carrera, etapa) {
+    const c = frag(carrera); if (!c || !CARRERA_NOMBRE.test(c)) return c;
+    return (/egres|titul|licenciad/i.test(t(etapa)) ? "egresado de " : "estudiante de ") + nombrePropio(c).replace(/^([a-záéíóúñ])/, m => m.toUpperCase());
   }
   function revisarLogro(l) {
     const out = [];
@@ -313,7 +336,7 @@
     "me interesa el cargo de esta oportunidad porque además me atrae que y creo que puedo aportar un logro del que me siento orgulloso fue entonces como resultado ahí puse en práctica " +
     "una vez lo que hice fue al final de eso aprendí sí me gustaría saber logrando buenos días mi nombre es gusto presentarme soy he trabajado en distintos rubros competencias que me definen " +
     "esa experiencia me mostró algo que hoy guía mi carrera lo viví cuando donde pueda muchas gracias";
-  const API = { VERBO_RE, TEMAS, temaDebilidad, opcionesDebilidad, opcionesAccion, opcionesFortaleza, opcionesAporte, OPC, PLANTILLA, PPM, words, segundos, ESTILOS, PREG_ESTILO, opcionesEstilo, puntajeEstilo, tarjetasEstilo, COMPETENCIAS, COMP_IDX, NIVEL_COMP, resumenCompetencias, conArticulo,
+  const API = { carreraFrase, nombrePropio, institucion, VERBO_RE, TEMAS, temaDebilidad, opcionesDebilidad, opcionesAccion, opcionesFortaleza, opcionesAporte, OPC, PLANTILLA, PPM, words, segundos, ESTILOS, PREG_ESTILO, opcionesEstilo, puntajeEstilo, tarjetasEstilo, COMPETENCIAS, COMP_IDX, NIVEL_COMP, resumenCompetencias, conArticulo,
     MOTIVADORES, MOT_IDX, IDEAL, preguntasSugeridas, VERBOS, IDEAS_LOGRO, fraseLogro, revisarLogro, PREGUNTAS, ORDEN_PREG, respuesta, revisarRespuesta };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   else root.AuraEnt = API;

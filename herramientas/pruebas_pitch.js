@@ -18,4 +18,9 @@ const r = P.revisar({ tipo: "video", exp: [{ rubro: "x", que: "aumenté las vent
 ["saludo", "formacion", "competencias", "experiencia", "transicion", "futuro"].forEach(k => { if (!r.some(x => x.k === k)) err("revisión falta", k); });
 const largo = P.revisar(base, "palabra ".repeat(400)); if (!largo.some(x => x.k === "largo")) err("aviso de largo");
 if (P.guion({}) !== P.partes({}).cierre) err("pitch vacío solo con cierre", P.guion({}));
+// Carrera e institución escritas en minúscula; momento sin motivación
+const pf = P.partes({ carrera: "ingenieria civil industrial", inst: "universidad mayor", etapa: "en el penúltimo año de la carrera", momento: "mejoré la ruta de despacho" });
+if (pf.formacion !== "Soy estudiante de Ingeniería Civil Industrial en la Universidad Mayor, en el penúltimo año de la carrera.") err("formación en minúscula", pf.formacion);
+if (pf.transicion !== "Un logro que me representa: mejoré la ruta de despacho.") err("momento sin motivo", pf.transicion);
+if (P.partes({ carrera: "estudiante de Ingeniería Comercial", inst: "la Universidad de Chile" }).formacion !== "Soy estudiante de Ingeniería Comercial en la Universidad de Chile.") err("formación ya escrita bien");
 console.log("ERRORS", errors);

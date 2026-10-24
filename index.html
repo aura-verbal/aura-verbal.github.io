@@ -718,6 +718,10 @@ body.en-intro .wrap{padding-block-end:16px}
 .cv-update{margin-top:8px}
 .q-card{display:flex;flex-direction:column;gap:12px;border-left:4px solid var(--ac);text-align:left}
 .q-card .pill-cta{align-self:flex-start}
+.top-acts{display:flex;gap:8px}
+.top-set[hidden]{display:none}
+.op-pre{white-space:pre-wrap;font-family:var(--font-mono);font-size:.78rem;line-height:1.5;margin:6px 0 0;color:var(--muted)}
+.op-nota .pw-opt{min-width:48px;justify-content:center}
 .cv-h{margin:8px 0 0;font-size:1.05rem}
 .cv-rev{display:flex;flex-direction:column;gap:4px;margin:0}
 .cv-rev small{font-weight:400;opacity:.85}
@@ -818,7 +822,8 @@ mark.con{background:color-mix(in srgb, var(--area-lab) 16%, transparent);color:i
 <body>
 <header class="top"><div class="wrap">
   <button class="brand" data-act="brand" aria-label="Ir al inicio"><span class="mark" aria-hidden="true">Aa</span>Aura <small>confianza verbal</small></button>
-  <button class="top-set" data-act="tab" data-tab="ajustes" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
+  <span class="top-acts"><button class="top-set" id="topOp" data-act="opinionOpen" aria-label="Danos tu opinión" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h7M8.5 14h4"/></svg></button>
+  <button class="top-set" data-act="tab" data-tab="ajustes" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button></span>
 </div></header>
 <main class="wrap" id="app" aria-live="polite"><div class="loading"><span class="mark" aria-hidden="true">Aa</span></div></main>
 <nav class="nav" aria-label="Secciones">
@@ -829,6 +834,7 @@ mark.con{background:color-mix(in srgb, var(--area-lab) 16%, transparent);color:i
     <button data-act="tab" data-tab="progreso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16v-4"/><path d="M11 16V7"/><path d="M16 16v-6"/><path d="M20 16V4"/></svg>Progreso</button>
   </div>
 </nav>
+<script src="js/config.js"></script>
 <script src="js/motor.js"></script>
 <script src="js/pres.js"></script>
 <script src="js/pres-import.js"></script>

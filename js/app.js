@@ -556,6 +556,7 @@ function renderNow() {
   else if (S.sub === "prueba") html = vPrueba(false);
   else if (S.sub === "pais") html = vPais(false);
   else if (S.sub === "reto") html = vReto();
+  else if (S.sub === "opinion") html = vOpinion();
   else if (S.sub === "pres") html = vPres();
   else if (S.sub === "video") html = vVideo();
   else if (S.sub === "pitch") html = vPitch();
@@ -572,6 +573,7 @@ function renderNow() {
   if (S.anim) window.scrollTo({ top: 0 });
   S.anim = null; S.toast = null;
   if (S.intro) introArm();
+  const ob = document.getElementById("topOp"); if (ob) ob.hidden = !CFG.PRUEBA || onb;
   const nt = navTab();
   document.querySelectorAll(".nav button, .top [data-tab]").forEach(b => { const on = b.dataset.tab === nt; b.classList.toggle("on", on); if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
   if (S.tab === "practica" && S.view === "results") requestAnimationFrame(() => requestAnimationFrame(() => { const b = document.getElementById("newBar"); if (b) b.style.width = b.dataset.w + "%"; }));
@@ -641,7 +643,7 @@ function saveProfile() {
   if (!progress.pais) progress.pais = guessPais() || "CL";
   save(); chime();
   // La prueba inicial de 60 s ya no es parte de la bienvenida: queda en Progreso. Cada persona llega a su pilar.
-  if (isNew) { S.ob = null; S.obPrueba = false;
+  if (isNew) { usoDatos().desde = today(); uso("perfil_" + g.value); usoDia(); S.ob = null; S.obPrueba = false;
     if (g.value === "presentacion") { S.tab = "presentaciones"; presStartNew(false); }
     else go({ tab: g.value === "entrevista" ? "entrevistas" : "inicio", sub: null }, "up"); }
   else { S.toast = "Perfil guardado."; render(); }
@@ -713,7 +715,7 @@ function introPaso(d) {
   I.i = Math.max(0, n); render();
 }
 function introFin() {
-  clearTimeout(introT); const desde = S.intro && S.intro.desde; S.intro = null;
+  clearTimeout(introT); const desde = S.intro && S.intro.desde; if (S.intro) uso(S.intro.i >= INTRO.length - 1 ? "intro_completa" : "intro_omitida_" + (S.intro.i + 1)); S.intro = null;
   progress.settings.introVista = true; save();
   go(desde === "ajustes" ? { tab: "ajustes", sub: null } : { ob: "bienvenida" }, "up");
 }
@@ -2322,7 +2324,7 @@ async function cvImport(file) {
   try {
     const r = await window.AuraImport.readCv(file), txt = t2(r.text);
     if (txt.split(/\s+/).length < 30) E.err = "No pudimos leer el texto de tu CV: parece una imagen. Expórtalo como PDF con texto, súbelo en Word o pega el texto.";
-    else { perfil().cv = { nombre: file.name, paginas: r.paginas || 0, texto: r.text.slice(0, 30000), fecha: today(), descartes: [] }; save(); }
+    else { perfil().cv = { nombre: file.name, paginas: r.paginas || 0, texto: r.text.slice(0, 30000), fecha: today(), descartes: [] }; uso("cv_subido"); save(); }
   } catch (e) {
     E.err = e.message === "doc" ? "Ese es un Word antiguo (.doc). Guárdalo como .docx o PDF y súbelo de nuevo." : e.message === "formato" ? "Sube tu CV en PDF o Word (.docx)." : "No pudimos leer ese archivo. Prueba con otro formato o pega el texto.";
   }
@@ -2373,7 +2375,7 @@ function entMicGo() {
     onText: txt => { E.live = txt; const el = document.getElementById("entLive"); if (el) el.textContent = txt; },
     onError: code => { E.rec = false; E.micErr = micMsg(code); render(); },
     onEnd: () => { if (!E.fin) return; E.fin = false; E.rec = false; const r = entEval(E.k, (E.live || "").trim(), (Date.now() - entT0) / 1000);
-      if (E.sim) E.sim.res[E.sim.i] = r; else E.res = r; markDay(); save(); render(); } });
+      if (E.sim) E.sim.res[E.sim.i] = r; else E.res = r; uso("respuesta_practicada"); markDay(); save(); render(); } });
   E.fin = false; entDict.start();
   if (!entDict.supported) { E.rec = false; E.micErr = micMsg("unsupported"); }
   render();
@@ -2432,7 +2434,8 @@ function entAct(a, el) {
       if (E.sim) E.sim.res[E.sim.i] = r; else E.res = r; markDay(); save(); render(); return true; }
     case "simGo": { const ks = EN.ORDEN_PREG.filter(k => k !== "preguntas" && RESP_LISTA(k)); for (let i = ks.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ks[i], ks[j]] = [ks[j], ks[i]]; }
       if (!ks.length) { entGo("resp"); return true; } entGo("pract", { k: ks[0], sim: { ks, i: 0, res: [] } }); setTimeout(() => speak(EN.PREGUNTAS[ks[0]].q), 400); return true; }
-    case "simNext": { const E = S.ev; entMicStop(); E.sim.i++; E.rec = false; E.micErr = null; if (E.sim.i < E.sim.ks.length) { E.k = E.sim.ks[E.sim.i]; setTimeout(() => speak(EN.PREGUNTAS[E.k].q), 300); } S.anim = "right"; render(); return true; }
+    case "simNext": { const E = S.ev; entMicStop(); E.sim.i++; E.rec = false; E.micErr = null; if (E.sim.i < E.sim.ks.length) { E.k = E.sim.ks[E.sim.i]; setTimeout(() => speak(EN.PREGUNTAS[E.k].q), 300); }
+      else { progress.simsEnt = (progress.simsEnt || 0) + 1; uso("simulacion_entrevista_completa"); save(); } S.anim = "right"; render(); return true; }
     case "simSalir": entMicStop(); go({ sub: null, tab: "entrevistas" }, "left"); return true;
   }
   return false;
@@ -2844,7 +2847,7 @@ function vProgreso() {
       <span class="barlabel"><span>${m}/${s.n} palabras</span><span>${rec.best ? "mejor: " + rec.best + (rec.lastFin ? " · último: " + FIN_NAME[rec.lastFin].toLowerCase() : "") : "sin simular"}</span></span></div></div>`; }).join("");
   const pr = pres(), hist = progress.presHist || [], nPres = hist.length + (pr && pr.bloques && pr.bloques.length ? 1 : 0);
   const ens = (pr && pr.ensayos || []).slice(-5).reverse();
-  const nEnt = ["entrevista", "practica"].reduce((a, id) => a + ((progress.sims[id] || {}).attempts || 0), 0);
+  const nEnt = ["entrevista", "practica"].reduce((a, id) => a + ((progress.sims[id] || {}).attempts || 0), 0) + (progress.simsEnt || 0);
   const extra = listReady().filter(s => pilarDe(s.id) === "progreso");
   return `<section class="section"><div><p class="eyebrow">Tu avance</p><h2>Progreso</h2></div>
       <div class="kpis">
@@ -2870,6 +2873,83 @@ function vProgreso() {
         <button class="btn sm" data-act="retoStart">${retoHoy() ? "Reto de hoy completado ✓" : "Hacer el reto de hoy"}</button></details>` : ""}
       ${p ? `<p class="note">¿Sientes que ganaste confianza (${p.confStart} → ${p.confNow})? Actualízala en <button class="linkish" data-act="tab" data-tab="ajustes">Ajustes</button>.</p>` : ""}
     </section>`;
+}
+
+/* ===================== MEDICIÓN DE USO =====================
+   Sin servidor: cada celular guarda cuántas veces se usó cada función y qué días se abrió la app (nunca textos,
+   nombres ni archivos). La persona puede enviar ese resumen junto con su opinión. Si en js/config.js hay un código
+   de GoatCounter (analítica sin cookies), además se envían los mismos nombres de evento, sin datos personales. */
+const CFG = window.AuraConfig || {};
+let gcCarga = null;
+function gcEnviar(ev) {
+  if (!CFG.GOATCOUNTER || !/^[a-z0-9-]+$/i.test(CFG.GOATCOUNTER)) return;
+  const go = () => { try { window.goatcounter && window.goatcounter.count && window.goatcounter.count({ path: "evento/" + ev, title: ev, event: true }); } catch (e) {} };
+  if (window.goatcounter && window.goatcounter.count) { go(); return; }
+  if (!gcCarga) { window.goatcounter = { no_onload: true, allow_local: false };
+    gcCarga = new Promise(res => { const s = document.createElement("script"); s.async = true; s.src = "https://gc.zgo.at/count.js";
+      s.dataset.goatcounter = "https://" + CFG.GOATCOUNTER + ".goatcounter.com/count"; s.onload = res; s.onerror = res; document.head.appendChild(s); }); }
+  gcCarga.then(go);
+}
+function usoDatos() { const u = progress.uso || (progress.uso = { desde: today(), dias: [], ev: {} }); u.dias = u.dias || []; u.ev = u.ev || {}; return u; }
+function uso(ev) {
+  try { const u = usoDatos(); u.ev[ev] = (u.ev[ev] || 0) + 1; save(); gcEnviar(ev); } catch (e) {}
+}
+function usoDia() {
+  const u = usoDatos(), d = today();
+  if (!u.dias.includes(d)) { u.dias.push(d); if (u.dias.length > 120) u.dias = u.dias.slice(-120); save(); gcEnviar("dia_activo"); }
+}
+/* Resumen para la opinión: solo conteos y fechas, sin contenido. */
+function usoResumen() {
+  const u = usoDatos(), e = u.ev, n = k => e[k] || 0, sum = re => Object.keys(e).filter(k => re.test(k)).reduce((a, k) => a + e[k], 0);
+  const desde = u.desde || today(), dias = daysBetween(desde, today()) + 1, d7 = u.dias.some(d => daysBetween(desde, d) >= 6);
+  const pf = progress.perfil || {}, pp = progress.pitch || {};
+  return [`Resumen de uso de Aura (sin contenido personal)`,
+    `Desde: ${desde} (${dias} ${dias === 1 ? "día" : "días"}) · días con la app abierta: ${u.dias.length}${dias >= 7 ? " · volvió después del día 7: " + (d7 ? "sí" : "no") : ""}`,
+    `Objetivo elegido: ${(progress.profile || {}).goal || "—"} · país: ${progress.pais || "—"} · voz en el navegador: ${VOZ_OK ? "sí" : "no"}`,
+    `Presentaciones: planes creados ${n("plan_creado")}, sesiones terminadas ${sum(/^sesion_/)}, ensayos completos ${n("sesion_ensayo")}, preguntas del profesor ${n("sesion_preguntas")}, modo silencioso ${n("modo_silencioso")}, videos grabados ${n("video_grabado")}`,
+    `Entrevistas: estilo ${pf.estilo && Object.keys(pf.estilo.resp || {}).length >= 12 ? "hecho" : "no"}, competencias clave ${(pf.clave || []).length}, logros ${(pf.logros || []).length}, respuestas practicadas ${n("respuesta_practicada")}, simulaciones ${n("simulacion_entrevista_completa")}, pitch ${pp.carrera ? "armado" : "no"}, CV ${pf.cv ? "subido" : "no"}`,
+    `Otros: respaldos ${n("respaldo")}, intro ${n("intro_completa") ? "vista completa" : sum(/^intro_omitida/) ? "omitida" : "—"}, Aura Pro pedido: ${Object.keys(e).filter(k => /^pro_/.test(k)).map(k => k.slice(4)).join(", ") || "nada"}`
+  ].join("\n");
+}
+
+/* ===================== OPINIÓN (prueba con usuarios) =====================
+   Un mini formulario dentro de la app. Con OPINION_URL en js/config.js abre ese Google Form; si no, arma el
+   mensaje y lo envía por WhatsApp (la persona elige a quién) o lo copia. */
+const OP_DONDE = ["Presentación", "Entrevista", "CV", "Pitch o video", "Otra cosa"];
+function opinionTexto() {
+  const O = S.op || {}, ta = document.getElementById("opTxt"), txt = ta ? ta.value.trim() : (O.txt || "");
+  return ["Opinión sobre Aura", O.donde ? "Estaba usando: " + O.donde : "", O.nota ? "Utilidad hoy: " + O.nota + " de 5" : "", txt ? "Comentario: " + txt : "",
+    O.resumen !== false ? "\n" + usoResumen() : ""].filter(Boolean).join("\n");
+}
+function vOpinion() {
+  const O = S.op || (S.op = { resumen: true });
+  return `<section class="section"><button class="back" data-act="subBack">← Volver</button>
+    <div><p class="eyebrow">Versión en prueba</p><h2>Danos tu opinión</h2><p class="lead" style="margin:0">Estás ayudando a construir Aura. Cuéntanos qué te costó, qué no entendiste o qué te gustaría.</p></div>
+    ${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
+    <div class="panel">
+      <div class="field"><span class="lbl">¿Qué estabas haciendo?</span><div class="pw-opts flat comp-sug">${OP_DONDE.map(x => chipBtn("opSet", x, x, O.donde === x, ' data-k="donde"')).join("")}</div></div>
+      <div class="field"><span class="lbl">¿Qué tan útil te parece Aura hoy?</span><div class="pw-opts flat op-nota">${[1, 2, 3, 4, 5].map(x => chipBtn("opSet", String(x), String(x), O.nota === String(x), ' data-k="nota"')).join("")}</div>
+        <small class="muted">1 = nada útil · 5 = muy útil</small></div>
+      <div class="field"><label for="opTxt">Cuéntanos</label><textarea id="opTxt" class="esc-ta" rows="5" placeholder="Ej: no entendí qué hacer después de subir mi PowerPoint…">${esc(O.txt || "")}</textarea></div>
+      <label class="ck-row"><input type="checkbox" id="opRes" ${O.resumen !== false ? "checked" : ""}> <span>Incluir mi resumen de uso (solo conteos: qué funciones usé y cuántos días; nada de lo que escribí)</span></label>
+      <details class="heard"><summary>Ver el resumen que se envía</summary><pre class="op-pre">${esc(usoResumen())}</pre></details>
+    </div>
+    ${CFG.OPINION_URL ? `<a class="btn primary wide" href="${esc(CFG.OPINION_URL)}" target="_blank" rel="noopener" data-act="opinionForm">Abrir el formulario de opinión</a><button class="btn" data-act="opinionCopiar">Copiar mi resumen para pegarlo en el formulario</button>`
+      : `<button class="btn primary wide" data-act="opinionWsp">Enviar por WhatsApp</button><button class="btn" data-act="opinionCopiar">Copiar el mensaje</button>`}
+  </section>`;
+}
+function opinionAct(a, el) {
+  const O = S.op || (S.op = { resumen: true }), guarda = () => { const ta = document.getElementById("opTxt"); if (ta) O.txt = ta.value; const r = document.getElementById("opRes"); if (r) O.resumen = r.checked; };
+  switch (a) {
+    case "opinionOpen": leaveSim(); stopDictado(); S.op = S.op || { resumen: true }; go({ sub: "opinion" }, "up"); return true;
+    case "opSet": guarda(); O[el.dataset.k] = O[el.dataset.k] === el.dataset.v ? null : el.dataset.v; render(); return true;
+    case "opinionWsp": { guarda(); const msg = opinionTexto(), num = CFG.OPINION_WSP ? String(CFG.OPINION_WSP).replace(/\D/g, "") : "";
+      uso("opinion_enviada"); window.open("https://wa.me/" + num + "?text=" + encodeURIComponent(msg), "_blank", "noopener"); return true; }
+    case "opinionCopiar": { guarda(); const msg = CFG.OPINION_URL ? usoResumen() : opinionTexto();
+      try { navigator.clipboard.writeText(msg).then(() => { S.toast = "Copiado. Pégalo donde quieras enviarlo."; render(); }, () => {}); } catch (e) {} return true; }
+    case "opinionForm": guarda(); uso("opinion_enviada"); return true;
+  }
+  return false;
 }
 
 /* ===================== RESPALDO ===================== */
@@ -2943,6 +3023,7 @@ function vAjustes() {
         : `<button class="btn" data-act="resetAsk">Reiniciar progreso</button>`}
       ${S.confirm === "wipe" ? `<div class="confirm"><span>¿Borrar perfil, progreso y ajustes? No se puede deshacer.</span><button class="btn danger" data-act="wipeYes">Sí, borrar todo</button><button class="btn ghost" data-act="cancelConfirm">Cancelar</button></div>`
         : `<button class="btn danger" data-act="wipeAsk">Borrar todo</button>`}</div>
+    <div class="panel"><h3>Ayúdanos a mejorar</h3><p class="note" style="margin:0">Aura está en prueba. Tu opinión decide qué mejoramos primero.</p><button class="btn primary" data-act="opinionOpen" style="align-self:flex-start">Danos tu opinión</button></div>
     <button class="btn ghost" data-act="introVer" style="align-self:center">Ver la introducción de Aura</button>
     <p class="note" style="text-align:center"><a href="privacidad.html" target="_blank" rel="noopener">Privacidad y términos</a> · Aura · versión en validación</p>
   </section>`;
@@ -3019,14 +3100,23 @@ async function openScen(id, anim) {
   }
   go({ view: "scenario" }, anim || "right");
 }
+const USO_ACT = {
+  pbOk: () => !(pres() || {}).planCreado ? "plan_creado" : null, psDone: () => S.ps ? "sesion_" + S.ps.tipo : null,
+  simGo: "simulacion_entrevista_inicio", ptOpen: "pitch_abierto", cvActualizar: "cv_actualiza_pitch", entEscOk: "respuesta_practicada",
+  vidGo: "video_grabado", bkExportar: "respaldo", bkSi: "respaldo_restaurado", proAvisame: el => "pro_" + el.dataset.f, opinionOpen: "opinion_abierta",
+  presSes: el => el.dataset.ses === "libre-preguntas" ? "preguntas_directas" : null, psQEscOk: "respuesta_escrita"
+};
 function onAct(e) {
   const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
   const a = el.dataset.act;
+  if (USO_ACT[a]) { const ev = typeof USO_ACT[a] === "function" ? USO_ACT[a](el) : USO_ACT[a]; if (ev) uso(ev); }
+  if (a === "toggle" && el.dataset.key === "silencio" && !progress.settings.silencio) uso("modo_silencioso");
   if (/^(pres|pd|pc|pb|ps)/.test(a) && !["psMicGo", "psMicStop", "psDone", "psFrase", "psSabe"].includes(a)) tick();
   if (vidAct(a, el)) return;
   if (ptAct(a, el)) return;
   if (entAct(a, el)) return;
   if (cvAct(a, el)) return;
+  if (opinionAct(a, el)) return;
   if (presAct(a, el, e)) return;
   if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle", "recStart", "recStop", "pwSave", "escNext", "escPrev", "escVoz"].includes(a)) tick();
   switch (a) {
@@ -3186,6 +3276,7 @@ async function boot() {
   else if (progress.pais && !DATA.paises.paises.some(x => x.id === progress.pais)) { progress.pais = "CL"; save(); }
   try { if ("speechSynthesis" in window) speechSynthesis.getVoices(); } catch (e) {}
   if (!progress.profile && !progress.settings.introVista) S.intro = { i: 0 };
+  if (progress.profile) usoDia();
   applyTheme(); render();
 }
 if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {

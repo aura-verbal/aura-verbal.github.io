@@ -547,10 +547,12 @@ function render() {
   try { renderNow(); } finally { rendering = false; }
 }
 function renderNow() {
-  const onb = !progress.profile || !!S.obPrueba;
+  const onb = !progress.profile || !!S.obPrueba || !!S.intro;
   document.body.classList.toggle("onboarding", onb);
+  document.body.classList.toggle("en-intro", !!S.intro);
   let html;
-  if (onb) html = vOnboarding();
+  if (S.intro) html = vIntro();
+  else if (onb) html = vOnboarding();
   else if (S.sub === "prueba") html = vPrueba(false);
   else if (S.sub === "pais") html = vPais(false);
   else if (S.sub === "reto") html = vReto();
@@ -569,6 +571,7 @@ function renderNow() {
   const scrollTurn = S.scrollTurn; S.scrollTurn = false;
   if (S.anim) window.scrollTo({ top: 0 });
   S.anim = null; S.toast = null;
+  if (S.intro) introArm();
   const nt = navTab();
   document.querySelectorAll(".nav button, .top [data-tab]").forEach(b => { const on = b.dataset.tab === nt; b.classList.toggle("on", on); if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
   if (S.tab === "practica" && S.view === "results") requestAnimationFrame(() => requestAnimationFrame(() => { const b = document.getElementById("newBar"); if (b) b.style.width = b.dataset.w + "%"; }));
@@ -656,9 +659,10 @@ function vOnboarding() {
   if (S.ob === "prueba") return vPrueba(true);
   return `<section class="hero">${heroPhoto()}
       <h1 class="over">Habla con seguridad <em>cuando importa</em>.</h1>
-      <p class="lead">Prepara tu disertación y tu entrevista de trabajo con tu propio material: Aura arma tu plan hasta el día D y te hace practicar en voz alta.</p></section>
+      <p class="lead">Prepara tu disertación y tu entrevista de trabajo con tu propio material. Aura arma tu plan hasta el día D y te hace practicar en voz alta, o en silencio, escribiendo: en la micro, el metro o el gym.</p></section>
     <section class="section"><button class="btn primary wide" data-act="obNext" data-to="perfil">Empezar</button>
       <p class="note" style="text-align:center">Gratis · sin registro · tu progreso se guarda en tu celular</p>
+      <button class="linkish" data-act="introVer" style="align-self:center">Ver cómo funciona (30 s)</button>
       ${bkPanel(true)}</section>`;
 }
 function vPais(ob) {
@@ -672,6 +676,57 @@ function vPais(ob) {
     <p class="eyebrow">Con modismos locales</p><div class="paises">${local.map(card).join("")}</div>
     <p class="eyebrow">Español neutro por ahora</p><div class="paises">${neutros.map(card).join("")}</div>
     <p class="note">Los modismos marcados como borrador los redactó la IA y falta que los revise un hablante nativo; pueden tener errores.</p>
+  </section>`;
+}
+
+/* ===================== INTRO ANIMADA (primera vez) =====================
+   Unos 30 s en 5 escenas tipo «historias»: avanza sola, se toca para pasar y se puede omitir desde el primer segundo.
+   Sin audio (los navegadores bloquean el sonido automático y mucha gente abre la app en lugares públicos).
+   Se ve una sola vez; se repite desde Ajustes o desde la bienvenida. */
+const INTRO_MS = 6000;
+const ICON_BUS = `<svg ${SVG_ATTR}><path d="M3 16V8a2 2 0 0 1 2-2h12.5l3.5 4v6z"/><path d="M3 11h18M8 6v5M13 6v5"/><circle cx="7.5" cy="17" r="1.7"/><circle cx="16.5" cy="17" r="1.7"/></svg>`;
+const ICON_METRO = `<svg ${SVG_ATTR}><rect x="5" y="3" width="14" height="14" rx="4"/><path d="M5 10h14M9 21l1.5-4M15 21l-1.5-4"/><circle cx="9" cy="13.5" r=".8"/><circle cx="15" cy="13.5" r=".8"/></svg>`;
+const ICON_GYM = `<svg ${SVG_ATTR}><path d="M6 8v8M3.5 10v4M18 8v8M20.5 10v4M6 12h12"/></svg>`;
+const ICON_FILE = `<svg ${SVG_ATTR}><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>`;
+const INTRO = [
+  { t: "Tu disertación. Tu entrevista.", s: "Aura te prepara para los dos momentos que más importan este año.",
+    v: () => `<div class="in-foto">${heroPhoto()}</div>` },
+  { t: "Trae tu propio material", s: "Tu PowerPoint, tu Canva, tu guion o tu CV. Nada de ejemplos genéricos.",
+    v: () => `<div class="in-files">${["PowerPoint", "Canva · PDF", "Tu CV"].map((x, i) => `<span class="in-file" style="--d:${i * 0.45}s">${ICON_FILE}<b>${x}</b></span>`).join("")}<span class="in-ok" style="--d:1.6s">${ICON_CHECK} Listo para practicar</span></div>` },
+  { t: "Un plan hasta el día D", s: "Aura reparte la práctica en los días que te quedan. Cada día sabes qué te toca.",
+    v: () => `<div class="in-cal">${["Hoy", "Mar", "Mié", "Jue", "Vie"].map((d, i) => `<span class="in-day" style="--d:${0.3 + i * 0.4}s"><small>${d}</small>${ICON_CHECK}</span>`).join("")}<span class="in-day dd" style="--d:2.4s"><small>Día D</small><b>★</b></span></div>` },
+  { t: "Practica en voz alta", s: "Aura te escucha, te muestra lo que olvidaste y cuenta tus muletillas.",
+    v: () => `<div class="in-voz"><span class="in-mic">${ICON_MIC}</span><span class="in-wave">${[0, 1, 2, 3, 4, 5, 6].map(i => `<i style="--d:${i * 0.12}s"></i>`).join("")}</span>
+      <p class="in-frase">${"Buenos días, mi nombre es Cristian y hoy les voy a presentar".split(" ").map((w, i) => `<span style="--d:${0.4 + i * 0.22}s">${w}</span>`).join(" ")}</p>
+      <span class="in-ok" style="--d:3.4s">0 muletillas · 1:05 min</span></div>` },
+  { t: "¿En la micro, el metro o el gym? Practica en silencio", s: "Completa los huecos y escribe tu presentación de memoria. Sin hablar, en cualquier lado.",
+    v: () => `<div class="in-sil"><div class="in-lugares"><span style="--d:0s">${ICON_BUS}<small>Micro</small></span><span style="--d:.5s">${ICON_METRO}<small>Metro</small></span><span style="--d:1s">${ICON_GYM}<small>Gym</small></span></div>
+      <p class="in-huecos">Hoy les quiero presentar <span class="hz" style="--d:1.4s">el proyecto</span> que hicimos <span class="hz" style="--d:2.2s">este semestre</span>.</p>
+      <span class="in-ok" style="--d:3s">${ICON_SIL} Modo silencioso</span></div>` }
+];
+let introT = 0;
+/* La última escena no avanza sola: espera a «Empezar». */
+function introArm() { clearTimeout(introT); if (!S.intro || S.intro.i >= INTRO.length - 1) return; const i = S.intro.i; introT = setTimeout(() => { if (S.intro && S.intro.i === i) introPaso(1); }, INTRO_MS); }
+function introPaso(d) {
+  const I = S.intro; if (!I) return; clearTimeout(introT);
+  const n = I.i + d; if (n >= INTRO.length) { introFin(); return; }
+  I.i = Math.max(0, n); render();
+}
+function introFin() {
+  clearTimeout(introT); const desde = S.intro && S.intro.desde; S.intro = null;
+  progress.settings.introVista = true; save();
+  go(desde === "ajustes" ? { tab: "ajustes", sub: null } : { ob: "bienvenida" }, "up");
+}
+function vIntro() {
+  const I = S.intro, sc = INTRO[I.i], ult = I.i === INTRO.length - 1;
+  return `<section class="intro" id="intro" role="dialog" aria-label="Introducción a Aura">
+    <div class="in-top"><div class="in-prog">${INTRO.map((_, k) => `<i class="${k < I.i ? "done" : k === I.i ? "now" : ""}" style="--ms:${INTRO_MS}ms"></i>`).join("")}</div>
+      <button class="in-skip" data-act="introFin">${ult ? "Cerrar" : "Omitir"}</button></div>
+    <div class="in-scene" data-act="introSig" key="${I.i}">
+      <div class="in-vis">${sc.v()}</div>
+      <h2 class="in-t">${esc(sc.t)}</h2><p class="in-s">${esc(sc.s)}</p></div>
+    <div class="in-bot">${I.i > 0 ? `<button class="btn ghost" data-act="introAnt">‹ Atrás</button>` : "<span></span>"}
+      <button class="btn primary" data-act="${ult ? "introFin" : "introSig"}">${ult ? (I.desde === "ajustes" ? "Listo" : "Empezar") : "Siguiente"}</button></div>
   </section>`;
 }
 
@@ -2878,6 +2933,7 @@ function vAjustes() {
         : `<button class="btn" data-act="resetAsk">Reiniciar progreso</button>`}
       ${S.confirm === "wipe" ? `<div class="confirm"><span>¿Borrar perfil, progreso y ajustes? No se puede deshacer.</span><button class="btn danger" data-act="wipeYes">Sí, borrar todo</button><button class="btn ghost" data-act="cancelConfirm">Cancelar</button></div>`
         : `<button class="btn danger" data-act="wipeAsk">Borrar todo</button>`}</div>
+    <button class="btn ghost" data-act="introVer" style="align-self:center">Ver la introducción de Aura</button>
     <p class="note" style="text-align:center"><a href="privacidad.html" target="_blank" rel="noopener">Privacidad y términos</a> · Aura · versión en validación</p>
   </section>`;
 }
@@ -2968,6 +3024,10 @@ function onAct(e) {
     case "brand": if (progress.profile && !S.obPrueba) setTab("inicio"); break;
     case "obNext": go({ ob: el.dataset.to }, "right"); break;
     case "bkExportar": bkExportar(); break;
+    case "introSig": introPaso(1); break;
+    case "introAnt": introPaso(-1); break;
+    case "introFin": introFin(); break;
+    case "introVer": S.intro = { i: 0, desde: progress.profile ? "ajustes" : null }; go({}, "up"); break;
     case "bkSi": bkAplicar(); break;
     case "bkNo": S.bk = null; render(); break;
     case "obBack": go({ ob: el.dataset.to }, "left"); break;
@@ -3115,6 +3175,7 @@ async function boot() {
   if (progress.profile && !progress.pais) { progress.pais = guessPais() || "CL"; S.paisAuto = true; save(); }
   else if (progress.pais && !DATA.paises.paises.some(x => x.id === progress.pais)) { progress.pais = "CL"; save(); }
   try { if ("speechSynthesis" in window) speechSynthesis.getVoices(); } catch (e) {}
+  if (!progress.profile && !progress.settings.introVista) S.intro = { i: 0 };
   applyTheme(); render();
 }
 if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {

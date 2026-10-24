@@ -635,6 +635,58 @@ body.vid-full{overflow:hidden}
 button.card.pilar.tipo{cursor:pointer}
 .tipo-sel{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0;padding:10px 12px;border-radius:12px;background:var(--surface-2);font-size:.92rem}
 .tipo-sel svg{width:20px;height:20px;color:var(--area-acad);flex:none}
+/* ---------- Intro animada (primera vez) ---------- */
+body.en-intro .top{display:none}
+.intro{display:flex;flex-direction:column;gap:10px;min-height:calc(100vh - 56px);min-height:calc(100svh - 56px);padding-top:14px}
+body.en-intro .wrap{padding-block-end:16px}
+.in-top{display:flex;align-items:center;gap:12px}
+.in-prog{flex:1;display:flex;gap:5px}
+.in-prog i{flex:1;height:4px;border-radius:4px;background:var(--line);overflow:hidden;position:relative}
+.in-prog i.done{background:var(--accent)}
+.in-prog i.now::after{content:"";position:absolute;inset:0;background:var(--accent);transform-origin:left;animation:inFill var(--ms) linear both}
+@keyframes inFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.in-skip{background:none;border:0;color:var(--muted);font:inherit;font-weight:700;padding:8px 4px;min-height:40px;cursor:pointer}
+.in-scene{flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;cursor:pointer;animation:inUp .5s cubic-bezier(.2,.8,.2,1) both;min-height:0}
+@keyframes inUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.in-vis{min-height:220px;display:flex;align-items:center;justify-content:center}
+.in-t{font-family:var(--font-display);font-size:1.75rem;line-height:1.15;margin:4px 0 0}
+.in-s{margin:0;color:var(--muted);font-size:1.02rem;line-height:1.5}
+.in-bot{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.in-bot .btn.primary{min-width:150px;min-height:50px}
+.in-foto{width:100%}
+.in-foto .photo{animation:none}
+.in-files,.in-cal,.in-voz,.in-sil{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.in-file{display:flex;align-items:center;gap:10px;width:min(280px,90%);padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--elev);animation:inSlide .6s cubic-bezier(.2,.8,.2,1) var(--d) both}
+.in-file svg{width:22px;height:22px;color:var(--accent);flex:none}
+@keyframes inSlide{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+.in-ok{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:99px;background:var(--good-soft);color:var(--good);font-weight:700;font-size:.92rem;animation:inPop .45s cubic-bezier(.2,.9,.3,1.3) var(--d) both}
+.in-ok svg{width:18px;height:18px}
+@keyframes inPop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+.in-cal{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:8px;max-width:330px}
+.in-day{width:96px;height:78px;border-radius:14px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.in-day small{color:var(--muted);font-weight:700}
+.in-day svg{width:26px;height:26px;color:var(--good);animation:inPop .4s cubic-bezier(.2,.9,.3,1.3) var(--d) both}
+.in-day.dd{border:2px solid var(--accent);background:var(--accent-soft);animation:inPop .5s cubic-bezier(.2,.9,.3,1.3) var(--d) both}
+.in-day.dd b{color:var(--accent);font-size:1.3rem}
+.in-mic{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);animation:inPulse 1.6s ease-in-out infinite}
+.in-mic svg{width:34px;height:34px}
+@keyframes inPulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--accent) 40%, transparent)}50%{box-shadow:0 0 0 14px transparent}}
+.in-wave{display:flex;align-items:center;gap:5px;height:36px}
+.in-wave i{width:6px;height:100%;border-radius:4px;background:var(--accent);transform-origin:center;animation:inWave .9s ease-in-out var(--d) infinite alternate}
+@keyframes inWave{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
+.in-frase{margin:0;text-align:center;font-size:1.05rem;line-height:1.5;max-width:320px}
+.in-frase span{opacity:.18;animation:inWord .3s ease var(--d) forwards}
+@keyframes inWord{to{opacity:1}}
+.in-lugares{display:flex;gap:14px}
+.in-lugares span{display:flex;flex-direction:column;align-items:center;gap:4px;width:78px;padding:10px 0;border-radius:14px;background:var(--surface);border:1px solid var(--line);animation:inLugar 3s ease-in-out var(--d) infinite}
+.in-lugares svg{width:30px;height:30px;color:var(--area-acad)}
+.in-lugares small{font-weight:700;color:var(--muted)}
+@keyframes inLugar{0%,30%,100%{transform:none;border-color:var(--line)}12%{transform:translateY(-6px);border-color:var(--accent)}}
+.in-huecos{margin:0;text-align:center;font-size:1.05rem;line-height:1.9;max-width:330px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.in-huecos .hz{display:inline-block;min-width:96px;border-bottom:2px solid var(--accent);color:transparent;animation:inType .5s steps(10) var(--d) forwards}
+@keyframes inType{to{color:var(--accent)}}
+@media (prefers-reduced-motion:reduce){.intro *{animation-duration:.01ms !important;animation-delay:0s !important;animation-iteration-count:1 !important}.in-prog i.now::after{animation:none;transform:scaleX(1)}}
+@media (max-height:640px){.in-vis{min-height:170px}.in-t{font-size:1.45rem}}
 /* ---------- Pitch y video currículum ---------- */
 .tipo-opt{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;border-radius:14px !important;width:100%;padding:12px 14px !important}
 .tipo-list{display:flex;flex-direction:column;gap:10px}

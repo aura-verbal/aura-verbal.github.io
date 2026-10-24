@@ -2387,13 +2387,18 @@ function presBtnAttrs() {
   const hoy = presHoy(p);
   return daysBetween(today(), p.fecha) < 0 || !hoy ? 'data-act="presOpen" data-pv="plan"' : `data-act="presOpen" data-pv="sesion" data-ses="${hoy.id}"`;
 }
+/* Fotos de los pilares: las dos mitades de la imagen de bienvenida (el mismo estudiante exponiendo y en una entrevista).
+   Solo en los puntos de entrada (Inicio y portada de cada pilar); las pantallas de práctica quedan limpias. */
+function pilarImg(k, cls) {
+  return `<span class="${cls}" aria-hidden="true"><picture><source srcset="img/pilar-${k}.webp" type="image/webp"><img src="img/pilar-${k}.jpg" alt="" width="760" height="380" loading="lazy" decoding="async"></picture></span>`;
+}
 function pilarCards() {
   const p = pres(), pendiente = p && (!p.bloques || !p.bloques.length), paso = p && !pendiente && daysBetween(today(), p.fecha) < 0;
-  return `<button class="card pilar ar-acad" ${presBtnAttrs()}>
+  return `<button class="card pilar con-img ar-acad" ${presBtnAttrs()}>${pilarImg("pres", "pilar-img")}
       <span class="card-head"><span class="s-icon big">${ICON_PRES}</span><span><span class="eyebrow ar">Presentaciones</span><h3>${pendiente ? esc(p.tema || "Mi presentación") : paso ? "¿Cómo te fue?" : "Una presentación o un video"}</h3></span></span>
       <span class="meta">${pendiente ? "Te falta cargar tu presentación o tu guion para crear el plan." : paso ? `Cuéntanos cómo te fue con «${esc(p.tema)}» y prepara la siguiente.` : "En vivo o grabada. Sube tu PowerPoint, Canva o guion y Aura arma tu plan hasta la fecha."}</span>
       <span class="pill-cta solid">${pendiente ? "Continuar" : paso ? "Contar" : "Empezar"} ${ICON_GO}</span></button>
-    <button class="card pilar ar-lab" data-act="tab" data-tab="entrevistas">
+    <button class="card pilar con-img ar-lab" data-act="tab" data-tab="entrevistas">${pilarImg("ent", "pilar-img")}
       <span class="card-head"><span class="s-icon big">${ICON_ENT}</span><span><span class="eyebrow ar">Entrevistas</span><h3>Una entrevista de trabajo</h3></span></span>
       <span class="meta">Descubre tus fortalezas y debilidades, arma tus respuestas y ensaya por voz.</span>
       <span class="pill-cta">Empezar ${ICON_GO}</span></button>`;
@@ -2437,6 +2442,7 @@ function vPresHub() {
   const sim = (id, titulo, sub) => { const m = meta(id); if (!m || !m.ready) return "";
     return `<button class="card mini ar-acad" data-act="open" data-id="${id}"><span class="s-icon">${iconFor(id, m.area)}</span><b>${titulo}</b><span class="note" style="margin:0">${sub}</span></button>`; };
   return `<section class="section">${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
+    ${pilarImg("pres", "hub-img ar-acad")}
     <div class="hub-head ar-acad"><div><p class="eyebrow ar">Pilar 1</p><h2>Presentaciones</h2></div>
       ${p ? `<button class="btn primary" data-act="presNewAsk">+ Nueva</button>` : ""}</div>
     ${S.confirm === "presNueva" ? `<div class="confirm"><span>¿Empezar una nueva? «${esc(p.tema || "Tu presentación")}» pasa a tu historial.</span><button class="btn primary" data-act="presNewYes">Sí, nueva</button><button class="btn ghost" data-act="cancelConfirm">Cancelar</button></div>` : ""}
@@ -2461,6 +2467,7 @@ function vEntrevistas() {
   const simBtns = ["entrevista", "practica"].filter(id => meta(id) && meta(id).ready).map((id, i) => { const rec = progress.sims[id] || {};
     return `<button class="btn${i === 0 ? " primary lab" : " lab-ghost"}" data-act="open" data-id="${id}">${id === "entrevista" ? "Entrevista de trabajo" : "Entrevista de práctica"}${rec.best ? ` · mejor ${rec.best}` : ""}</button>`; }).join("");
   return `<section class="section">${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
+    ${pilarImg("ent", "hub-img ar-lab")}
     <div class="hub-head ar-lab"><div><p class="eyebrow ar">Pilar 2</p><h2>Entrevistas</h2><p class="lead" style="margin:4px 0 0">Llega a tu entrevista sabiendo qué decir, en cuatro pasos.</p></div></div>
     ${eventoCard()}
     <ol class="pasos ar-lab">

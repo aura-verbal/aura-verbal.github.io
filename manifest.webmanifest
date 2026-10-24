@@ -1,7 +1,7 @@
 {
-  "name": "Aura",
+  "name": "Aura · Habla con seguridad",
   "short_name": "Aura",
-  "description": "Prepara tu disertación y tu entrevista de trabajo con tu propio material.",
+  "description": "Prepara tu disertación y tu entrevista de trabajo con tu propio material. Practica en voz alta o en silencio.",
   "lang": "es-CL",
   "start_url": "./",
   "scope": "./",
@@ -10,7 +10,83 @@
   "background_color": "#f7f3ec",
   "theme_color": "#f7f3ec",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "./",
+  "dir": "ltr",
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "shortcuts": [
+    {
+      "name": "Mis presentaciones",
+      "short_name": "Presentaciones",
+      "url": "./?ir=presentaciones",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Mis entrevistas",
+      "short_name": "Entrevistas",
+      "url": "./?ir=entrevistas",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "herramientas/playstore/capturas/01_bienvenida.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Bienvenida de Aura"
+    },
+    {
+      "src": "herramientas/playstore/capturas/03_plan.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Plan de estudio hasta el día de tu presentación"
+    },
+    {
+      "src": "herramientas/playstore/capturas/04_preguntas.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Preguntas del profesor sobre tu presentación"
+    },
+    {
+      "src": "herramientas/playstore/capturas/06_entrevistas.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Prepara tu entrevista en cuatro pasos"
+    }
   ]
 }

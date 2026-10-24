@@ -1556,7 +1556,7 @@ function presAct(a, el, ev) {
       return true; }
     case "pbOk": {
       const t = PR.asignarTiempo(p.bloques, p.minutos);
-      p.planCreado = true; save(); S.toast = t.faltan ? `Plan creado. ${t.faltan} bloques sin guion: practicarás con el texto de la lámina.` : "Plan creado. Empieza por la sesión de hoy.";
+      p.planCreado = true; save(); S.toast = t.faltan ? `Plan creado. ${t.faltan === 1 ? "1 bloque no tiene guion: practicarás con el texto de su lámina." : t.faltan + " bloques no tienen guion: practicarás con el texto de sus láminas."}` : "Plan creado. Empieza por la sesión de hoy.";
       presGo("plan"); return true; }
     case "presSes": presStartSes(el.dataset.ses); return true;
     case "presDelAsk": S.confirm = "presDel"; render(); return true;
@@ -3277,6 +3277,7 @@ async function boot() {
   try { if ("speechSynthesis" in window) speechSynthesis.getVoices(); } catch (e) {}
   if (!progress.profile && !progress.settings.introVista) S.intro = { i: 0 };
   if (progress.profile) usoDia();
+  try { const ir = new URLSearchParams(location.search).get("ir"); if (progress.profile && ["presentaciones", "entrevistas", "progreso"].includes(ir)) S.tab = ir; } catch (e) {}   // atajos del ícono de la app
   applyTheme(); render();
 }
 if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {

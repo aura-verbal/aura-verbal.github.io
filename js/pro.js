@@ -24,6 +24,9 @@
   };
   const AuraPro = {
     activo: false, ENDPOINT: null, FUNCIONES,
+    /* Puerta falsa (fake door): mientras Pro no exista, el botón «Avísame cuando esté» abre un formulario
+       externo (lista de espera + preguntas de precio). Pega aquí el enlace del Google Form; con null se ve el candado. */
+    FORM_URL: null,
     prompt(id, datos) { const f = FUNCIONES[id]; return f ? f.prompt(datos || {}) : ""; },
     async pedir(id, datos) {
       if (!this.activo || !this.ENDPOINT) throw new Error("pro-inactivo");

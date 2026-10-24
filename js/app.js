@@ -2180,7 +2180,10 @@ function cvHechoHTML(ctx) {
 }
 function proCards(ids) {
   return ids.map(id => { const f = PRO.FUNCIONES[id]; return `<div class="pro-card lock"><span class="tag">${ICON_LOCK} Aura Pro · próximamente</span><p><b>${esc(f.nombre)}.</b> ${esc(f.desc)}</p>
-    <button class="btn sm" disabled aria-disabled="true">${ICON_LOCK} Disponible con Aura Pro</button></div>`; }).join("");
+    ${PRO.FORM_URL ? `<a class="btn sm primary" href="${esc(PRO.FORM_URL)}" target="_blank" rel="noopener" data-act="proAvisame" data-f="${id}">Avísame cuando esté</a>${proPedidos().includes(id) ? `<small class="muted">Ya lo pediste. ¡Gracias!</small>` : ""}`
+      : `<button class="btn sm" disabled aria-disabled="true">${ICON_LOCK} Disponible con Aura Pro</button>`}</div>`; }).join("");
+}
+function proPedidos() { return (progress.settings && progress.settings.proPedidos) || [];
 }
 function vCv() {
   const E = S.ev, c = cvData(), back = E.from === "pitch" ? ["cvVolver", "Tu pitch"] : ["entSalir", "Entrevistas"];
@@ -2236,6 +2239,8 @@ async function cvImport(file) {
 function cvAct(a, el) {
   const p = perfil(), pp = pitchData();
   switch (a) {
+    case "proAvisame": { const s = progress.settings || (progress.settings = {}), f = el.dataset.f; s.proPedidos = [...new Set((s.proPedidos || []).concat([f]))]; save();
+      setTimeout(render, 300); return true; }   // el enlace abre el formulario por sí solo
     case "cvPegar": S.ev.pegar = true; render(); return true;
     case "cvPegarOk": { const v = (document.getElementById("cvPegar") || {}).value || "";
       if (t2(v).split(/\s+/).length < 30) { S.ev.err = "Pega el texto completo de tu CV (con tus secciones)."; render(); return true; }

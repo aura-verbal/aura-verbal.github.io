@@ -317,7 +317,7 @@ const ICON_MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const ICON_STOP = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
 const ICON_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13"/><path d="M7 8l5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>';
 function heroPhoto(size) {
-  return `<figure class="photo${size ? " " + size : ""}"><picture><source srcset="hero.webp" type="image/webp"><img src="hero.jpg" width="1200" height="800" alt="Dos jóvenes conversando con confianza en un café, con luz dorada de atardecer"></picture></figure>`;
+  return `<figure class="photo${size ? " " + size : ""}"><picture><source srcset="hero.webp" type="image/webp"><img src="hero.jpg" width="1200" height="800" alt="El mismo estudiante en dos momentos: a la izquierda expone con seguridad frente a su curso; a la derecha, sonríe confiado en una entrevista de trabajo"></picture></figure>`;
 }
 
 /* ===================== SONIDOS (Web Audio API) ===================== */

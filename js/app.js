@@ -583,7 +583,7 @@ function navTab() {
   if (S.tab === "practica") return pilarDe(S.sid);
   return S.tab;
 }
-function go(patch, anim) { S.cvHecho = null; Object.assign(S, patch); S.anim = anim || "up"; render(); }
+function go(patch, anim) { S.cvHecho = null; S.ptOk = false; Object.assign(S, patch); S.anim = anim || "up"; render(); }
 function setTab(t) {
   if (t === S.tab && !S.sub) { if (t === "practica" && S.view !== "list") { leaveSim(); go({ view: "list" }, "left"); } return; }
   const dir = TABS.indexOf(t) >= TABS.indexOf(S.tab) ? "right" : "left";
@@ -1752,6 +1752,16 @@ function pitchData() {
   return p;
 }
 function pitchTexto(p) { return p.editado && p.guion ? p.guion : PT.guion(p); }
+/* Edición a mano del guion: lo escrito queda como borrador (no se pierde) y solo pasa a ser «tu pitch»
+   (el que usan el teleprompter, el video y «Escucharlo») cuando aprietas Guardar. */
+const ptSucio = p => p.guionBorrador != null && p.guionBorrador.trim() !== pitchTexto(p).trim();
+function ptSaveHTML(p) {
+  if (ptSucio(p)) return `<div class="pt-save"><span class="note" style="margin:0"><b>Tienes cambios sin guardar.</b> El teleprompter usa la última versión guardada.</span>
+    <div class="row"><button class="btn primary" data-act="ptGuardar">${ICON_CHECK} Guardar cambios</button><button class="btn" data-act="ptDescartar">Descartar</button></div></div>`;
+  if (S.ptOk) return `<p class="fb ok" style="margin:0">${ICON_CHECK} Guardado. Este es ahora tu pitch.</p><span class="note"><button class="linkish" data-act="ptRegen">Volver a armarlo desde tus respuestas</button></span>`;
+  return p.editado ? `<span class="note">Editado a mano y guardado. <button class="linkish" data-act="ptRegen">Volver a armarlo desde tus respuestas</button></span>`
+    : `<span class="note">Puedes cambiarlo aquí mismo; aparecerá el botón «Guardar cambios».</span>`;
+}
 const PT_PASOS = [
   { k: "tipo", t: "¿Para qué es tu pitch?", why: "El mismo relato sirve para tres cosas; cambia cuánto dura y cómo termina." },
   { k: "saludo", t: "Saludo y nombre", why: "Empieza simple: un saludo formal y tu nombre completo." },
@@ -1822,8 +1832,8 @@ function vPitch() {
       ${(() => { const c = cvData(), sug = c ? cvSugerencias() : [];
         if (!c) return `<p class="note" style="margin:0">¿Tienes CV? <button class="linkish" data-act="entIr" data-v="cv" data-from="pitch">Súbelo</button> y te decimos qué tienes ahí y no estás usando en tu pitch.</p>`;
         return sug.length || S.cvHecho ? `<div class="panel"><h3>De tu CV, y no está en tu pitch</h3>${cvHechoHTML("pitch")}${cvSugHTML(sug, "pitch")}</div>` : ""; })()}
-      <div class="field"><label for="ptGuion">Tu guion (puedes editarlo)</label><textarea id="ptGuion" class="esc-ta" rows="12">${esc(txt)}</textarea>
-        ${p.editado ? `<span class="note">Lo editaste a mano. <button class="linkish" data-act="ptRegen">Volver a armarlo desde tus respuestas</button></span>` : `<span class="note">Si cambias tus respuestas, el guion se vuelve a armar solo.</span>`}</div>
+      <div class="field"><label for="ptGuion">Tu guion (puedes editarlo)</label><textarea id="ptGuion" class="esc-ta" rows="12">${esc(p.guionBorrador != null ? p.guionBorrador : txt)}</textarea>
+        <div id="ptSave">${ptSaveHTML(p)}</div></div>
       <div class="row"><button class="btn primary" data-act="vidOpen" data-from="pitch">${ICON_CAM} ${p.tipo === "video" ? "Grabar con teleprompter" : "Practicar con teleprompter"}</button>
         <button class="btn" data-act="ptOir">${ICON_SPEAK} Escucharlo</button><button class="btn" data-act="ptCopy">Copiar</button></div>
       <p class="note">Consejo: no lo memorices palabra por palabra. Apréndete el orden de las 7 partes y las palabras clave; así sonarás natural.</p>
@@ -1858,7 +1868,9 @@ function ptAct(a, el) {
     case "ptComp": if (p.comps.length < 8) p.comps.push(el.dataset.v); save(); render(); return true;
     case "ptLogro": { const l = perfil().logros.filter(x => EN.fraseLogro(x))[+el.dataset.i]; if (l) { p.momento = EN.fraseLogro(l).replace(/\.$/, ""); p.momento = p.momento[0].toLowerCase() + p.momento.slice(1); save(); render(); } return true; }
     case "ptCompDel": p.comps.splice(+el.dataset.i, 1); save(); render(); return true;
-    case "ptRegen": p.editado = false; p.guion = ""; save(); render(); return true;
+    case "ptRegen": p.editado = false; p.guion = ""; delete p.guionBorrador; S.ptOk = false; save(); render(); return true;
+    case "ptGuardar": if (p.guionBorrador != null) { p.guion = p.guionBorrador.trim(); p.editado = true; delete p.guionBorrador; S.ptOk = true; save(); render(); } return true;
+    case "ptDescartar": delete p.guionBorrador; S.ptOk = false; save(); render(); return true;
     case "ptOir": speak(pitchTexto(p)); return true;
     case "ptCopy": { const txt = pitchTexto(p), ok = () => { el.textContent = "¡Copiado!"; };
       try { navigator.clipboard.writeText(txt).then(ok, () => {}); } catch (e) {} return true; }
@@ -2139,7 +2151,7 @@ function cvSugHTML(list, ctx) {
       : `<button class="pw-opt cv-pick${cur === j ? " on" : ""}" data-act="cvSel" data-i="${i}" data-j="${j}" aria-pressed="${cur === j}">${cur === j ? "✓ " : "+ "}${esc(a.lbl)}</button>`).join("")}
       <button class="linkish" data-act="cvDescartar" data-i="${i}">No aplica</button></div></div>`; }).join("");
   const barra = n ? `<div class="cv-update"><button class="btn primary wide" data-act="cvActualizar">Actualizar mi pitch (${n} ${n === 1 ? "cambio" : "cambios"})</button>
-      ${pp.editado ? `<span class="note" style="margin:0">Editaste tu guion a mano: al actualizar se vuelve a armar desde tus respuestas.</span>` : ""}</div>`
+      ${pp.editado || pp.guionBorrador != null ? `<span class="note" style="margin:0">Editaste tu guion a mano: al actualizar se vuelve a armar desde tus respuestas.</span>` : ""}</div>`
     : list.length ? `<p class="note" style="margin:0">Marca lo que quieres sumar y después actualiza tu pitch de una vez.</p>` : "";
   return items + barra;
 }
@@ -2216,7 +2228,7 @@ function cvAct(a, el) {
     case "cvActualizar": { const sel = S.cvSel || {}, list = cvSugerencias(); let n = 0, logros = 0;
       list.forEach(s => { const j = sel[cvKey(s)], ac = j != null && s.acciones[j]; if (!ac) return;
         if (CVM.aplicar(ac, pp, p) === "logro") { logros++; p.cv.descartes = (p.cv.descartes || []).concat([cvKey(s)]); } else n++; });
-      if (n) { pp.editado = false; pp.guion = ""; }
+      if (n) { pp.editado = false; pp.guion = ""; delete pp.guionBorrador; }
       S.cvSel = {}; S.cvHecho = { n, logros }; save(); render();
       const d = document.getElementById("cvDone"); if (d) d.scrollIntoView({ block: "center", behavior: "smooth" }); return true; }
     case "cvVerGuion": { const g = document.getElementById("ptGuion"); if (g) { g.scrollIntoView({ block: "center", behavior: "smooth" }); g.classList.add("flash"); setTimeout(() => g.classList.remove("flash"), 1600); } return true; }
@@ -2804,7 +2816,8 @@ app.addEventListener("input", e => {
     if (E.v === "respEdit" && /^resp\./.test(tg.dataset.ef)) { const c = perfil().resp[E.k]; c.editado = false; const ta = document.getElementById("entTexto"), txt = entTexto(E.k); if (ta) ta.value = txt; const inf = document.getElementById("entInfo"); if (inf) inf.textContent = txt ? `Cerca de ${EN.segundos(txt)} s en voz alta.` : ""; }
   }
   if (tg.id === "entTexto" && S.ev) { const c = perfil().resp[S.ev.k] || (perfil().resp[S.ev.k] = {}); c.texto = tg.value; c.editado = true; save(); }
-  if (tg.id === "ptGuion") { const p = pitchData(); p.guion = tg.value; p.editado = true; save(); }
+  if (tg.id === "ptGuion") { const p = pitchData(), antes = ptSucio(p); p.guionBorrador = tg.value; if (!ptSucio(p)) delete p.guionBorrador; S.ptOk = false; save();
+    if (antes !== ptSucio(p) || antes === false) { const box = document.getElementById("ptSave"); if (box) box.innerHTML = ptSaveHTML(p); } }
   if (tg.id === "pdTema" && S.pd) S.pd.tema = tg.value;
   if (tg.id === "pcText") S.pcText = tg.value;
   if (tg.id === "pbIns" || tg.id === "pbMat") { S[tg.id] = tg.value; const pp = document.getElementById("pbPrompt"), p0 = pres(); if (pp && p0) pp.value = PR.promptGuion({ tema: p0.tema, minutos: p0.minutos, fecha: fechaLarga(p0.fecha), instrucciones: S.pbIns || "", material: S.pbMat || "", pais: paisObj().nombre }); }

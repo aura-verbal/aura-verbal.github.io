@@ -69,4 +69,6 @@ if (bl.competencias.length !== 3 || bl.logros.length !== 2) err("bloques", bl.co
 // Encabezados en mayúsculas, con dos puntos o con #
 if (C.tipoSeccion("EXPERIENCIA LABORAL:") !== "experiencia" || C.tipoSeccion("## Educación") !== null && C.secciones("## Educación\nx").formacion === undefined) err("tipoSeccion");
 if (C.tipoSeccion("Experiencia en atención de clientes en retail durante dos años") !== null) err("frase larga no es sección");
+const pm = { comps: ["Responsabilidad", "Manejo de Excel, Power BI y Python"] }; C.aplicar({ k: "comp", v: "Manejo de AMPL y Excel" }, pm, {});
+if (pm.comps.join(" | ") !== "Responsabilidad | Manejo de Excel, Power BI, Python y AMPL") err("fusión de herramientas", pm.comps);
 console.log("ERRORS", errors);

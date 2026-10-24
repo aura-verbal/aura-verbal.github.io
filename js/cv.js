@@ -167,7 +167,13 @@
   /* Aplica una sugerencia al pitch (o a los logros). Devuelve qué cambió. */
   function aplicar(acc, pitch, perfil) {
     const v = t(acc.v);
-    if (acc.k === "comp") { pitch.comps = pitch.comps || []; if (!pitch.comps.some(c => norm(c) === norm(v))) pitch.comps.push(v); return "comps"; }
+    if (acc.k === "comp") { pitch.comps = pitch.comps || []; if (pitch.comps.some(c => norm(c) === norm(v))) return "comps";
+      // Herramientas: si ya hay un «Manejo de …», se suman ahí para no repetir «manejo de» dos veces en el guion.
+      const i = /^manejo de /i.test(v) ? pitch.comps.findIndex(c => /^manejo de /i.test(t(c))) : -1;
+      if (i >= 0) { const ya = t(pitch.comps[i]).replace(/^manejo de /i, "").split(/,\s*|\s+y\s+/).map(t).filter(Boolean),
+          nu = v.replace(/^manejo de /i, "").split(/,\s*|\s+y\s+/).map(t).filter(x => x && !ya.some(y => norm(y) === norm(x)));
+        pitch.comps[i] = "Manejo de " + lista(ya.concat(nu)); }
+      else pitch.comps.push(v); return "comps"; }
     if (acc.k === "aporte") { pitch.aporte = t(pitch.aporte) ? t(pitch.aporte) + " y " + v : v; return "aporte"; }
     if (acc.k === "momento") { pitch.momento = v; return "momento"; }
     if (acc.k === "enfasis") { pitch.enfasis = t(pitch.enfasis) ? t(pitch.enfasis) + ", " + v : v; return "enfasis"; }

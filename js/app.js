@@ -549,6 +549,7 @@ function renderNow() {
   else if (S.sub === "reto") html = vReto();
   else if (S.sub === "pres") html = vPres();
   else if (S.sub === "video") html = vVideo();
+  else if (S.sub === "pitch") html = vPitch();
   else if (S.tab === "inicio") html = vInicio();
   else if (S.tab === "presentaciones") html = vPresHub();
   else if (S.tab === "entrevistas") html = vEntrevistas();
@@ -575,6 +576,7 @@ function renderNow() {
 }
 /* Pestaña que se marca en la barra: el flujo de presentación es de Presentaciones; un escenario, de su pilar. */
 function navTab() {
+  if (S.sub === "pitch" || S.sub === "video" && ["pitch", "entrevistas"].includes(S.vidFrom)) return "entrevistas";
   if (S.sub === "pres" || S.sub === "video") return "presentaciones";
   if (S.sub === "prueba") return "progreso";
   if (S.tab === "practica") return pilarDe(S.sid);
@@ -1585,6 +1587,7 @@ function guionDePres(p) { return (p.bloques || []).map(b => presTxt(b)).filter(B
 function vidOpen(from) {
   const c = vidCfg(), p = pres();
   if (from === "pres" && p && p.bloques && p.bloques.length) c.texto = guionDePres(p);
+  if (from === "pitch") c.texto = pitchTexto(pitchData());
   S.vidFrom = from || (["inicio", "presentaciones", "entrevistas"].includes(S.tab) ? S.tab : "presentaciones");
   S.vid = { fase: "editor", err: null };
   leaveSim(); go({ sub: "video" }, "right");
@@ -1675,7 +1678,7 @@ function vidDescargar() {
 }
 const TP_SIZE = { s: "Pequeña", m: "Mediana", l: "Grande" };
 function vVideo() {
-  const c = vidCfg(), V = S.vid || (S.vid = { fase: "editor" }), words = PR.countWords(c.texto), back = S.vidFrom === "pres" ? "Mi plan" : PILAR_NOM[S.vidFrom] || "Presentaciones";
+  const c = vidCfg(), V = S.vid || (S.vid = { fase: "editor" }), words = PR.countWords(c.texto), back = S.vidFrom === "pres" ? "Mi plan" : S.vidFrom === "pitch" ? "Mi pitch" : PILAR_NOM[S.vidFrom] || "Presentaciones";
   if (V.fase === "camara") {
     const parr = String(c.texto).split(/\n\s*\n/).map(x => x.trim()).filter(Boolean);
     return `<div class="vid-stage" role="dialog" aria-label="Grabar video con teleprompter">
@@ -1722,7 +1725,7 @@ function vidAct(a, el) {
   const c = vidCfg();
   switch (a) {
     case "vidOpen": vidOpen(el.dataset.from); return true;
-    case "vidBack": { const f = S.vidFrom; vidStop(); S.vid = null; if (f === "pres" && pres()) presGo("plan", null, "left"); else go({ sub: null, tab: PILAR_NOM[f] ? f : "presentaciones" }, "left"); return true; }
+    case "vidBack": { const f = S.vidFrom; vidStop(); S.vid = null; if (f === "pitch") { S.pt = { paso: PT_PASOS.length }; go({ sub: "pitch" }, "left"); return true; } if (f === "pres" && pres()) presGo("plan", null, "left"); else go({ sub: null, tab: PILAR_NOM[f] ? f : "presentaciones" }, "left"); return true; }
     case "vidSet": { const ta = document.getElementById("vidTxt"); if (ta) c.texto = ta.value; const k = el.dataset.k; c[k] = k === "wpm" ? +el.dataset.v : el.dataset.v; save(); render(); return true; }
     case "vidCam": vidCamara(); return true;
     case "vidGo": vidCuenta(); el.disabled = true; return true;
@@ -1734,6 +1737,105 @@ function vidAct(a, el) {
     case "vidGuardar": vidGuardar(); return true;
     case "vidBajar": vidDescargar(); return true;
     case "vidOtra": vidCamara(); return true;
+  }
+  return false;
+}
+
+/* ===================== PITCH Y VIDEO CURRÍCULUM (Entrevistas · paso 4) =====================
+   Asistente de 7 partes (pasado → transición → futuro). El guion se arma solo con las respuestas,
+   se puede editar a mano y se graba con el teleprompter. Motor en js/pitch.js. */
+const PT = window.AuraPitch;
+function pitchData() {
+  const p = progress.pitch || (progress.pitch = { tipo: "video", saludo: "Buenos días", nombre: (progress.profile && progress.profile.name) || "", exp: [{}, {}, {}], comps: [], check: {} });
+  if (!p.exp) p.exp = [{}, {}, {}]; if (!p.comps) p.comps = []; if (!p.check) p.check = {};
+  return p;
+}
+function pitchTexto(p) { return p.editado && p.guion ? p.guion : PT.guion(p); }
+const PT_PASOS = [
+  { k: "tipo", t: "¿Para qué es tu pitch?", why: "El mismo relato sirve para tres cosas; cambia cuánto dura y cómo termina." },
+  { k: "saludo", t: "Saludo y nombre", why: "Empieza simple: un saludo formal y tu nombre completo." },
+  { k: "formacion", t: "Tu formación", why: "Qué estudias o estudiaste y dónde. Una sola oración." },
+  { k: "experiencia", t: "Tu experiencia, en síntesis", why: "Solo rubros y áreas donde has trabajado. Sin tareas ni logros: eso es para la entrevista." },
+  { k: "competencias", t: "Tus competencias clave", why: "Entre 3 y 5, las que más sirven para lo que buscas y que puedas respaldar con un ejemplo." },
+  { k: "transicion", t: "La transición", why: "Lo que une tu pasado con lo que quieres: qué te mostró tu experiencia y un momento concreto que lo pruebe." },
+  { k: "futuro", t: "Lo que buscas", why: "Di claro qué buscas y qué quieres aportar. Así el que escucha sabe cómo ayudarte." }
+];
+function ptField(id, label, val, ph, path) {
+  return `<div class="field"><label for="${id}">${label}</label><input type="text" id="${id}" data-pf="${path || id.replace(/^pf-/, "")}" value="${esc(val || "")}" placeholder="${esc(ph)}" maxlength="220"></div>`;
+}
+function ptPasoHTML(k, p) {
+  if (k === "tipo") return `<div class="tipo-list">${Object.entries(PT.TIPOS).map(([id, x]) => `<button class="pw-opt tipo-opt${p.tipo === id ? " on" : ""}" data-act="ptSet" data-k="tipo" data-v="${id}"><b>${esc(x.nombre)}</b><small>${esc(x.desc)} Meta: ${PR.fmt(x.secs)}.</small></button>`).join("")}</div>
+      ${ptField("pf-audiencia", "¿Quién lo va a ver o escuchar? (opcional)", p.audiencia, "Ej: empresas que buscan practicantes de logística")}`;
+  if (k === "saludo") return `<div class="field"><span class="lbl">Saludo</span><div class="pw-opts flat">${["Buenos días", "Buenas tardes", "Hola"].map(s => chipBtn("ptSet", s, s, p.saludo === s, ' data-k="saludo"')).join("")}</div></div>
+      ${ptField("pf-nombre", "Tu nombre y apellido", p.nombre, "Ej: Camila Soto")}`;
+  if (k === "formacion") return ptField("pf-carrera", "¿Qué estudias o estudiaste?", p.carrera, "Ej: estudiante de Ingeniería Comercial")
+      + ptField("pf-inst", "¿Dónde?", p.inst, "Ej: la Universidad de Chile")
+      + ptField("pf-etapa", "¿En qué etapa vas? (opcional)", p.etapa, "Ej: en el último año de la carrera")
+      + ptField("pf-enfasis", "Formación en… (opcional)", p.enfasis, "Ej: finanzas y análisis de datos");
+  if (k === "experiencia") return [0, 1, 2].map(i => `<div class="pt-exp"><span class="eyebrow">Experiencia ${i + 1}${i ? " (opcional)" : ""}</span>
+      ${ptField("pf-exp" + i + "r", "Rubro o tipo de empresa", (p.exp[i] || {}).rubro, i === 0 ? "Ej: retail" : i === 1 ? "Ej: una agencia de marketing" : "Ej: el comercio", "exp." + i + ".rubro")}
+      ${ptField("pf-exp" + i + "q", "¿En qué área o rol?", (p.exp[i] || {}).que, i === 0 ? "Ej: en bodega, apoyando el control de inventario" : "Ej: en atención al público y ventas", "exp." + i + ".que")}</div>`).join("")
+      + `<p class="note">¿Sin experiencia laboral? Usa voluntariados, ayudantías, proyectos de la universidad o un emprendimiento.</p>`;
+  if (k === "competencias") {
+    const sel = p.comps.map(c => c.toLowerCase());
+    return `<div class="pb-keys">${p.comps.map((c, i) => `<span class="kchip">${esc(c)}<button class="x" data-act="ptCompDel" data-i="${i}" aria-label="Quitar ${esc(c)}">×</button></span>`).join("") || `<span class="note">Aún no eliges ninguna.</span>`}</div>
+      <div class="pw-opts flat comp-sug">${PT.SUG_COMP.filter(c => !sel.includes(c.toLowerCase())).map(c => chipBtn("ptComp", c, "+ " + c, false)).join("")}</div>
+      <div class="field"><label for="ptCompNew">¿Otra? Escríbela y presiona Enter</label><input type="text" id="ptCompNew" maxlength="60" placeholder="Ej: Manejo de Excel y Power BI"></div>`;
+  }
+  if (k === "transicion") return ptField("pf-motivo", "¿Qué te mostró tu experiencia o qué te motiva?", p.motivo, "Ej: me motiva entender por qué un proceso falla y mejorarlo")
+      + ptField("pf-momento", "Un momento concreto que lo muestre (opcional)", p.momento, "Ej: rediseñé una ruta de despacho y todos los clientes recibieron a tiempo")
+      + `<p class="note">Si estás cambiando de área, explica el cambio por algo tuyo («descubrí que soy bueno en…»), no por algo externo.</p>`;
+  if (k === "futuro") return ptField("pf-busco", "¿Qué buscas?", p.busco, "Ej: realizar mi práctica profesional en finanzas")
+      + ptField("pf-aporte", "¿Qué quieres aportar? (opcional)", p.aporte, "Ej: mi experiencia en atención a clientes");
+  return "";
+}
+function vPitch() {
+  const p = pitchData(), P = S.pt || (S.pt = { paso: 0 }), n = PT_PASOS.length;
+  if (P.paso >= n) {
+    const txt = pitchTexto(p), secs = PT.segundos(txt), meta = (PT.TIPOS[p.tipo] || PT.TIPOS.video).secs, revs = PT.revisar(p, txt);
+    const okT = Math.abs(secs - meta) <= meta * 0.15;
+    const CHECK = [["fondo", "Fondo claro y ordenado"], ["luz", "Luz de frente (una ventana o lámpara frente a ti, no detrás)"], ["altura", "Celular fijo a la altura de los ojos (trípode o unos libros)"],
+      ["ropa", "Ropa acorde a la empresa a la que postulas"], ["mirada", "Miras al lente en el saludo y en el cierre"], ["final", "Pantalla final con tu nombre, teléfono, correo y LinkedIn"]];
+    return `<section class="section"><button class="back" data-act="ptPaso" data-d="-1">← Editar respuestas</button>
+      <div><p class="eyebrow">${esc((PT.TIPOS[p.tipo] || PT.TIPOS.video).nombre)}</p><h2>Tu pitch</h2></div>
+      <div class="kpis two"><div class="kpi"><b class="${okT ? "good" : "warn"}">${PR.fmt(secs)}</b><span>de ${PR.fmt(meta)} recomendados</span></div><div class="kpi"><b>${PT.words(txt)}</b><span>palabras</span></div></div>
+      ${revs.length ? `<div class="panel"><h3>Antes de grabar</h3>${revs.map(r => `<p class="fb ${r.nivel === "no" ? "no" : r.nivel === "mid" ? "mid" : "ok"}" style="margin:0">${esc(r.txt)}</p>`).join("")}</div>` : `<p class="fb ok">Tu relato tiene las 7 partes y está dentro del tiempo.</p>`}
+      <div class="field"><label for="ptGuion">Tu guion (puedes editarlo)</label><textarea id="ptGuion" class="esc-ta" rows="12">${esc(txt)}</textarea>
+        ${p.editado ? `<span class="note">Lo editaste a mano. <button class="linkish" data-act="ptRegen">Volver a armarlo desde tus respuestas</button></span>` : `<span class="note">Si cambias tus respuestas, el guion se vuelve a armar solo.</span>`}</div>
+      <div class="row"><button class="btn primary" data-act="vidOpen" data-from="pitch">${ICON_CAM} ${p.tipo === "video" ? "Grabar con teleprompter" : "Practicar con teleprompter"}</button>
+        <button class="btn" data-act="ptOir">${ICON_SPEAK} Escucharlo</button><button class="btn" data-act="ptCopy">Copiar</button></div>
+      <p class="note">Consejo: no lo memorices palabra por palabra. Apréndete el orden de las 7 partes y las palabras clave; así sonarás natural.</p>
+      ${p.tipo === "video" ? `<div class="panel"><h3>Checklist de grabación</h3>${CHECK.map(([id, l]) => `<label class="ck-row"><input type="checkbox" data-ptck="${id}" ${p.check[id] ? "checked" : ""}> <span>${esc(l)}</span></label>`).join("")}
+        <p class="note">La pantalla final con tus datos va escrita, no dicha: agrégala al editar el video, o muéstrala en una hoja frente a la cámara.</p></div>` : ""}
+    </section>`;
+  }
+  const st = PT_PASOS[P.paso], prev = PT.partes(p)[st.k === "tipo" ? "cierre" : st.k];
+  return `<section class="section"><button class="back" data-act="${P.paso === 0 ? "ptSalir" : "ptPaso"}" data-d="-1">← ${P.paso === 0 ? "Entrevistas" : "Atrás"}</button>
+    <div><p class="eyebrow">Pitch y video currículum · parte ${P.paso + 1} de ${n}</p><h2>${esc(st.t)}</h2><p class="lead">${esc(st.why)}</p></div>
+    <div class="dotsprog">${PT_PASOS.map((_, k) => `<i class="${k <= P.paso ? "done" : ""}"></i>`).join("")}</div>
+    <div class="panel">${ptPasoHTML(st.k, p)}</div>
+    <div class="pt-prev"><span class="eyebrow">${st.k === "tipo" ? "Así va a terminar" : "Así queda en tu guion"}</span><p id="ptPrev">${esc(prev || "…")}</p></div>
+    <button class="btn primary wide" data-act="ptPaso" data-d="1">${P.paso === n - 1 ? "Ver mi pitch completo" : "Siguiente"}</button>
+  </section>`;
+}
+function pitchSet(path, v) {
+  const p = pitchData(), ks = path.split("."); let o = p;
+  for (let i = 0; i < ks.length - 1; i++) { const k = ks[i]; if (o[k] == null) o[k] = /^\d+$/.test(ks[i + 1]) ? [] : {}; o = o[k]; }
+  o[ks[ks.length - 1]] = v; save();
+}
+function ptAct(a, el) {
+  const p = pitchData();
+  switch (a) {
+    case "ptOpen": S.pt = { paso: el.dataset.fin && p.carrera ? PT_PASOS.length : 0 }; leaveSim(); go({ sub: "pitch" }, "right"); return true;
+    case "ptSalir": go({ sub: null, tab: "entrevistas" }, "left"); return true;
+    case "ptPaso": { const n = S.pt.paso + (+el.dataset.d); S.pt.paso = Math.max(0, Math.min(PT_PASOS.length, n)); S.anim = el.dataset.d > 0 ? "right" : "left"; render(); return true; }
+    case "ptSet": p[el.dataset.k] = el.dataset.v; save(); render(); return true;
+    case "ptComp": if (p.comps.length < 8) p.comps.push(el.dataset.v); save(); render(); return true;
+    case "ptCompDel": p.comps.splice(+el.dataset.i, 1); save(); render(); return true;
+    case "ptRegen": p.editado = false; p.guion = ""; save(); render(); return true;
+    case "ptOir": speak(pitchTexto(p)); return true;
+    case "ptCopy": { const txt = pitchTexto(p), ok = () => { el.textContent = "¡Copiado!"; };
+      try { navigator.clipboard.writeText(txt).then(ok, () => {}); } catch (e) {} return true; }
   }
   return false;
 }
@@ -1832,7 +1934,8 @@ function vEntrevistas() {
       ${step(1, "Conócete", "Test guiado de fortalezas y debilidades. Marca con cuáles te identificas y con cuáles no.", "pronto")}
       ${step(2, "Arma tus respuestas", "«Cuéntame de ti», tu mayor debilidad, un logro y un conflicto, con estructura.", "pronto")}
       ${step(3, "Simula la entrevista", "Responde por voz y mira cómo reacciona el entrevistador.", "on", `<div class="row">${simBtns}</div>`)}
-      ${step(4, "Pitch y video currículum", "Tu presentación de 60 segundos: guion, ensayo cronometrado y grabación.", "pronto")}
+      ${step(4, "Pitch y video currículum", "Arma tu presentación personal en 7 partes y grábala con teleprompter. Sirve para el «cuéntame de ti» y para tu video currículum.", "on",
+        (() => { const pp = progress.pitch, listo = pp && pp.carrera && pp.busco; return `<div class="row"><button class="btn primary lab" data-act="ptOpen"${listo ? ' data-fin="1"' : ""}>${listo ? "Ver mi pitch" : "Armar mi pitch"}</button>${listo ? `<span class="note" style="margin:0">${esc((PT.TIPOS[pp.tipo] || PT.TIPOS.video).nombre)} · ${PR.fmt(PT.segundos(pitchTexto(pp)))}</span>` : ""}</div>`; })())}
     </ol>
   </section>`;
 }
@@ -2185,6 +2288,7 @@ function vAjustes() {
 /* ===================== EVENTOS ===================== */
 document.addEventListener("click", onAct);
 app.addEventListener("change", e => {
+  if (e.target.dataset && e.target.dataset.ptck) { const p = pitchData(); p.check[e.target.dataset.ptck] = e.target.checked; save(); return; }
   const t = e.target;
   if ((t.id === "pcFileA" || t.id === "pcFileB") && t.files && t.files[0]) { presImport(t.files[0]); t.value = ""; return; }
   if (t.id === "pdFecha" && S.pd) { S.pd.fecha = t.value; render(); return; }
@@ -2200,9 +2304,18 @@ app.addEventListener("keydown", e => {
     e.preventDefault(); const all = [...document.querySelectorAll(".hz-in")], i = all.indexOf(e.target);
     if (all[i + 1]) all[i + 1].focus(); else { const c = document.querySelector('[data-act="psHzCheck"]'); if (c) c.click(); }
     return;
+  } if (e.target.id === "ptCompNew" && e.key === "Enter") {
+    e.preventDefault(); const v = e.target.value.trim(), p = pitchData();
+    if (v && !p.comps.some(c => c.toLowerCase() === v.toLowerCase()) && p.comps.length < 8) { p.comps.push(v); save(); render(); const n = document.getElementById("ptCompNew"); if (n) n.focus(); }
+    return;
   } if (e.target.id === "pwText" && e.key === "Enter") { e.preventDefault(); pwAnswer(M.cleanSlot(e.target.value)); } });
 app.addEventListener("input", e => {
   const tg = e.target;
+  if (tg.dataset && tg.dataset.pf && S.sub === "pitch") {
+    pitchSet(tg.dataset.pf, tg.value);
+    const pv = document.getElementById("ptPrev"); if (pv && S.pt) { const st = PT_PASOS[S.pt.paso]; if (st) pv.textContent = PT.partes(pitchData())[st.k === "tipo" ? "cierre" : st.k] || "…"; }
+  }
+  if (tg.id === "ptGuion") { const p = pitchData(); p.guion = tg.value; p.editado = true; save(); }
   if (tg.id === "pdTema" && S.pd) S.pd.tema = tg.value;
   if (tg.id === "pcText") S.pcText = tg.value;
   if (tg.id === "pbIns" || tg.id === "pbMat") { S[tg.id] = tg.value; const pp = document.getElementById("pbPrompt"), p0 = pres(); if (pp && p0) pp.value = PR.promptGuion({ tema: p0.tema, minutos: p0.minutos, fecha: fechaLarga(p0.fecha), instrucciones: S.pbIns || "", material: S.pbMat || "", pais: paisObj().nombre }); }
@@ -2224,6 +2337,7 @@ function onAct(e) {
   const a = el.dataset.act;
   if (/^(pres|pd|pc|pb|ps)/.test(a) && !["psMicGo", "psMicStop", "psDone", "psFrase", "psSabe"].includes(a)) tick();
   if (vidAct(a, el)) return;
+  if (ptAct(a, el)) return;
   if (presAct(a, el, e)) return;
   if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle", "recStart", "recStop", "pwSave", "escNext", "escPrev", "escVoz"].includes(a)) tick();
   switch (a) {

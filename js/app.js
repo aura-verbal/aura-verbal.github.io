@@ -550,6 +550,7 @@ function renderNow() {
   else if (S.sub === "pres") html = vPres();
   else if (S.sub === "video") html = vVideo();
   else if (S.sub === "pitch") html = vPitch();
+  else if (S.sub === "ent") html = vEnt();
   else if (S.tab === "inicio") html = vInicio();
   else if (S.tab === "presentaciones") html = vPresHub();
   else if (S.tab === "entrevistas") html = vEntrevistas();
@@ -576,7 +577,7 @@ function renderNow() {
 }
 /* Pestaña que se marca en la barra: el flujo de presentación es de Presentaciones; un escenario, de su pilar. */
 function navTab() {
-  if (S.sub === "pitch" || S.sub === "video" && ["pitch", "entrevistas"].includes(S.vidFrom)) return "entrevistas";
+  if (S.sub === "pitch" || S.sub === "ent" || S.sub === "video" && ["pitch", "entrevistas"].includes(S.vidFrom)) return "entrevistas";
   if (S.sub === "pres" || S.sub === "video") return "presentaciones";
   if (S.sub === "prueba") return "progreso";
   if (S.tab === "practica") return pilarDe(S.sid);
@@ -590,7 +591,7 @@ function setTab(t) {
   if (t === "practica" && (S.view === "results" || S.view === "loading")) S.view = "list";
   go({ tab: t, sub: null }, dir);
 }
-function leaveSim() { vidStop(); presMicStop(); escStop(); clearTimeout(pwTimer); stopDictado(); recReset(); stopPrueba(); try { speechSynthesis.cancel(); } catch (e) {} }
+function leaveSim() { vidStop(); presMicStop(); entMicStop(); escStop(); clearTimeout(pwTimer); stopDictado(); recReset(); stopPrueba(); try { speechSynthesis.cancel(); } catch (e) {} }
 
 /* ===================== PERFIL ===================== */
 function profileForm(p, cta) {
@@ -1777,12 +1778,14 @@ function ptPasoHTML(k, p) {
       ${ptField("pf-exp" + i + "q", "¿En qué área o rol?", (p.exp[i] || {}).que, i === 0 ? "Ej: en bodega, apoyando el control de inventario" : "Ej: en atención al público y ventas", "exp." + i + ".que")}</div>`).join("")
       + `<p class="note">¿Sin experiencia laboral? Usa voluntariados, ayudantías, proyectos de la universidad o un emprendimiento.</p>`;
   if (k === "competencias") {
-    const sel = p.comps.map(c => c.toLowerCase());
-    return `<div class="pb-keys">${p.comps.map((c, i) => `<span class="kchip">${esc(c)}<button class="x" data-act="ptCompDel" data-i="${i}" aria-label="Quitar ${esc(c)}">×</button></span>`).join("") || `<span class="note">Aún no eliges ninguna.</span>`}</div>
+    const sel = p.comps.map(c => c.toLowerCase()), mias = perfil().clave.map(id => EN.COMP_IDX[id] && EN.COMP_IDX[id].nombre).filter(c => c && !sel.includes(c.toLowerCase()));
+    return `${mias.length ? `<div class="field"><span class="lbl">De tu autodiagnóstico</span><div class="pw-opts flat comp-sug">${mias.map(c => chipBtn("ptComp", c, "+ " + c, false)).join("")}</div></div>` : ""}<div class="pb-keys">${p.comps.map((c, i) => `<span class="kchip">${esc(c)}<button class="x" data-act="ptCompDel" data-i="${i}" aria-label="Quitar ${esc(c)}">×</button></span>`).join("") || `<span class="note">Aún no eliges ninguna.</span>`}</div>
       <div class="pw-opts flat comp-sug">${PT.SUG_COMP.filter(c => !sel.includes(c.toLowerCase())).map(c => chipBtn("ptComp", c, "+ " + c, false)).join("")}</div>
       <div class="field"><label for="ptCompNew">¿Otra? Escríbela y presiona Enter</label><input type="text" id="ptCompNew" maxlength="60" placeholder="Ej: Manejo de Excel y Power BI"></div>`;
   }
-  if (k === "transicion") return ptField("pf-motivo", "¿Qué te mostró tu experiencia o qué te motiva?", p.motivo, "Ej: me motiva entender por qué un proceso falla y mejorarlo")
+  if (k === "transicion") return (() => { const ls = perfil().logros.map(l => EN.fraseLogro(l)).filter(Boolean);
+      return ls.length ? `<div class="field"><span class="lbl">Usa uno de tus logros como momento concreto</span><div class="tipo-list">${ls.map((f, i) => `<button class="pw-opt tipo-opt${p.momento && f.toLowerCase().startsWith(p.momento.slice(0, 20).toLowerCase()) ? " on" : ""}" data-act="ptLogro" data-i="${i}">${esc(f)}</button>`).join("")}</div></div>` : ""; })()
+      + ptField("pf-motivo", "¿Qué te mostró tu experiencia o qué te motiva?", p.motivo, "Ej: me motiva entender por qué un proceso falla y mejorarlo")
       + ptField("pf-momento", "Un momento concreto que lo muestre (opcional)", p.momento, "Ej: rediseñé una ruta de despacho y todos los clientes recibieron a tiempo")
       + `<p class="note">Si estás cambiando de área, explica el cambio por algo tuyo («descubrí que soy bueno en…»), no por algo externo.</p>`;
   if (k === "futuro") return ptField("pf-busco", "¿Qué buscas?", p.busco, "Ej: realizar mi práctica profesional en finanzas")
@@ -1831,11 +1834,302 @@ function ptAct(a, el) {
     case "ptPaso": { const n = S.pt.paso + (+el.dataset.d); S.pt.paso = Math.max(0, Math.min(PT_PASOS.length, n)); S.anim = el.dataset.d > 0 ? "right" : "left"; render(); return true; }
     case "ptSet": p[el.dataset.k] = el.dataset.v; save(); render(); return true;
     case "ptComp": if (p.comps.length < 8) p.comps.push(el.dataset.v); save(); render(); return true;
+    case "ptLogro": { const l = perfil().logros.filter(x => EN.fraseLogro(x))[+el.dataset.i]; if (l) { p.momento = EN.fraseLogro(l).replace(/\.$/, ""); p.momento = p.momento[0].toLowerCase() + p.momento.slice(1); save(); render(); } return true; }
     case "ptCompDel": p.comps.splice(+el.dataset.i, 1); save(); render(); return true;
     case "ptRegen": p.editado = false; p.guion = ""; save(); render(); return true;
     case "ptOir": speak(pitchTexto(p)); return true;
     case "ptCopy": { const txt = pitchTexto(p), ok = () => { el.textContent = "¡Copiado!"; };
       try { navigator.clipboard.writeText(txt).then(ok, () => {}); } catch (e) {} return true; }
+  }
+  return false;
+}
+
+/* ===================== ENTREVISTAS: CONÓCETE, LOGROS, RESPUESTAS Y SIMULACIÓN =====================
+   Autodiagnóstico propio (no es un test validado: el usuario confirma o descarta cada resultado),
+   logros con resultados medibles y respuestas armadas con plantillas. Todo queda en el celular.
+   Motor y contenidos en js/entrevista.js. */
+const EN = window.AuraEnt;
+function perfil() {
+  const p = progress.perfil || (progress.perfil = {});
+  p.estilo = p.estilo || { resp: {}, marca: {}, nota: {} }; p.comps = p.comps || {}; p.clave = p.clave || []; p.motiv = p.motiv || [];
+  p.ideal = p.ideal || {}; p.logros = p.logros || []; p.resp = p.resp || {};
+  return p;
+}
+function entGo(v, extra, anim) { leaveSim(); go({ sub: "ent", ev: Object.assign({ v }, extra || {}) }, anim || "right"); }
+function entSet(path, v) {
+  const p = perfil(), ks = path.split("."); let o = p;
+  for (let i = 0; i < ks.length - 1; i++) { const k = ks[i]; if (o[k] == null) o[k] = /^\d+$/.test(ks[i + 1]) ? [] : {}; o = o[k]; }
+  o[ks[ks.length - 1]] = v; save();
+}
+function entField(path, label, val, ph, area) {
+  const id = "ef-" + path.replace(/\./g, "-");
+  return `<div class="field"><label for="${id}">${label}</label>${area ? `<textarea id="${id}" class="esc-ta" rows="3" data-ef="${path}" placeholder="${esc(ph)}" maxlength="400">${esc(val || "")}</textarea>`
+    : `<input type="text" id="${id}" data-ef="${path}" value="${esc(val || "")}" placeholder="${esc(ph)}" maxlength="220">`}</div>`;
+}
+function entHead(titulo, sub, backAct, backLbl) {
+  return `<button class="back" data-act="${backAct || "entSalir"}">← ${esc(backLbl || "Entrevistas")}</button><div><p class="eyebrow">${esc(sub)}</p><h2>${esc(titulo)}</h2></div>`;
+}
+const estiloListo = () => Object.keys(perfil().estilo.resp).length >= EN.PREG_ESTILO.length;
+function entTexto(k) {
+  const p = perfil(), c = p.resp[k] || {};
+  if (c.editado && c.texto) return c.texto;
+  if (k === "cuentame") return progress.pitch && progress.pitch.carrera ? pitchTexto(progress.pitch) : "";
+  return EN.respuesta(k, c, { logro: c.logro != null ? p.logros[c.logro] : null, motiv: p.motiv });
+}
+const RESP_LISTA = k => !!t2(entTexto(k));
+function t2(s) { return String(s || "").trim(); }
+
+/* ---------- Paso 1 · estilo de trabajo ---------- */
+function vEstilo() {
+  const e = perfil().estilo, i = S.ev.i || 0, q = EN.PREG_ESTILO[i];
+  return `<section class="section">${entHead("Tu estilo de trabajo", `Conócete · pregunta ${i + 1} de ${EN.PREG_ESTILO.length}`)}
+    <div class="dotsprog">${EN.PREG_ESTILO.map((_, k) => `<i class="${k <= i ? "done" : ""}"></i>`).join("")}</div>
+    <div class="panel"><h3>${esc(q.q)}</h3><p class="note">Elige la que más se parece a ti. No hay respuestas buenas ni malas.</p>
+      <div class="tipo-list">${EN.opcionesEstilo(i).map(k => `<button class="pw-opt tipo-opt${e.resp[i] === k ? " on" : ""}" data-act="estPick" data-v="${k}">${esc(q.o[k])}</button>`).join("")}</div></div>
+    ${i > 0 ? `<button class="linkish" data-act="estPrev" style="align-self:flex-start">‹ Pregunta anterior</button>` : ""}
+  </section>`;
+}
+function vEstiloRes() {
+  const e = perfil().estilo, pt = EN.puntajeEstilo(e.resp), st = EN.ESTILOS[pt.principal], sec = pt.secundario && EN.ESTILOS[pt.secundario];
+  const cards = EN.tarjetasEstilo(pt), card = c => { const m = e.marca[c.id];
+    return `<div class="id-card${m === "si" ? " si" : m === "no" ? " no" : ""}"><p>${esc(c.txt)}</p>
+      <div class="row"><button class="chip-btn${m === "si" ? " on" : ""}" data-act="estMarca" data-id="${c.id}" data-v="si" aria-pressed="${m === "si"}">Me identifico</button><button class="chip-btn${m === "no" ? " on" : ""}" data-act="estMarca" data-id="${c.id}" data-v="no" aria-pressed="${m === "no"}">No tanto</button></div>
+      ${m === "no" ? `<div class="field"><label for="nota-${c.id}">¿Por qué no? ¿Con qué te identificas más? (opcional)</label><input type="text" id="nota-${c.id}" data-ef="estilo.nota.${c.id}" value="${esc(e.nota[c.id] || "")}" maxlength="200" placeholder="Ej: soy directo, pero cuido cómo lo digo"></div>` : ""}</div>`; };
+  const tot = EN.PREG_ESTILO.length;
+  return `<section class="section">${entHead("Tu estilo de trabajo", "Conócete · resultado")}
+    <div class="panel"><p class="eyebrow">Tu estilo principal</p><h3 style="font-size:1.5rem">${esc(st.nombre)}${sec ? ` <span class="muted" style="font-size:1rem">con rasgos de ${esc(sec.nombre)}</span>` : ""}</h3>
+      <p style="margin:0">${esc(st.desc)}</p>
+      <div class="est-bars">${pt.orden.map(k => `<div class="est-bar"><span>${esc(EN.ESTILOS[k].nombre)}</span><span class="bar" aria-hidden="true"><i style="width:${Math.round(pt.s[k] / tot * 100)}%"></i></span><b class="mono">${pt.s[k]}</b></div>`).join("")}</div>
+      <p class="note">Es una guía para reflexionar, no un test psicológico. Por eso tú decides qué te representa.</p></div>
+    <div><h3>Tus posibles fortalezas</h3><p class="note" style="margin:2px 0 8px">Marca las que de verdad te representan: con esas armas tus respuestas.</p>${cards.filter(c => c.tipo === "fort").map(card).join("")}</div>
+    <div><h3>Tus posibles debilidades</h3><p class="note" style="margin:2px 0 8px">Elige las reales. Una debilidad honesta, con un plan para mejorarla, convence más que una disfrazada.</p>${cards.filter(c => c.tipo === "deb").map(card).join("")}</div>
+    <div class="row"><button class="btn primary" data-act="entSalir">Listo</button><button class="btn" data-act="estOtra">Responder de nuevo</button></div>
+  </section>`;
+}
+/* ---------- Paso 1 · competencias ---------- */
+function vComps() {
+  const p = perfil(), r = EN.resumenCompetencias(p.comps), total = Object.keys(EN.COMP_IDX).length;
+  if (S.ev.res) {
+    return `<section class="section">${entHead("Tus competencias", "Conócete · resultado", "compsEdit", "Volver a evaluar")}
+      <div class="panel"><h3>Elige tus competencias clave (3 a 5)</h3><p class="note">Las que mejor puedes respaldar con un ejemplo. Aparecen en tu pitch y en tus respuestas.</p>
+        ${r.altas.length ? r.altas.map(c => `<label class="ck-row"><input type="checkbox" data-clave="${c.id}" ${p.clave.includes(c.id) ? "checked" : ""}> <span><b>${esc(c.nombre)}</b> · ${esc(EN.NIVEL_COMP[c.v])}<br><small class="muted">${esc(c.desc)}</small></span></label>`).join("") : `<p class="empty">Marca alguna como «Bien» o «Es mi fuerte».</p>`}
+        <p class="note">${p.clave.length} elegidas.</p></div>
+      <div class="panel"><h3>Tus áreas de mejora</h3><p class="note">Candidatas para la pregunta de la debilidad, siempre que no sean centrales para el cargo al que postulas.</p>
+        ${r.bajas.length ? r.bajas.map(c => `<p class="hist-row" style="margin:0"><span>${esc(c.nombre)}</span><span>${esc(EN.NIVEL_COMP[c.v])}</span></p>`).join("") : `<p class="empty">No marcaste ninguna como «Me cuesta» o «Normal».</p>`}</div>
+      <button class="btn primary wide" data-act="entSalir">Listo</button></section>`;
+  }
+  return `<section class="section">${entHead("Tus competencias", `Conócete · ${r.n} de ${total} evaluadas`)}
+    <p class="lead" style="margin:0">¿Qué tan bien haces cada cosa? Piensa en ejemplos reales del trabajo, la universidad o tus proyectos.</p>
+    ${EN.COMPETENCIAS.map(g => `<div class="panel comp-g"><h3>${esc(g.g)}</h3>${g.items.map(([id, n, d]) => `<div class="comp-row"><div><b>${esc(n)}</b><small>${esc(d)}</small></div>
+      <div class="comp-lv" role="group" aria-label="${esc(n)}">${[1, 2, 3, 4].map(v => `<button class="${(p.comps[id] || 0) === v ? "on" : ""}" data-act="compSet" data-id="${id}" data-v="${v}" aria-pressed="${(p.comps[id] || 0) === v}" title="${EN.NIVEL_COMP[v]}">${v}</button>`).join("")}</div></div>`).join("")}</div>`).join("")}
+    <p class="note">1 = me cuesta · 2 = normal · 3 = bien · 4 = es mi fuerte</p>
+    <button class="btn primary wide" data-act="compsRes" ${r.n < 6 ? "disabled" : ""}>Ver mi resultado</button>${r.n < 6 ? `<p class="note">Evalúa al menos 6.</p>` : ""}</section>`;
+}
+/* ---------- Paso 1 · motivadores y trabajo ideal ---------- */
+function vMotiv() {
+  const p = perfil();
+  return `<section class="section">${entHead("Qué te mueve", "Conócete · motivadores y trabajo ideal")}
+    <div class="panel"><h3>Elige tus 3 motivadores, en orden</h3><p class="note">Toca en el orden de importancia. Sirven para responder «¿por qué quieres trabajar aquí?».</p>
+      <div class="pw-opts flat comp-sug">${EN.MOTIVADORES.map(([id, n]) => { const k = p.motiv.indexOf(id); return `<button class="pw-opt${k >= 0 ? " on" : ""}" data-act="motivTog" data-v="${id}">${k >= 0 ? `<b>${k + 1}</b> · ` : ""}${esc(n)}</button>`; }).join("")}</div></div>
+    <div class="panel"><h3>Tu trabajo ideal</h3>
+      ${Object.entries(EN.IDEAL).map(([k, x]) => `<div class="field"><span class="lbl">${esc(x.q)}</span><div class="pw-opts flat comp-sug">${x.ops.map(o => chipBtn("idealSet", o, o, p.ideal[k] === o, ` data-k="${k}"`)).join("")}</div></div>`).join("")}
+      ${entField("ideal.lejos", "¿Cuánto es lo máximo que viajarías al trabajo?", p.ideal.lejos, "Ej: hasta 1 hora")}
+      ${entField("ideal.no", "Algo que NO quieres en un trabajo", p.ideal.no, "Ej: que no se valore el esfuerzo")}</div>
+    <button class="btn primary wide" data-act="entSalir">Listo</button></section>`;
+}
+/* ---------- Paso 2 · logros ---------- */
+function vLogros() {
+  const p = perfil();
+  return `<section class="section">${entHead("Tus logros", "Arma tus respuestas")}
+    <p class="lead" style="margin:0">Un logro es algo que hiciste y que cambió algo: con números si se puede. Son la prueba de tus fortalezas.</p>
+    ${p.logros.length ? p.logros.map((l, i) => `<button class="card mini ar-lab logro-card" data-act="logroEdit" data-i="${i}"><b>${esc(EN.fraseLogro(l) || l.m || "Logro sin terminar")}</b>${(l.comps || []).length ? `<span class="note" style="margin:0">${esc(l.comps.join(" · "))}</span>` : ""}</button>`).join("")
+      : `<p class="empty">Aún no tienes logros. Parte por uno: con 2 o 3 ya puedes responder casi cualquier pregunta de experiencia.</p>`}
+    <button class="btn primary wide" data-act="logroNuevo">+ Nuevo logro</button>
+    <div class="panel"><h3>¿No se te ocurre ninguno?</h3><p class="note">Piensa en el trabajo, la universidad, un voluntariado o un emprendimiento:</p><ul class="ideas">${EN.IDEAS_LOGRO.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
+  </section>`;
+}
+function vLogro() {
+  const p = perfil(), i = S.ev.i, l = p.logros[i] || {}, revs = EN.revisarLogro(l), base = "logros." + i + ".";
+  const sug = p.clave.map(id => EN.COMP_IDX[id] && EN.COMP_IDX[id].nombre).filter(Boolean).concat(["Planificación y organización", "Resolución de problemas", "Trabajo en equipo", "Orientación al cliente", "Iniciativa", "Responsabilidad"]);
+  const comps = l.comps || [];
+  return `<section class="section">${entHead("Un logro", "Momento · Acción · Resultado · Competencias", "logrosVolver", "Tus logros")}
+    <div class="panel">
+      ${entField(base + "m", "1 · Momento: ¿cuál era el problema, desafío u oportunidad?", l.m, "Ej: la ruta de despacho no alcanzaba a cubrir a todos los clientes", true)}
+      <div class="field"><span class="lbl">2 · Acción: ¿qué hiciste tú? Empieza con un verbo</span><div class="pw-opts flat comp-sug">${EN.VERBOS.slice(0, 12).map(v => chipBtn("logroVerbo", v, v, false)).join("")}</div></div>
+      ${entField(base + "a", "Tu acción", l.a, "Ej: Rediseñé la ruta agrupando a los clientes por zona", true)}
+      ${entField(base + "r", "3 · Resultado: ¿qué cambió? Con números si puedes", l.r, "Ej: que el 100% de los clientes recibiera a tiempo")}
+      <div class="field"><span class="lbl">4 · Competencias que usaste</span><div class="pw-opts flat comp-sug">${sug.filter((c, k) => sug.indexOf(c) === k).map(c => chipBtn("logroComp", c, (comps.includes(c) ? "✓ " : "+ ") + c, comps.includes(c))).join("")}</div></div>
+    </div>
+    <div class="pt-prev"><span class="eyebrow">5 · Tu logro en una frase</span><p id="entPrev">${esc(EN.fraseLogro(l) || "…")}</p></div>
+    ${revs.length ? `<div class="stack" style="gap:6px">${revs.map(r => `<p class="fb mid" style="margin:0">${esc(r)}</p>`).join("")}</div>` : `<p class="fb ok">Logro completo: momento, acción con verbo, resultado medible.</p>`}
+    <div class="row"><button class="btn primary" data-act="logrosVolver">Guardar</button><button class="btn danger" data-act="logroDel">Borrar</button></div>
+  </section>`;
+}
+/* ---------- Paso 2 · respuestas ---------- */
+function vResp() {
+  const lista = EN.ORDEN_PREG.filter(k => RESP_LISTA(k)).length;
+  return `<section class="section">${entHead("Tus respuestas", `Arma tus respuestas · ${lista} de ${EN.ORDEN_PREG.length} listas`)}
+    <p class="lead" style="margin:0">Las preguntas que casi siempre aparecen. Arma cada respuesta con lo que ya sabes de ti y practícala en voz alta.</p>
+    ${EN.ORDEN_PREG.map(k => { const ok = RESP_LISTA(k); return `<button class="hoy-row${ok ? " ok-r" : ""}" data-act="respOpen" data-k="${k}"><span class="hoy-ck" aria-hidden="true">${ok ? ICON_CHECK : ""}</span><span class="stack" style="gap:2px;flex-grow:1"><b>${esc(EN.PREGUNTAS[k].q)}</b><small class="muted">${esc(EN.PREGUNTAS[k].desc)}</small></span><span class="arrow">›</span></button>`; }).join("")}
+  </section>`;
+}
+function respOpciones(k, p) {
+  const e = p.estilo, marcadas = tipo => EN.tarjetasEstilo(EN.puntajeEstilo(e.resp)).filter(c => c.tipo === tipo && e.marca[c.id] === "si");
+  const r = EN.resumenCompetencias(p.comps);
+  if (k === "fortaleza") return { frases: estiloListo() ? marcadas("fort").map(c => c.txt) : [], comps: p.clave.length ? p.clave : r.altas.slice(0, 4).map(c => c.id) };
+  if (k === "debilidad") return { frases: estiloListo() ? marcadas("deb").map(c => c.txt) : [], comps: r.bajas.slice(0, 4).map(c => c.id) };
+  return {};
+}
+function logroPicker(c, base, p) {
+  return `<div class="field"><span class="lbl">Un logro que lo pruebe</span>${p.logros.length ? `<div class="tipo-list">${p.logros.map((l, i) => `<button class="pw-opt tipo-opt${c.logro === i ? " on" : ""}" data-act="respLogro" data-i="${i}">${esc(EN.fraseLogro(l) || l.m || "Logro " + (i + 1))}</button>`).join("")}</div>` : `<p class="note">Aún no tienes logros guardados.</p>`}
+    <button class="linkish" data-act="logroNuevo" data-ret="1" style="align-self:flex-start">+ Crear un logro</button></div>`;
+}
+function vRespEdit() {
+  const p = perfil(), k = S.ev.k, c = p.resp[k] || (p.resp[k] = {}), base = "resp." + k + ".", Q = EN.PREGUNTAS[k];
+  let campos = "";
+  if (k === "cuentame") {
+    const pp = progress.pitch;
+    campos = `<p>Esta respuesta es tu pitch en versión «Cuéntame de ti» (2 minutos).</p><button class="btn primary" data-act="respPitch">${pp && pp.carrera ? "Abrir mi pitch" : "Armar mi pitch"}</button>`;
+  } else if (k === "fortaleza" || k === "debilidad") {
+    const o = respOpciones(k, p), key = k === "fortaleza" ? "fort" : "deb";
+    campos = `<div class="field"><span class="lbl">${k === "fortaleza" ? "Elige tu fortaleza" : "Elige una debilidad real"}</span>
+      ${o.frases.length || o.comps.length ? `<div class="tipo-list">${o.frases.map(f => `<button class="pw-opt tipo-opt${c[key] === f && !c.compId ? " on" : ""}" data-act="respPick" data-v="${esc(f)}">${esc(f)}</button>`).join("")}
+        ${o.comps.map(id => `<button class="pw-opt tipo-opt${c.compId === id ? " on" : ""}" data-act="respComp" data-v="${id}">${esc(EN.COMP_IDX[id].nombre)}<small>${k === "fortaleza" ? "De tus competencias" : "De tus áreas de mejora"}</small></button>`).join("")}</div>`
+        : `<p class="note">Haz «Conócete» para tener sugerencias, o escribe la tuya abajo.</p>`}</div>
+      ${entField(base + key, "O escríbela con tus palabras", c.compId ? "" : c[key], k === "fortaleza" ? "Ej: Soy constante y cumplo lo que prometo" : "Ej: Me cuesta delegar")}`;
+    if (k === "fortaleza") campos += logroPicker(c, base, p) + entField(base + "aporte", "¿Cómo te ayudaría en el cargo? (opcional)", c.aporte, "Ej: ordenar la operación desde el primer día");
+    else campos += entField(base + "ejemplo", "¿Cuándo lo notaste? Un ejemplo", c.ejemplo, "Ej: acepté tres turnos extra la misma semana")
+      + entField(base + "accion", "¿Qué estás haciendo para mejorarlo?", c.accion, "Ej: ahora reviso mi carga antes de comprometerme")
+      + entField(base + "avance", "¿Qué ha cambiado? (opcional)", c.avance, "Ej: aviso con tiempo cuando no alcanzo");
+  } else if (k === "porque") {
+    campos = entField(base + "cargo", "¿A qué cargo postulas?", c.cargo, "Ej: analista de operaciones") + entField(base + "empresa", "¿En qué empresa?", c.empresa, "Ej: Ripley")
+      + entField(base + "atrae", "¿Qué te atrae de esa empresa? Algo concreto", c.atrae, "Ej: están invirtiendo en su centro de distribución")
+      + entField(base + "aporte", "¿Qué puedes aportar? (opcional)", c.aporte, "Ej: mi experiencia en la operación")
+      + `<p class="note">Tus motivadores: ${p.motiv.length ? esc(p.motiv.map(id => EN.MOT_IDX[id].nombre).join(", ")) : "aún no los eliges"}. <button class="linkish" data-act="entIr" data-v="motiv">${p.motiv.length ? "Cambiar" : "Elegirlos"}</button></p>`;
+  } else if (k === "logro") {
+    campos = logroPicker(c, base, p);
+  } else if (k === "conflicto") {
+    campos = entField(base + "sit", "¿Qué pasó? (situación)", c.sit, "Ej: un compañero y yo no estábamos de acuerdo en cómo repartir los turnos")
+      + entField(base + "acc", "¿Qué hiciste tú?", c.acc, "Ej: le propuse conversarlo con los datos de ventas de cada día")
+      + entField(base + "res", "¿Cómo terminó?", c.res, "Ej: armamos un turno rotativo que funcionó para los dos")
+      + entField(base + "apr", "¿Qué aprendiste?", c.apr, "Ej: los desacuerdos se resuelven mejor con datos que con opiniones");
+  } else if (k === "preguntas") {
+    const sug = EN.preguntasSugeridas(p), sel = c.sel || [];
+    campos = `<div class="field"><span class="lbl">Elige 2 o 3</span>${sug.concat(sel.filter(x => !sug.includes(x))).map(q => `<label class="ck-row"><input type="checkbox" data-pq="${esc(q)}" ${sel.includes(q) ? "checked" : ""}> <span>${esc(q)}</span></label>`).join("")}</div>
+      <div class="field"><label for="pqNew">¿Otra? Escríbela y presiona Enter</label><input type="text" id="pqNew" maxlength="160" placeholder="Ej: ¿Qué es lo que más valoran de su equipo?"></div>
+      <p class="note">Evita preguntar por sueldo o vacaciones en la primera entrevista, salvo que ellos lo mencionen.</p>`;
+  }
+  const txt = entTexto(k), revs = k === "cuentame" ? [] : EN.revisarRespuesta(k, { ...c, logro: c.logro != null ? p.logros[c.logro] : null }, txt);
+  return `<section class="section">${entHead(Q.q, "Arma tu respuesta", "respVolver", "Tus respuestas")}
+    <div class="panel">${campos}</div>
+    ${k === "cuentame" ? "" : `<div class="field"><label for="entTexto">Tu respuesta (puedes editarla)</label><textarea id="entTexto" class="esc-ta" rows="6" placeholder="Completa los campos de arriba y tu respuesta aparece aquí.">${esc(txt)}</textarea>
+      <span class="note" id="entInfo">${txt ? `Cerca de ${EN.segundos(txt)} s en voz alta.` : ""}${c.editado ? ` Editada a mano. <button class="linkish" data-act="respRegen">Volver a armarla</button>` : ""}</span></div>`}
+    ${revs.map(r => `<p class="fb ${r.n === "no" ? "no" : r.n === "mid" ? "mid" : "ok"}" style="margin:0">${esc(r.txt)}</p>`).join("")}
+    ${txt && k !== "cuentame" ? `<div class="row"><button class="btn primary" data-act="practOpen" data-k="${k}">${ICON_MIC} Practicar en voz alta</button><button class="btn" data-act="respOir">${ICON_SPEAK} Escucharla</button></div>
+      <p class="note">No la memorices palabra por palabra: apréndete las ideas y dilas con tus palabras.</p>` : ""}
+  </section>`;
+}
+/* ---------- Práctica por voz y simulación ---------- */
+let entDict = null, entT0 = 0;
+function entMicStop() { if (entDict && entDict.active) entDict.stop(); }
+function entEval(k, dicho, secs) {
+  /* Ideas clave: solo palabras que escribió el usuario, no las de la plantilla («principales», «además»…). */
+  const ref = entTexto(k), plantilla = M.tokens(EN.PLANTILLA), claves = PR.keywords(ref, 14).filter(w => !plantilla.includes(M.norm(w))).slice(0, 6), cov = PR.cobertura(dicho, [{ id: "r", titulo: "", claves }])[0];
+  const m = dicho ? M.speechMetrics(dicho, secs, mulList()) : null;
+  return { secs, words: m ? m.words : 0, cov, mul: m ? m.mul.count : 0, mulFound: m ? Object.keys(m.mul.found).join(", ") : "", dicho };
+}
+function entFeedback(r) {
+  const ok = r.secs >= 20 && r.secs <= 90, pc = r.cov.total ? Math.round(r.cov.ok / r.cov.total * 100) : 0;
+  return `<div class="kpis"><div class="kpi"><b class="${ok ? "good" : "warn"}">${Math.round(r.secs)} s</b><span>${r.secs < 20 ? "muy corta" : r.secs > 90 ? "larga: apunta a 30–75 s" : "buen largo"}</span></div>
+      <div class="kpi"><b>${pc}%</b><span>de tus ideas clave</span></div><div class="kpi"><b>${r.mul}</b><span>muletillas${r.mulFound ? ": " + esc(r.mulFound) : ""}</span></div></div>
+    ${r.cov.faltan.length ? `<p class="note">Te faltó mencionar: ${r.cov.faltan.map(esc).join(", ")}.</p>` : `<p class="fb ok" style="margin:0">Dijiste todas tus ideas clave.</p>`}
+    <details class="heard"><summary>Lo que escuché</summary><p class="transcript">${esc(r.dicho || "(nada)")}</p></details>`;
+}
+function vPract() {
+  const k = S.ev.k, Q = EN.PREGUNTAS[k], E = S.ev, sim = !!E.sim;
+  const cab = sim ? entHead("Simulación de entrevista", `Pregunta ${E.sim.i + 1} de ${E.sim.ks.length}`, "simSalir", "Entrevistas") : entHead("Practica tu respuesta", "Arma tus respuestas", "practVolver", "Tu respuesta");
+  if (sim && E.sim.i >= E.sim.ks.length) {
+    const rs = E.sim.res.filter(Boolean), cov = rs.length ? Math.round(rs.reduce((a, r) => a + (r.cov.total ? r.cov.ok / r.cov.total : 0), 0) / rs.length * 100) : 0;
+    return `<section class="section">${entHead("Simulación terminada", "Paso 3 · Simula la entrevista", "simSalir", "Entrevistas")}
+      <div class="kpis"><div class="kpi"><b>${rs.length}</b><span>preguntas respondidas</span></div><div class="kpi"><b>${cov}%</b><span>de tus ideas clave, en promedio</span></div><div class="kpi"><b>${rs.reduce((a, r) => a + r.mul, 0)}</b><span>muletillas en total</span></div></div>
+      <div class="panel"><h3>Pregunta por pregunta</h3>${E.sim.ks.map((kk, i) => { const r = E.sim.res[i]; return `<div class="cov-row"><span class="cov-ic ${!r ? "no" : r.cov.ok === r.cov.total ? "ok" : "mid"}">${!r ? "—" : Math.round(r.secs) + "s"}</span><span><b>${esc(EN.PREGUNTAS[kk].q)}</b>${r && r.cov.faltan.length ? `<small>Te faltó: ${r.cov.faltan.map(esc).join(", ")}</small>` : ""}</span></div>`; }).join("")}</div>
+      <div class="row"><button class="btn primary" data-act="simGo">Otra simulación</button><button class="btn" data-act="simSalir">Terminar</button></div></section>`;
+  }
+  const res = sim ? E.sim.res[E.sim.i] : E.res;
+  return `<section class="section">${cab}
+    <div class="panel"><div class="msg them"><div class="who"><span>Entrevistador</span></div>${esc(Q.q)}</div><button class="btn ghost sm" data-act="entOirQ">${ICON_SPEAK} Escuchar la pregunta</button>
+      ${E.rec ? `<p class="transcript" id="entLive">${esc(E.live || "")}</p><button class="btn primary" data-act="entMicStop">${ICON_STOP} Terminé de responder</button>`
+        : res ? entFeedback(res) + `<div class="row">${sim ? `<button class="btn primary" data-act="simNext">${E.sim.i < E.sim.ks.length - 1 ? "Siguiente pregunta" : "Ver resumen"}</button>` : ""}<button class="btn${sim ? "" : " primary"}" data-act="entMicGo">${ICON_MIC} Responder de nuevo</button></div>`
+        : `<p class="note">Responde en voz alta, como si estuvieras en la entrevista. Mira tus ideas antes si quieres, pero no las leas.</p><button class="btn primary" data-act="entMicGo">${ICON_MIC} Responder</button>${sim ? `<button class="linkish" data-act="simNext" style="align-self:flex-start">Saltar</button>` : ""}`}
+      ${E.micErr ? `<p class="note warn">${esc(E.micErr)}</p>` : ""}</div>
+    ${!sim ? `<details class="heard"><summary>Ver mi respuesta preparada</summary><p class="transcript">${esc(entTexto(k))}</p></details>` : ""}
+  </section>`;
+}
+function vEnt() {
+  const v = S.ev && S.ev.v;
+  if (v === "estilo") return estiloListo() && !S.ev.rehacer ? vEstiloRes() : vEstilo();
+  if (v === "comps") return vComps();
+  if (v === "motiv") return vMotiv();
+  if (v === "logros") return vLogros();
+  if (v === "logro") return vLogro();
+  if (v === "resp") return vResp();
+  if (v === "respEdit") return vRespEdit();
+  if (v === "pract") return vPract();
+  S.sub = null; return vEntrevistas();
+}
+function entMicGo() {
+  const E = S.ev; E.live = ""; E.micErr = null; E.rec = true; entT0 = Date.now();
+  if (E.sim) E.sim.res[E.sim.i] = null; else E.res = null;
+  stopDictado(); entMicStop();
+  entDict = Dictado({ lang: paisObj().voz, keepAlive: true,
+    onText: txt => { E.live = txt; const el = document.getElementById("entLive"); if (el) el.textContent = txt; },
+    onError: code => { E.rec = false; E.micErr = micMsg(code); render(); },
+    onEnd: () => { if (!E.fin) return; E.fin = false; E.rec = false; const r = entEval(E.k, (E.live || "").trim(), (Date.now() - entT0) / 1000);
+      if (E.sim) E.sim.res[E.sim.i] = r; else E.res = r; markDay(); save(); render(); } });
+  E.fin = false; entDict.start();
+  if (!entDict.supported) { E.rec = false; E.micErr = micMsg("unsupported"); }
+  render();
+}
+function entAct(a, el) {
+  const p = perfil();
+  switch (a) {
+    case "entIr": entGo(el.dataset.v, el.dataset.v === "comps" && Object.keys(p.comps).length >= 6 ? { res: true } : {}); return true;
+    case "entSalir": entMicStop(); go({ sub: null, tab: "entrevistas" }, "left"); return true;
+    case "estPick": { const E = S.ev, i = E.i || 0; p.estilo.resp[i] = el.dataset.v; save();
+      if (i < EN.PREG_ESTILO.length - 1) { E.i = i + 1; S.anim = "right"; } else { E.rehacer = false; chime(); S.anim = "up"; } render(); return true; }
+    case "estPrev": S.ev.i = Math.max(0, (S.ev.i || 0) - 1); S.anim = "left"; render(); return true;
+    case "estOtra": p.estilo.resp = {}; S.ev.i = 0; S.ev.rehacer = true; save(); render(); return true;
+    case "estMarca": { const id = el.dataset.id; p.estilo.marca[id] = p.estilo.marca[id] === el.dataset.v ? null : el.dataset.v; save(); render(); return true; }
+    case "compSet": p.comps[el.dataset.id] = +el.dataset.v; save(); render(); return true;
+    case "compsRes": S.ev.res = true; S.anim = "right"; render(); return true;
+    case "compsEdit": S.ev.res = false; S.anim = "left"; render(); return true;
+    case "motivTog": { const v = el.dataset.v, k = p.motiv.indexOf(v); if (k >= 0) p.motiv.splice(k, 1); else if (p.motiv.length < 3) p.motiv.push(v); save(); render(); return true; }
+    case "idealSet": p.ideal[el.dataset.k] = p.ideal[el.dataset.k] === el.dataset.v ? null : el.dataset.v; save(); render(); return true;
+    case "logroNuevo": p.logros.push({ m: "", a: "", r: "", comps: [] }); save(); entGo("logro", { i: p.logros.length - 1, ret: el.dataset.ret ? S.ev.k : null }); return true;
+    case "logroEdit": entGo("logro", { i: +el.dataset.i }); return true;
+    case "logrosVolver": { const E = S.ev, l = p.logros[E.i]; if (l && !t2(l.m) && !t2(l.a) && !t2(l.r)) { p.logros.splice(E.i, 1); save(); }
+      if (E.ret) { const rk = E.ret; if (l && p.logros.includes(l)) { (p.resp[rk] = p.resp[rk] || {}).logro = p.logros.indexOf(l); save(); } entGo("respEdit", { k: rk }, "left"); }
+      else entGo("logros", {}, "left"); return true; }
+    case "logroDel": { const i = S.ev.i; p.logros.splice(i, 1); Object.values(p.resp).forEach(c => { if (c.logro === i) delete c.logro; else if (c.logro > i) c.logro--; }); save(); entGo("logros", {}, "left"); return true; }
+    case "logroVerbo": { const l = p.logros[S.ev.i], a = t2(l.a).replace(/^[A-ZÁÉÍÓÚa-záéíóúñ]+(é|í)(?=[\s,.;]|$)\s*/, ""); l.a = el.dataset.v + " " + a; save(); render(); const n = document.getElementById("ef-logros-" + S.ev.i + "-a"); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } return true; }
+    case "logroComp": { const l = p.logros[S.ev.i], v = el.dataset.v; l.comps = l.comps || []; const k = l.comps.indexOf(v); if (k >= 0) l.comps.splice(k, 1); else l.comps.push(v); save(); render(); return true; }
+    case "respOpen": entGo("respEdit", { k: el.dataset.k }); return true;
+    case "respVolver": entGo("resp", {}, "left"); return true;
+    case "respPick": { const c = p.resp[S.ev.k], key = S.ev.k === "fortaleza" ? "fort" : "deb"; c[key] = el.dataset.v; delete c.compId; c.editado = false; save(); render(); return true; }
+    case "respComp": { const c = p.resp[S.ev.k], key = S.ev.k === "fortaleza" ? "fort" : "deb"; c.compId = el.dataset.v; c[key] = ""; c.editado = false; save(); render(); return true; }
+    case "respLogro": { const c = p.resp[S.ev.k]; c.logro = +el.dataset.i; c.editado = false; save(); render(); return true; }
+    case "respRegen": { const c = p.resp[S.ev.k]; c.editado = false; c.texto = ""; save(); render(); return true; }
+    case "respOir": speak(entTexto(S.ev.k)); return true;
+    case "respPitch": { const pp = pitchData(); if (!pp.carrera) pp.tipo = "presentacion"; save(); S.pt = { paso: pp.carrera ? PT_PASOS.length : 0 }; leaveSim(); go({ sub: "pitch" }, "right"); return true; }
+    case "practOpen": entGo("pract", { k: el.dataset.k }); return true;
+    case "practVolver": entMicStop(); entGo("respEdit", { k: S.ev.k }, "left"); return true;
+    case "entOirQ": speak(EN.PREGUNTAS[S.ev.k].q); return true;
+    case "entMicGo": entMicGo(); return true;
+    case "entMicStop": S.ev.fin = true; entMicStop(); return true;
+    case "simGo": { const ks = EN.ORDEN_PREG.filter(k => k !== "preguntas" && RESP_LISTA(k)); for (let i = ks.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ks[i], ks[j]] = [ks[j], ks[i]]; }
+      if (!ks.length) { entGo("resp"); return true; } entGo("pract", { k: ks[0], sim: { ks, i: 0, res: [] } }); setTimeout(() => speak(EN.PREGUNTAS[ks[0]].q), 400); return true; }
+    case "simNext": { const E = S.ev; entMicStop(); E.sim.i++; E.rec = false; E.micErr = null; if (E.sim.i < E.sim.ks.length) { E.k = E.sim.ks[E.sim.i]; setTimeout(() => speak(EN.PREGUNTAS[E.k].q), 300); } S.anim = "right"; render(); return true; }
+    case "simSalir": entMicStop(); go({ sub: null, tab: "entrevistas" }, "left"); return true;
   }
   return false;
 }
@@ -1931,9 +2225,20 @@ function vEntrevistas() {
     <div class="hub-head ar-lab"><div><p class="eyebrow ar">Pilar 2</p><h2>Entrevistas</h2><p class="lead" style="margin:4px 0 0">Llega a tu entrevista sabiendo qué decir, en cuatro pasos.</p></div></div>
     ${eventoCard()}
     <ol class="pasos ar-lab">
-      ${step(1, "Conócete", "Test guiado de fortalezas y debilidades. Marca con cuáles te identificas y con cuáles no.", "pronto")}
-      ${step(2, "Arma tus respuestas", "«Cuéntame de ti», tu mayor debilidad, un logro y un conflicto, con estructura.", "pronto")}
-      ${step(3, "Simula la entrevista", "Responde por voz y mira cómo reacciona el entrevistador.", "on", `<div class="row">${simBtns}</div>`)}
+      ${(() => { const pf = perfil(), est = estiloListo(), nc = Object.keys(pf.comps).length, mot = pf.motiv.length;
+        const it = (act, v, lbl, ok, det) => `<button class="sub-row" data-act="${act}" data-v="${v}"><span class="hoy-ck" aria-hidden="true">${ok ? ICON_CHECK : ""}</span><span class="stack" style="gap:1px;flex-grow:1"><b>${lbl}</b><small class="muted">${det}</small></span><span class="arrow">›</span></button>`;
+        return step(1, "Conócete", "Descubre tus fortalezas, debilidades y lo que te mueve. Tú decides con qué te identificas.", "on",
+          `<div class="sub-list">${it("entIr", "estilo", "Tu estilo de trabajo", est, est ? EN.ESTILOS[EN.puntajeEstilo(pf.estilo.resp).principal].nombre + " · 12 preguntas" : "12 preguntas · 3 min")}
+            ${it("entIr", "comps", "Tus competencias", pf.clave.length >= 3, pf.clave.length ? pf.clave.length + " clave elegidas" : nc ? nc + " de 24 evaluadas" : "24 competencias · 4 min")}
+            ${it("entIr", "motiv", "Qué te mueve", mot === 3, mot ? pf.motiv.map(id => EN.MOT_IDX[id].nombre).join(" · ") : "Motivadores y trabajo ideal · 2 min")}</div>`); })()}
+      ${(() => { const pf = perfil(), nl = pf.logros.filter(l => EN.fraseLogro(l)).length, nr = EN.ORDEN_PREG.filter(k => RESP_LISTA(k)).length;
+        return step(2, "Arma tus respuestas", "Tus logros con resultados y las respuestas a las preguntas que casi siempre aparecen.", "on",
+          `<div class="sub-list"><button class="sub-row" data-act="entIr" data-v="logros"><span class="hoy-ck" aria-hidden="true">${nl ? ICON_CHECK : ""}</span><span class="stack" style="gap:1px;flex-grow:1"><b>Tus logros</b><small class="muted">${nl ? nl + (nl === 1 ? " logro" : " logros") : "Momento · Acción · Resultado"}</small></span><span class="arrow">›</span></button>
+            <button class="sub-row" data-act="entIr" data-v="resp"><span class="hoy-ck" aria-hidden="true">${nr >= 5 ? ICON_CHECK : ""}</span><span class="stack" style="gap:1px;flex-grow:1"><b>Tus respuestas</b><small class="muted">${nr} de ${EN.ORDEN_PREG.length} listas</small></span><span class="arrow">›</span></button></div>`); })()}
+      ${(() => { const nr = EN.ORDEN_PREG.filter(k => k !== "preguntas" && RESP_LISTA(k)).length;
+        return step(3, "Simula la entrevista", "Te hacemos tus preguntas en orden aleatorio y respondes por voz, sin mirar.", "on",
+          `<button class="btn primary lab" data-act="simGo" ${nr ? "" : "disabled"}>${ICON_MIC} Simulación con tus respuestas</button>${nr ? "" : `<span class="note" style="margin:0">Arma al menos una respuesta en el paso 2.</span>`}
+          <span class="note" style="margin:6px 0 0">O practica con un entrevistador que reacciona a lo que dices:</span><div class="row">${simBtns}</div>`); })()}
       ${step(4, "Pitch y video currículum", "Arma tu presentación personal en 7 partes y grábala con teleprompter. Sirve para el «cuéntame de ti» y para tu video currículum.", "on",
         (() => { const pp = progress.pitch, listo = pp && pp.carrera && pp.busco; return `<div class="row"><button class="btn primary lab" data-act="ptOpen"${listo ? ' data-fin="1"' : ""}>${listo ? "Ver mi pitch" : "Armar mi pitch"}</button>${listo ? `<span class="note" style="margin:0">${esc((PT.TIPOS[pp.tipo] || PT.TIPOS.video).nombre)} · ${PR.fmt(PT.segundos(pitchTexto(pp)))}</span>` : ""}</div>`; })())}
     </ol>
@@ -2288,6 +2593,8 @@ function vAjustes() {
 /* ===================== EVENTOS ===================== */
 document.addEventListener("click", onAct);
 app.addEventListener("change", e => {
+  if (e.target.dataset && e.target.dataset.clave) { const p = perfil(), id = e.target.dataset.clave; p.clave = p.clave.filter(x => x !== id); if (e.target.checked) { if (p.clave.length < 5) p.clave.push(id); else e.target.checked = false; } save(); render(); return; }
+  if (e.target.dataset && e.target.dataset.pq) { const c = perfil().resp.preguntas || (perfil().resp.preguntas = {}), q = e.target.dataset.pq; c.sel = (c.sel || []).filter(x => x !== q); if (e.target.checked) c.sel.push(q); c.editado = false; save(); render(); return; }
   if (e.target.dataset && e.target.dataset.ptck) { const p = pitchData(); p.check[e.target.dataset.ptck] = e.target.checked; save(); return; }
   const t = e.target;
   if ((t.id === "pcFileA" || t.id === "pcFileB") && t.files && t.files[0]) { presImport(t.files[0]); t.value = ""; return; }
@@ -2304,6 +2611,10 @@ app.addEventListener("keydown", e => {
     e.preventDefault(); const all = [...document.querySelectorAll(".hz-in")], i = all.indexOf(e.target);
     if (all[i + 1]) all[i + 1].focus(); else { const c = document.querySelector('[data-act="psHzCheck"]'); if (c) c.click(); }
     return;
+  } if (e.target.id === "pqNew" && e.key === "Enter") {
+    e.preventDefault(); const v = e.target.value.trim(), c = perfil().resp.preguntas || (perfil().resp.preguntas = {});
+    if (v) { c.sel = (c.sel || []).concat([/\?$/.test(v) ? v : v + "?"]); c.editado = false; save(); render(); }
+    return;
   } if (e.target.id === "ptCompNew" && e.key === "Enter") {
     e.preventDefault(); const v = e.target.value.trim(), p = pitchData();
     if (v && !p.comps.some(c => c.toLowerCase() === v.toLowerCase()) && p.comps.length < 8) { p.comps.push(v); save(); render(); const n = document.getElementById("ptCompNew"); if (n) n.focus(); }
@@ -2315,6 +2626,13 @@ app.addEventListener("input", e => {
     pitchSet(tg.dataset.pf, tg.value);
     const pv = document.getElementById("ptPrev"); if (pv && S.pt) { const st = PT_PASOS[S.pt.paso]; if (st) pv.textContent = PT.partes(pitchData())[st.k === "tipo" ? "cierre" : st.k] || "…"; }
   }
+  if (tg.dataset && tg.dataset.ef && S.sub === "ent") {
+    entSet(tg.dataset.ef, tg.value);
+    const E = S.ev, pv = document.getElementById("entPrev");
+    if (pv && E.v === "logro") pv.textContent = EN.fraseLogro(perfil().logros[E.i]) || "…";
+    if (E.v === "respEdit" && /^resp\./.test(tg.dataset.ef)) { const c = perfil().resp[E.k]; c.editado = false; const ta = document.getElementById("entTexto"), txt = entTexto(E.k); if (ta) ta.value = txt; const inf = document.getElementById("entInfo"); if (inf) inf.textContent = txt ? `Cerca de ${EN.segundos(txt)} s en voz alta.` : ""; }
+  }
+  if (tg.id === "entTexto" && S.ev) { const c = perfil().resp[S.ev.k] || (perfil().resp[S.ev.k] = {}); c.texto = tg.value; c.editado = true; save(); }
   if (tg.id === "ptGuion") { const p = pitchData(); p.guion = tg.value; p.editado = true; save(); }
   if (tg.id === "pdTema" && S.pd) S.pd.tema = tg.value;
   if (tg.id === "pcText") S.pcText = tg.value;
@@ -2338,6 +2656,7 @@ function onAct(e) {
   if (/^(pres|pd|pc|pb|ps)/.test(a) && !["psMicGo", "psMicStop", "psDone", "psFrase", "psSabe"].includes(a)) tick();
   if (vidAct(a, el)) return;
   if (ptAct(a, el)) return;
+  if (entAct(a, el)) return;
   if (presAct(a, el, e)) return;
   if (!["pAnswer", "rAnswer", "sAnswer", "sSubmit", "toggle", "saveProfile", "prToggle", "recStart", "recStop", "pwSave", "escNext", "escPrev", "escVoz"].includes(a)) tick();
   switch (a) {

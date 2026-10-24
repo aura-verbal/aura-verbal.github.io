@@ -631,6 +631,30 @@ button.card.pilar.tipo{cursor:pointer}
 .kchip .x{border:0;background:none;color:inherit;font-size:1rem;padding:0 0 0 6px;cursor:pointer;line-height:1}
 .ck-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;font-size:.95rem;cursor:pointer}
 .ck-row input{width:20px;height:20px;margin-top:1px;accent-color:var(--area-lab);flex:none}
+/* ---------- Entrevistas: Conócete, logros, respuestas ---------- */
+.sub-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.sub-row{display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);font:inherit;text-align:left;width:100%}
+.sub-row .arrow,.hoy-row .arrow{color:var(--muted);font-size:1.3rem}
+.hoy-row.ok-r .hoy-ck{border:0}
+.id-card{padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);margin-bottom:8px;display:flex;flex-direction:column;gap:8px}
+.id-card p{margin:0;font-weight:700}
+.id-card.si{border-color:var(--area-lab);background:color-mix(in srgb, var(--area-lab) 7%, var(--surface))}
+.id-card.no{opacity:.85}
+.chip-btn{min-height:40px;padding:0 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);font:inherit;font-size:.88rem;font-weight:700}
+.chip-btn.on{border-color:var(--area-lab);background:var(--area-lab);color:var(--bg)}
+.est-bars{display:flex;flex-direction:column;gap:6px;margin:12px 0 4px}
+.est-bar{display:grid;grid-template-columns:96px 1fr 24px;align-items:center;gap:8px;font-size:.85rem}
+.est-bar .bar i{background:var(--area-lab)}
+.comp-g{gap:0}
+.comp-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--surface-2)}
+.comp-row:last-child{border-bottom:0}
+.comp-row small{display:block;color:var(--muted);font-size:.8rem;line-height:1.35;margin-top:2px}
+.comp-lv{display:flex;gap:4px;flex:none}
+.comp-lv button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:inherit;font-weight:700;padding:0}
+.comp-lv button.on{background:var(--area-lab);border-color:var(--area-lab);color:var(--bg)}
+.ideas{margin:4px 0 0;padding-left:18px;color:var(--muted);font-size:.9rem;line-height:1.6}
+.card.logro-card{text-align:left}
+.tipo-opt small{display:block}
 .fd-none{margin:0;padding:22px 16px;border:1px dashed var(--line);border-radius:12px;text-align:center;color:var(--muted);cursor:pointer}
 .flash{display:block;width:100%;min-height:220px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);box-shadow:var(--elev);padding:22px;text-align:left}
 .flash-in{display:flex;flex-direction:column;gap:12px}
@@ -701,6 +725,7 @@ mark.con{background:color-mix(in srgb, var(--area-lab) 16%, transparent);color:i
 <script src="js/pres.js"></script>
 <script src="js/pres-import.js"></script>
 <script src="js/pitch.js"></script>
+<script src="js/entrevista.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

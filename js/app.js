@@ -14,7 +14,7 @@ const PILAR_NOM = { presentaciones: "Presentaciones", entrevistas: "Entrevistas"
 const pilarDe = id => PILAR[id] || "progreso";
 /* ¿Qué te trae a Aura? Define a qué pilar llega la persona al terminar la bienvenida. */
 const GOALS = [
-  { id: "presentacion", label: "Tengo una presentación", sub: "Disertación, examen oral, reporte o un video" },
+  { id: "presentacion", label: "Tengo una presentación", sub: "Disertación, examen oral o un video para un ramo" },
   { id: "entrevista", label: "Tengo una entrevista", sub: "Práctica, primer trabajo o un nuevo empleo" },
   { id: "ambas", label: "Las dos", sub: "Quiero prepararme para ambas" }];
 const CONF_LABELS = ["", "Muy baja", "Baja", "Regular", "Buena", "Muy buena"];

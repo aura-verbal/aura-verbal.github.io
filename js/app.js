@@ -12,11 +12,11 @@ const TABS = ["inicio", "presentaciones", "entrevistas", "progreso", "ajustes"];
 const PILAR = { presentacion: "presentaciones", disertacion: "presentaciones", entrevista: "entrevistas", practica: "entrevistas" };
 const PILAR_NOM = { presentaciones: "Presentaciones", entrevistas: "Entrevistas", progreso: "Progreso", inicio: "Inicio" };
 const pilarDe = id => PILAR[id] || "progreso";
+/* ¿Qué te trae a Aura? Define a qué pilar llega la persona al terminar la bienvenida. */
 const GOALS = [
-  { id: "presentacion", label: "Presentar con seguridad" },
-  { id: "entrevista", label: "Brillar en entrevistas" },
-  { id: "venta", label: "Atender y vender mejor" },
-  { id: "cita", label: "Conversar con naturalidad" }];
+  { id: "presentacion", label: "Tengo una presentación", sub: "Disertación, examen oral, reporte o un video" },
+  { id: "entrevista", label: "Tengo una entrevista", sub: "Práctica, primer trabajo o un nuevo empleo" },
+  { id: "ambas", label: "Las dos", sub: "Quiero prepararme para ambas" }];
 const CONF_LABELS = ["", "Muy baja", "Baja", "Regular", "Buena", "Muy buena"];
 const LEVELS = [[0, "Aprendiz"], [20, "Comunicador"], [45, "Orador"], [70, "Persuasivo"], [90, "Maestro del Aura"]];
 const PERS = [["amable", "Amable"], ["neutral", "Neutral"], ["dificil", "Difícil"]];
@@ -295,6 +295,7 @@ const S_ICONS = {
   presentacion: `<svg ${SVG_ATTR}><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20l4-4 4 4"/><path d="M7 12l3-3 2 2 4-4"/></svg>`,
   entrevista: `<svg ${SVG_ATTR}><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg>`,
   venta: `<svg ${SVG_ATTR}><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>`,
+  ambas: `<svg ${SVG_ATTR}><path d="M12 3l2.4 5.2 5.6.6-4.2 3.8 1.2 5.5L12 15.4 7 18.1l1.2-5.5L4 8.8l5.6-.6L12 3z"/></svg>`,
   cita: `<svg ${SVG_ATTR}><path d="M4 10h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-5z"/><path d="M16 12h2a2 2 0 0 1 0 4h-2"/><path d="M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4"/></svg>`,
   disertacion: `<svg ${SVG_ATTR}><circle cx="12" cy="4.5" r="1.8"/><path d="M12 6.5V9"/><path d="M6 9h12l-1.5 8h-9L6 9z"/><path d="M12 17v4M8 21h8"/></svg>`,
   practica: `<svg ${SVG_ATTR}><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/><path d="M22 9v6"/></svg>`,
@@ -398,6 +399,12 @@ function Dictado(opts) {
 }
 let dict = null;
 function stopDictado() { if (dict && dict.active) dict.stop(); }
+/* Firefox (y algunos navegadores en iPhone) no traen reconocimiento de voz: la app ofrece escribir en su lugar. */
+const VOZ_OK = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+function vozBanner() {
+  if (VOZ_OK || progress.dismiss.vozBanner) return "";
+  return `<div class="banner"><span class="flag" aria-hidden="true">${ICON_MIC}</span><p>Este navegador no reconoce voz. Puedes practicar escribiendo (modo silencioso), o abrir Aura en <b>Chrome</b> para hablar.</p><button class="x" data-act="dismissVoz" aria-label="Cerrar aviso">×</button></div>`;
+}
 function micMsg(code) {
   return code === "unsupported" ? "Tu navegador no reconoce voz. Escribe tu respuesta (en Chrome sí funciona)."
     : code === "denied" ? "El micrófono está bloqueado. Revisa el permiso del navegador o escribe tu respuesta."
@@ -597,8 +604,8 @@ function leaveSim() { vidStop(); presMicStop(); entMicStop(); escStop(); clearTi
 function profileForm(p, cta) {
   const goal = p ? p.goal : "", conf = p ? p.confNow : 3;
   return `<div class="field"><label for="profName">¿Cómo te llamas?</label><input type="text" id="profName" maxlength="30" autocomplete="given-name" placeholder="Tu nombre" value="${p ? esc(p.name) : ""}"></div>
-    <div class="field"><span class="lbl">¿Qué quieres mejorar primero?</span>
-      <div class="chips-opt">${GOALS.map(g => `<label class="chip-opt"><input type="radio" name="goal" value="${g.id}" ${g.id === goal ? "checked" : ""}><span>${S_ICONS[g.id]}${esc(g.label)}</span></label>`).join("")}</div></div>
+    <div class="field"><span class="lbl">¿Qué te trae a Aura?</span>
+      <div class="goal-opts">${GOALS.map(g => `<label class="goal-opt"><input type="radio" name="goal" value="${g.id}" ${g.id === goal ? "checked" : ""}><span class="s-icon">${S_ICONS[g.id]}</span><span class="stack" style="gap:2px"><b>${esc(g.label)}</b><small>${esc(g.sub)}</small></span></label>`).join("")}</div></div>
     <div class="field"><label for="profConf">¿Cuánta confianza sientes hoy al hablar?</label>
       <input type="range" id="profConf" min="1" max="5" step="1" value="${conf}">
       <span class="conf-out" id="confOut">${conf} · ${CONF_LABELS[conf]}</span></div>
@@ -611,37 +618,45 @@ function saveProfile() {
   const conf = +document.getElementById("profConf").value;
   const err = document.getElementById("profErr");
   if (!name) { err.textContent = "Escribe tu nombre para continuar."; document.getElementById("profName").focus(); return; }
-  if (!g) { err.textContent = "Elige qué quieres mejorar primero."; return; }
+  if (!g) { err.textContent = "Cuéntanos qué te trae a Aura."; return; }
   const isNew = !progress.profile;
   if (isNew) progress.profile = { name, goal: g.value, confStart: conf, confNow: conf, since: today() };
   else Object.assign(progress.profile, { name, goal: g.value, confNow: conf });
   if (!progress.pais) progress.pais = guessPais() || "CL";
   save(); chime();
-  if (isNew) { S.obPrueba = true; S.ob = "prueba"; S.pr = null; go({}, "right"); }
+  // La prueba inicial de 60 s ya no es parte de la bienvenida: queda en Progreso. Cada persona llega a su pilar.
+  if (isNew) { S.ob = null; S.obPrueba = false;
+    if (g.value === "presentacion") { S.tab = "presentaciones"; presStartNew(false); }
+    else go({ tab: g.value === "entrevista" ? "entrevistas" : "inicio", sub: null }, "up"); }
   else { S.toast = "Perfil guardado."; render(); }
 }
 
 /* ===================== VISTA: BIENVENIDA Y PAÍS ===================== */
 function vOnboarding() {
   if (S.ob === "pais") return vPais(true);
-  if (S.ob === "perfil") return `<section class="section"><button class="back" data-act="obBack" data-to="pais">← País</button>
-      <div><p class="eyebrow">Paso 2 de 3</p><h2>Crea tu perfil</h2><p class="lead">Así Aura te recomienda por dónde empezar y mide cuánto avanzas.</p></div>
-      <div class="panel">${profileForm(null, "Continuar")}</div>
-      <p class="note">Tu perfil se guarda solo en este celular. No pedimos correo ni contraseña.</p></section>`;
+  if (S.ob === "perfil") {
+    const pa = paisObj(progress.pais || guessPais() || "CL");
+    return `<section class="section"><button class="back" data-act="obBack" data-to="bienvenida">← Inicio</button>
+      <div><h2>Empecemos</h2><p class="lead">Dos preguntas y te llevamos directo a lo tuyo.</p></div>
+      <div class="panel">${profileForm(null, "Empezar")}</div>
+      <p class="note">${pa.bandera} Español de ${esc(pa.nombre)}: detectamos sus muletillas y modismos. <button class="linkish" data-act="obNext" data-to="pais">Cambiar país</button></p>
+      <p class="note">Tu perfil se guarda solo en este celular. No pedimos correo ni contraseña. <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a></p></section>`;
+  }
   if (S.ob === "prueba") return vPrueba(true);
   return `<section class="hero">${heroPhoto()}
-      <h1 class="over">Entrena cómo <em>suenas</em>.</h1>
-      <p class="lead">Aprende la palabra adecuada para cada situación y ponla a prueba en conversaciones que reaccionan a lo que dices. Con los modismos de tu país.</p></section>
-    <section class="section"><button class="btn primary wide" data-act="obNext" data-to="pais">Empezar</button>
-      <p class="note" style="text-align:center">Gratis · sin registro · tu progreso se guarda en tu celular</p></section>`;
+      <h1 class="over">Habla con seguridad <em>cuando importa</em>.</h1>
+      <p class="lead">Prepara tu disertación y tu entrevista de trabajo con tu propio material: Aura arma tu plan hasta el día D y te hace practicar en voz alta.</p></section>
+    <section class="section"><button class="btn primary wide" data-act="obNext" data-to="perfil">Empezar</button>
+      <p class="note" style="text-align:center">Gratis · sin registro · tu progreso se guarda en tu celular</p>
+      ${bkPanel(true)}</section>`;
 }
 function vPais(ob) {
   const sel = ob ? (S.paisSel || progress.pais || guessPais()) : paisId();
   const card = p => `<button class="pais ${p.id === sel ? "on" : ""}" data-act="pickPais" data-id="${p.id}" aria-pressed="${p.id === sel}">
       <span class="flag" aria-hidden="true">${p.bandera}</span><span class="pn"><b>${esc(p.nombre)}</b><small>${CAPA_TXT[p.capa]}</small></span></button>`;
   const ps = DATA.paises.paises, local = ps.filter(p => p.capa !== "neutra"), neutros = ps.filter(p => p.capa === "neutra");
-  return `<section class="section">${ob ? `<button class="back" data-act="obBack" data-to="bienvenida">← Inicio</button>` : `<button class="back" data-act="subBack">← Volver</button>`}
-    <div>${ob ? `<p class="eyebrow">Paso 1 de 3</p>` : ""}<h2>¿De dónde eres?</h2>
+  return `<section class="section">${ob ? `<button class="back" data-act="obBack" data-to="perfil">← Volver</button>` : `<button class="back" data-act="subBack">← Volver</button>`}
+    <div><h2>¿De dónde eres?</h2>
       <p class="lead">Aura adapta las muletillas que detecta, los modismos y el trato (tú, vos o usted) a tu país.</p></div>
     <p class="eyebrow">Con modismos locales</p><div class="paises">${local.map(card).join("")}</div>
     <p class="eyebrow">Español neutro por ahora</p><div class="paises">${neutros.map(card).join("")}</div>
@@ -654,7 +669,7 @@ let prTimer = null;
 function stopPrueba() { clearInterval(prTimer); prTimer = null; if (S.pr && S.pr.phase === "rec") { S.pr.phase = "idle"; } stopDictado(); }
 function vPrueba(ob) {
   const P = S.pr || (S.pr = { phase: "idle", text: "", msg: "" });
-  const head = `${ob ? `<p class="eyebrow">Paso 3 de 3</p>` : `<button class="back" data-act="subBack">← Volver</button>`}
+  const head = `${ob ? "" : `<button class="back" data-act="subBack">← Volver</button>`}
     <div><h2>Preséntate en 60 segundos</h2><p class="lead">Es tu punto de partida: medimos tu ritmo y tus muletillas para comparar cuánto avanzas.</p></div>`;
   if (P.phase === "done") {
     const r = P.res, ideal = r.ppm !== null && r.ppm >= M.PPM_RANGE[0] && r.ppm <= M.PPM_RANGE[1];
@@ -825,7 +840,7 @@ function retoCard() {
     ${weekStrip()}<span class="cta">${streak() > 0 ? "Mantén tu racha" : "Empezar"} →</span></button>`;
 }
 function vReto() {
-  const R = S.reto, head = `<button class="back" data-act="subBack">← Inicio</button>`;
+  const R = S.reto, head = `<button class="back" data-act="subBack">← Volver</button>`;
   if (!R || R.loading) return vLoading();
   if (R.error) return `<section class="section">${head}<p class="fb no">No se pudo preparar el reto. Revisa tu conexión e intenta de nuevo.</p></section>`;
   const n = R.qs.length;
@@ -1247,7 +1262,7 @@ function vPresSesion() {
         ${P.phase === "rec" ? `<p class="transcript" id="psLive">${esc(P.live || "")}</p><button class="btn primary" data-act="psMicStop">${ICON_STOP} Listo, lo dije</button>`
           : `${res}<div class="row">${P.res && P.res.r >= .6 || !P.res ? `<button class="btn primary" data-act="psMicGo">${ICON_MIC} Decirlo en voz alta</button>` : `<button class="btn primary" data-act="psMicGo">${ICON_MIC} Repetir</button>`}
             <button class="btn" data-act="psNext">${nextLbl(maxN)}</button></div>`}
-        ${P.micErr ? `<p class="note warn">${esc(P.micErr)} Puedes decirlo igual y tocar «Siguiente».</p>` : ""}
+        ${P.micErr ? `<p class="note warn">${esc(P.micErr)} Puedes decirlo igual y tocar «Siguiente».</p>${!VOZ_OK ? silTog() : ""}` : ""}
         <p class="note">Toca una palabra oculta para verla.</p></div></section>`;
   }
   if (t === "tarjetas") {
@@ -2092,10 +2107,10 @@ function entEval(k, dicho, secs) {
 }
 function entFeedback(r) {
   const ok = r.secs >= 20 && r.secs <= 90, pc = r.cov.total ? Math.round(r.cov.ok / r.cov.total * 100) : 0;
-  return `<div class="kpis"><div class="kpi"><b class="${ok ? "good" : "warn"}">${Math.round(r.secs)} s</b><span>${r.secs < 20 ? "muy corta" : r.secs > 90 ? "larga: apunta a 30–75 s" : "buen largo"}</span></div>
+  return `<div class="kpis"><div class="kpi"><b class="${ok ? "good" : "warn"}">${r.escrito ? "≈ " : ""}${Math.round(r.secs)} s</b><span>${r.escrito ? "dicha en voz alta · " : ""}${r.secs < 20 ? "muy corta" : r.secs > 90 ? "larga: apunta a 30–75 s" : "buen largo"}</span></div>
       <div class="kpi"><b>${pc}%</b><span>de tus ideas clave</span></div><div class="kpi"><b>${r.mul}</b><span>muletillas${r.mulFound ? ": " + esc(r.mulFound) : ""}</span></div></div>
-    ${r.cov.faltan.length ? `<p class="note">Te faltó mencionar: ${r.cov.faltan.map(esc).join(", ")}.</p>` : `<p class="fb ok" style="margin:0">Dijiste todas tus ideas clave.</p>`}
-    <details class="heard"><summary>Lo que escuché</summary><p class="transcript">${esc(r.dicho || "(nada)")}</p></details>`;
+    ${r.cov.faltan.length ? `<p class="note">Te faltó mencionar: ${r.cov.faltan.map(esc).join(", ")}.</p>` : `<p class="fb ok" style="margin:0">${r.escrito ? "Escribiste" : "Dijiste"} todas tus ideas clave.</p>`}
+    <details class="heard"><summary>${r.escrito ? "Lo que escribiste" : "Lo que escuché"}</summary><p class="transcript">${esc(r.dicho || "(nada)")}</p></details>`;
 }
 function vPract() {
   const k = S.ev.k, Q = EN.PREGUNTAS[k], E = S.ev, sim = !!E.sim;
@@ -2113,7 +2128,8 @@ function vPract() {
       ${E.rec ? `<p class="transcript" id="entLive">${esc(E.live || "")}</p><button class="btn primary" data-act="entMicStop">${ICON_STOP} Terminé de responder</button>`
         : res ? entFeedback(res) + `<div class="row">${sim ? `<button class="btn primary" data-act="simNext">${E.sim.i < E.sim.ks.length - 1 ? "Siguiente pregunta" : "Ver resumen"}</button>` : ""}<button class="btn${sim ? "" : " primary"}" data-act="entMicGo">${ICON_MIC} Responder de nuevo</button></div>`
         : `<p class="note">Responde en voz alta, como si estuvieras en la entrevista. Mira tus ideas antes si quieres, pero no las leas.</p><button class="btn primary" data-act="entMicGo">${ICON_MIC} Responder</button>${sim ? `<button class="linkish" data-act="simNext" style="align-self:flex-start">Saltar</button>` : ""}`}
-      ${E.micErr ? `<p class="note warn">${esc(E.micErr)}</p>` : ""}</div>
+      ${E.micErr ? `<p class="note warn">${esc(E.micErr)}</p>` : ""}
+      ${!E.rec && !res && (!VOZ_OK || E.micErr) ? `<div class="field"><label for="entEsc">Responde escribiendo</label><textarea id="entEsc" class="esc-ta" rows="5" placeholder="Escribe tu respuesta como la dirías…" ${TXT_ATTR}></textarea></div><button class="btn primary" data-act="entEscOk">Revisar mi respuesta</button>` : ""}</div>
     ${!sim ? `<details class="heard"><summary>Ver mi respuesta preparada</summary><p class="transcript">${esc(entTexto(k))}</p></details>` : ""}
   </section>`;
 }
@@ -2335,6 +2351,9 @@ function entAct(a, el) {
     case "entOirQ": speak(EN.PREGUNTAS[S.ev.k].q); return true;
     case "entMicGo": entMicGo(); return true;
     case "entMicStop": S.ev.fin = true; entMicStop(); return true;
+    case "entEscOk": { const E = S.ev, v = t2((document.getElementById("entEsc") || {}).value); if (!v) return true;
+      const r = entEval(E.k, v, v.split(/\s+/).length / 130 * 60); r.escrito = true; E.micErr = null;
+      if (E.sim) E.sim.res[E.sim.i] = r; else E.res = r; markDay(); save(); render(); return true; }
     case "simGo": { const ks = EN.ORDEN_PREG.filter(k => k !== "preguntas" && RESP_LISTA(k)); for (let i = ks.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ks[i], ks[j]] = [ks[j], ks[i]]; }
       if (!ks.length) { entGo("resp"); return true; } entGo("pract", { k: ks[0], sim: { ks, i: 0, res: [] } }); setTimeout(() => speak(EN.PREGUNTAS[ks[0]].q), 400); return true; }
     case "simNext": { const E = S.ev; entMicStop(); E.sim.i++; E.rec = false; E.micErr = null; if (E.sim.i < E.sim.ks.length) { E.k = E.sim.ks[E.sim.i]; setTimeout(() => speak(EN.PREGUNTAS[E.k].q), 300); } S.anim = "right"; render(); return true; }
@@ -2388,12 +2407,12 @@ function vInicio() {
   const banner = S.paisAuto && !progress.dismiss.paisBanner
     ? `<div class="banner"><span class="flag" aria-hidden="true">${pa.bandera}</span><p>Aura ahora se adapta a tu país: <b>${esc(pa.nombre)}</b>. <button class="linkish" data-act="paisOpen">Cambiar</button></p><button class="x" data-act="dismissPais" aria-label="Cerrar aviso">×</button></div>` : "";
   const hola = `<p class="note" style="margin:0">Hola, ${esc(p.name)}${st > 0 ? ` · <b style="color:var(--accent)">${st} ${st === 1 ? "día seguido" : "días seguidos"}</b>` : ""}</p>`;
-  if (act) return `<section class="section home">${banner}${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}${hola}
+  if (act) return `<section class="section home">${banner}${vozBanner()}${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}${hola}
       ${presHomeCard(act)}
       ${hoyList(act)}
       <button class="link-card ar-lab" data-act="tab" data-tab="entrevistas"><span class="s-icon">${ICON_ENT}</span><span class="stack" style="gap:2px"><b>¿También tienes una entrevista?</b><span class="note" style="margin:0">Prepárala en paralelo</span></span><span class="arrow">›</span></button>
     </section>`;
-  return `<section class="section home">${banner}${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
+  return `<section class="section home">${banner}${vozBanner()}${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
       <div class="stack" style="gap:6px">${hola}<h1 class="home-q">¿Qué tienes que preparar?</h1></div>
       ${pilarCards()}
       <ol class="how3"><li><span>1</span>Dinos la fecha</li><li><span>2</span>Aura arma tu plan</li><li><span>3</span>Practica cada día</li></ol>
@@ -2460,7 +2479,7 @@ function vLoading() { return `<div class="loading"><span class="mark" aria-hidde
 function vList() {
   const areas = ["Todos"].concat(DATA.index.areas), a = S.area || "Todos", r = recommend();
   const inArea = x => a === "Todos" || x.area === a;
-  const ready = listReady().filter(inArea), soon = DATA.index.list.filter(x => !x.ready && inArea(x));
+  const ready = listReady().filter(inArea);
   const cards = ready.map(s => {
     const p = sProg(s.id); let mastered = 0; for (let i = 0; i < s.n; i++) if ((progress.words[s.id + "-" + i] || 0) >= 3) mastered++;
     const rec = progress.sims[s.id] || {};
@@ -2476,7 +2495,6 @@ function vList() {
       <p class="lead">Cada escenario tiene 3 pasos: vocabulario, práctica y una conversación que reacciona a tus respuestas.</p></div>
     <div class="filters" role="toolbar" aria-label="Filtrar por área">${areas.map(x => `<button class="fchip ${x === a ? "on" : ""} ${arCls(x)}" data-act="area" data-area="${esc(x)}" aria-pressed="${x === a}">${esc(x)}</button>`).join("")}</div>
     ${ready.length ? `<div class="grid">${cards}</div>` : `<p class="empty">Todavía no hay escenarios disponibles en ${esc(a)}. Ya vienen en camino.</p>`}
-    ${soon.length ? `<div class="stack" style="gap:8px"><p class="eyebrow">Próximamente · ${soon.length}</p><div class="soon">${soon.map(x => `<div class="soon-row"><span>${esc(tx(x.name))}</span><span class="ar-txt ${arCls(x.area)}">${esc(x.area)}</span></div>`).join("")}</div></div>` : ""}
   </section>`;
 }
 function stepper(active) {
@@ -2734,7 +2752,7 @@ function vProgreso() {
   const voiced = progress.history.filter(e => e.ppm);
   const avgPpm = voiced.length ? Math.round(voiced.reduce((a, e) => a + e.ppm, 0) / voiced.length) : null;
   const avgMpm = voiced.length ? (voiced.reduce((a, e) => a + (e.mpm || 0), 0) / voiced.length).toFixed(1) : null;
-  const rows = listReady().map(s => {
+  const rows = listReady().filter(s => pilarDe(s.id) !== "progreso").map(s => {
     const sp = sProg(s.id); let m = 0; for (let i = 0; i < s.n; i++) if ((progress.words[s.id + "-" + i] || 0) >= 3) m++;
     const rec = progress.sims[s.id] || {};
     return `<div class="srow ${arCls(s.area)}"><span class="s-icon">${iconFor(s.id, s.area)}</span><div class="stack" style="gap:6px;min-width:0">
@@ -2757,16 +2775,62 @@ function vProgreso() {
       <div class="panel"><div><h3>Tu semana</h3><p class="note">Los días que practicaste. Cualquier práctica mantiene tu racha (mejor racha: ${bestStreak()} días).</p></div>${weekStrip()}</div>
       ${baselineCard()}
       <div class="panel"><div><h3>Últimas simulaciones</h3><p class="note">Puntaje de cada intento (0 a 100).</p></div>${scoresChart()}</div>
-      <div class="panel"><h3>Simulaciones por escenario</h3>${rows}</div>
+      <div class="panel"><h3>Simulaciones de tus pilares</h3>${rows}</div>
       <div class="panel"><h3>Tu voz en las simulaciones</h3>
         ${avgPpm ? `<div class="kpis two"><div class="kpi"><b>${avgPpm}</b><span>palabras por minuto (ideal ${M.PPM_RANGE[0]}–${M.PPM_RANGE[1]})</span></div><div class="kpi"><b>${avgMpm}</b><span>muletillas por minuto</span></div></div>`
         : `<p class="empty">Responde por voz en los turnos libres de una simulación para medir tu ritmo y tus muletillas.</p>`}
       </div>
       ${extra.length ? `<details class="extra"><summary><span class="stack" style="gap:2px"><b>Práctica extra</b><span class="note" style="margin:0">Escenarios con guion fijo · beta</span></span><span class="arrow" aria-hidden="true">›</span></summary>
         <p class="note">Para soltarte en otras situaciones. No se adaptan a tu caso.</p>
-        <div class="extra-chips">${extra.map(s => `<button class="fchip ${arCls(s.area)}" data-act="open" data-id="${s.id}">${esc(tx(s.name))}</button>`).join("")}</div></details>` : ""}
+        <div class="extra-chips">${extra.map(s => `<button class="fchip ${arCls(s.area)}" data-act="open" data-id="${s.id}">${esc(tx(s.name))}</button>`).join("")}</div>
+        <p class="note" style="margin-top:6px">Reto diario: 5 preguntas de vocabulario y «caza la muletilla», en menos de 5 minutos.</p>
+        <button class="btn sm" data-act="retoStart">${retoHoy() ? "Reto de hoy completado ✓" : "Hacer el reto de hoy"}</button></details>` : ""}
       ${p ? `<p class="note">¿Sientes que ganaste confianza (${p.confStart} → ${p.confNow})? Actualízala en <button class="linkish" data-act="tab" data-tab="ajustes">Ajustes</button>.</p>` : ""}
     </section>`;
+}
+
+/* ===================== RESPALDO ===================== */
+/* Todo vive en este navegador: el respaldo es un archivo .json que la persona guarda donde quiera
+   (Drive, correo, el mismo celular) y restaura en otro teléfono o después de borrar los datos.
+   Los videos no van en el respaldo: se guardan aparte al grabarlos. */
+const BK_FORMATO = 1;
+function bkNombre() { return "aura-respaldo-" + today() + ".json"; }
+function bkExportar() {
+  const datos = JSON.parse(JSON.stringify(progress));
+  const blob = new Blob([JSON.stringify({ app: "Aura", formato: BK_FORMATO, fecha: new Date().toISOString(), datos }, null, 1)], { type: "application/json" });
+  const url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = bkNombre(); document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  progress.settings.ultimoRespaldo = today(); save(); S.toast = "Respaldo descargado: " + bkNombre() + ". Guárdalo en un lugar seguro (tiene tu CV y tus respuestas)."; render();
+}
+/* Lee y valida el archivo; no cambia nada hasta que la persona confirma. */
+async function bkLeer(file) {
+  let j = null;
+  try { j = JSON.parse(await file.text()); } catch (e) {}
+  const d = j && j.app === "Aura" && j.datos && typeof j.datos === "object" && !Array.isArray(j.datos) ? j.datos : null;
+  if (!d || (!d.profile && !d.perfil && !d.pres && !d.history)) { S.bk = { err: "Ese archivo no es un respaldo de Aura." }; render(); return; }
+  if ((j.formato || 1) > BK_FORMATO) { S.bk = { err: "Ese respaldo es de una versión más nueva de Aura. Actualiza la app e intenta de nuevo." }; render(); return; }
+  const resumen = [d.profile && d.profile.name ? "perfil de " + d.profile.name : "", d.pres && d.pres.tema ? "presentación «" + d.pres.tema + "»" : "",
+    d.perfil && d.perfil.logros && d.perfil.logros.length ? d.perfil.logros.length + (d.perfil.logros.length === 1 ? " logro" : " logros") : "",
+    d.pitch && d.pitch.carrera ? "pitch" : "", d.perfil && d.perfil.cv ? "CV" : ""].filter(Boolean);
+  S.bk = { datos: d, fecha: (j.fecha || "").slice(0, 10), resumen }; render();
+}
+function bkAplicar() {
+  const d = S.bk && S.bk.datos; if (!d) return;
+  try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) { S.bk = { err: "No se pudo guardar el respaldo en este navegador." }; render(); return; }
+  progress = load(); progress.settings.ultimoRespaldo = progress.settings.ultimoRespaldo || today(); save(); applyTheme();
+  DATA.esc = {}; S.bk = null; S.ob = null; S.obPrueba = false; S.toast = "Listo: restauramos tu respaldo."; go({ tab: "inicio", sub: null, view: "list" }, "up");
+}
+function bkPanel(enBienvenida) {
+  const B = S.bk, st = progress.settings, dias = st.ultimoRespaldo ? daysBetween(st.ultimoRespaldo, today()) : null;
+  const input = `<input type="file" id="bkFile" accept=".json,application/json" class="sr-only">`;
+  if (B && B.datos) return `<div class="confirm bk-ok"><span><b>¿Restaurar este respaldo${B.fecha ? " del " + esc(B.fecha) : ""}?</b> ${B.resumen.length ? "Trae " + esc(B.resumen.join(", ")) + ". " : ""}Reemplaza todo lo que hay ahora en este celular.</span>
+      <button class="btn primary" data-act="bkSi">Sí, restaurar</button><button class="btn ghost" data-act="bkNo">Cancelar</button></div>`;
+  if (enBienvenida) return `${B && B.err ? `<p class="fb no">${esc(B.err)}</p>` : ""}<label class="linkish" for="bkFile" style="align-self:center">¿Ya usabas Aura? Restaurar mi respaldo</label>${input}`;
+  return `<p class="note">Todo se guarda solo en este navegador. Si borras los datos del navegador o cambias de celular, se pierde: descarga un respaldo de vez en cuando (los videos se guardan aparte).</p>
+    ${B && B.err ? `<p class="fb no">${esc(B.err)}</p>` : ""}
+    <p class="note" style="margin:0">${st.ultimoRespaldo ? `Último respaldo: ${esc(st.ultimoRespaldo)}${dias >= 14 ? " · ya pasaron " + dias + " días" : ""}.` : "<b>Aún no tienes un respaldo.</b>"}</p>
+    <div class="row"><button class="btn primary" data-act="bkExportar">Descargar mi respaldo</button><label class="btn" for="bkFile">Restaurar desde archivo</label>${input}</div>`;
 }
 
 /* ===================== VISTA: AJUSTES ===================== */
@@ -2791,12 +2855,12 @@ function vAjustes() {
     <div class="panel"><h3>Voz</h3>
       ${sw("autoSpeak", "Leer en voz alta a tu interlocutor", "En la simulación escucharás cada frase automáticamente.")}</div>
     <div class="panel"><h3>Tus datos</h3>
-      <p class="note">Todo se guarda solo en este navegador. Si borras los datos del navegador o cambias de celular, se pierde.</p>
+      ${bkPanel(false)}
       ${S.confirm === "reset" ? `<div class="confirm"><span>¿Borrar tu progreso? Tu perfil se mantiene.</span><button class="btn danger" data-act="resetYes">Sí, borrar progreso</button><button class="btn ghost" data-act="cancelConfirm">Cancelar</button></div>`
         : `<button class="btn" data-act="resetAsk">Reiniciar progreso</button>`}
       ${S.confirm === "wipe" ? `<div class="confirm"><span>¿Borrar perfil, progreso y ajustes? No se puede deshacer.</span><button class="btn danger" data-act="wipeYes">Sí, borrar todo</button><button class="btn ghost" data-act="cancelConfirm">Cancelar</button></div>`
         : `<button class="btn danger" data-act="wipeAsk">Borrar todo</button>`}</div>
-    <p class="note" style="text-align:center">Aura · prototipo en validación</p>
+    <p class="note" style="text-align:center"><a href="privacidad.html" target="_blank" rel="noopener">Privacidad y términos</a> · Aura · versión en validación</p>
   </section>`;
 }
 
@@ -2809,6 +2873,7 @@ app.addEventListener("change", e => {
   const t = e.target;
   if ((t.id === "pcFileA" || t.id === "pcFileB") && t.files && t.files[0]) { presImport(t.files[0]); t.value = ""; return; }
   if (t.id === "cvFile" && t.files && t.files[0]) { cvImport(t.files[0]); t.value = ""; return; }
+  if (t.id === "bkFile" && t.files && t.files[0]) { bkLeer(t.files[0]); t.value = ""; return; }
   if (t.id === "pdFecha" && S.pd) { S.pd.fecha = t.value; render(); return; }
   if (t.id === "psCues" && S.ps) { S.ps.cues = t.checked; render(); if (S.ps.phase === "rec") presTick(); return; }
   if (t.dataset && t.dataset.bid && t.dataset.f === "texto") { const b = pbFind(t.dataset.bid); if (b && !b.kEdit) { b.claves = PR.keywords(b.texto + " " + b.apoyo + " " + b.titulo, 4); save(); setTimeout(() => { if (S.sub === "pres" && S.pv === "bloques") render(); }, 0); } }
@@ -2884,6 +2949,9 @@ function onAct(e) {
     case "tab": setTab(el.dataset.tab); break;
     case "brand": if (progress.profile && !S.obPrueba) setTab("inicio"); break;
     case "obNext": go({ ob: el.dataset.to }, "right"); break;
+    case "bkExportar": bkExportar(); break;
+    case "bkSi": bkAplicar(); break;
+    case "bkNo": S.bk = null; render(); break;
     case "obBack": go({ ob: el.dataset.to }, "left"); break;
     case "pickPais": {
       const id = el.dataset.id;
@@ -2893,6 +2961,7 @@ function onAct(e) {
     case "paisOpen": leaveSim(); go({ sub: "pais" }, "right"); break;
     case "subBack": stopPrueba(); S.pr = null; S.reto = null; go({ sub: null }, "left"); break;
     case "dismissPais": progress.dismiss.paisBanner = true; save(); render(); break;
+    case "dismissVoz": progress.dismiss.vozBanner = true; save(); render(); break;
     case "prOpen": leaveSim(); S.pr = null; go({ sub: "prueba" }, "right"); break;
     case "prToggle": if (S.pr && S.pr.phase === "rec") prStop(); else prStart(); break;
     case "prRetry": S.pr = null; render(); break;

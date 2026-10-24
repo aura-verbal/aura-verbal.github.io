@@ -104,4 +104,13 @@ if (P.huecos(tH, ["IPoM"]).map(x => x.gap ? x.pre + x.ans + x.post : x.t).join("
 if (P.huecos(tH, ["IPoM"], true).filter(x => x.gap).length <= P.huecos(tH, ["IPoM"]).filter(x => x.gap).length) err("huecos densos");
 const ch = (v, i) => P.checkHueco(v, gH[i]);
 if (ch("1,75", 0) !== "ok" || ch("1,7", 0) !== "no" || ch("pero", 1) !== "equiv" || ch("debido a", 1) !== "no" || ch("demnda", 2) !== "ok" || ch("IPOM", 4) !== "ok" || ch("", 4) !== "no" || ch("oferta", 2) !== "no") err("checkHueco");
+// Preguntas del profesor desde la presentación
+{ const bs = [{ id: "a", tipo: "apertura", titulo: "Apertura", claves: ["inflación"] }, { id: "b", tipo: "idea", titulo: "Qué es la inflación", claves: ["alza de precios", "IPC", "0,25%"] },
+    { id: "c", tipo: "idea", titulo: "La meta del Banco Central", claves: ["meta del 3%", "tasa de interés"] }, { id: "d", tipo: "cierre", titulo: "Cierre", claves: ["estabilidad"] }];
+  const banco = P.preguntasBanco(bs, "el IPoM");
+  if (banco.length < 12 || !banco.some(q => /«0,25%»/.test(q.q)) || !banco.some(q => /«La meta del Banco Central» con «Qué es la inflación»/.test(q.q))) err("banco de preguntas", banco.length);
+  const sel = P.preguntas(bs, "el IPoM", 6, Math.random);
+  if (sel.length !== 6 || !/idea principal/.test(sel[0].q) || new Set(sel.map(q => q.q)).size !== 6) err("selección de preguntas", sel.map(q => q.q));
+  if (P.preguntas(bs, "x").length !== 4) err("plan: 4 preguntas");
+  if (!P.dijoClave("la tasa de interés sube cuando hay inflación", "tasa de interés")) err("dijoClave"); }
 console.log("ERRORS", errors);

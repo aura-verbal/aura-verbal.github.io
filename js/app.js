@@ -1220,6 +1220,11 @@ function vPresPlan() {
 }
 
 /* ---------- Sesiones ---------- */
+/* ¿La respuesta usó las palabras clave del bloque del que sale la pregunta? */
+function qClaves(q, text) {
+  const al = (pres() || {}).alias || {}, ks = (q && q.claves) || [];
+  return { si: ks.filter(k => PR.dijoClave(text, k, al)), no: ks.filter(k => !PR.dijoClave(text, k, al)) };
+}
 function presFindSes(id) {
   if (/^libre-/.test(id)) return { id, tipo: id.split("-")[1], libre: true, min: 6 };
   return presSesiones(presPlan()).find(s => s.id === id) || null;
@@ -1229,7 +1234,7 @@ function presStartSes(id) {
   const p = pres();
   const blocks = s.tipo === "ancla" ? p.bloques.filter(b => b.tipo !== "idea") : p.bloques;
   S.ps = { id, tipo: s.tipo, n: s.n, libre: s.libre, i: 0, nivel: 0, blocks: blocks.map(b => b.id), res: null, phase: "idle", flip: false, sabe: 0, step: 0, frase: 0, cues: s.tipo === "ensayo" && presPlan() && presPlan().tipo === "expres" && (s.n || 1) === 1 };
-  if (s.tipo === "preguntas") S.ps.qs = PR.preguntas(p.bloques, p.tema);
+  if (s.tipo === "preguntas") S.ps.qs = PR.preguntas(p.bloques, p.tema, s.libre ? 6 : 4, Math.random);
   if (s.tipo === "relevo") { S.ps.items = PR.relevoItems(p.bloques, 10); S.ps.phase = "intro"; S.ps.ok = 0; S.ps.rapidas = 0; S.ps.nCon = S.ps.items.filter(x => x.tipo === "con").length; }
   presGo("sesion");
 }
@@ -1345,15 +1350,17 @@ function vPresSesion() {
   if (t === "relevo") return vRelevo();
   if (t === "preguntas") {
     const q = P.qs[P.i];
-    if (!q) return `<section class="section">${psHead()}<div class="panel"><h3>¡Bien!</h3><p>Respondiste ${P.qs.length} preguntas. Una buena respuesta tiene tres partes: la respuesta directa, un dato o ejemplo y una conclusión.</p></div><button class="btn primary wide" data-act="psDone">Terminar</button></section>`;
-    const r = P.res;
-    return `<section class="section">${psHead("Preguntas del profesor", `Pregunta ${P.i + 1} de ${P.qs.length}`)}
-      <div class="panel"><div class="msg them"><div class="who"><span>Profesor</span></div>${esc(q)}</div><button class="btn ghost sm" data-act="psSpeakQ">${ICON_SPEAK} Escuchar</button>
+    if (!q) return `<section class="section">${psHead()}<div class="panel"><h3>¡Bien!</h3><p>Respondiste ${P.qs.length} preguntas. Una buena respuesta tiene tres partes: la respuesta directa, un dato o ejemplo y una conclusión.</p></div>
+      <div class="row"><button class="btn primary" data-act="psDone">Terminar</button>${P.libre ? `<button class="btn" data-act="presSes" data-ses="libre-preguntas">Otras preguntas</button>` : ""}</div></section>`;
+    const r = P.res, esc2 = sil() || P.qEsc;
+    return `<section class="section">${psHead("Preguntas del profesor", `Pregunta ${P.i + 1} de ${P.qs.length} · sobre «${pres().tema || "tu presentación"}»`)}
+      <div class="panel"><div class="msg them"><div class="who"><span>Profesor</span></div>${esc(q.q)}</div><button class="btn ghost sm" data-act="psSpeakQ">${ICON_SPEAK} Escuchar</button>
         ${P.phase === "rec" ? `<p class="transcript" id="psLive">${esc(P.live || "")}</p><button class="btn primary" data-act="psMicStop">${ICON_STOP} Terminé de responder</button>`
           : r ? `<div class="fb ${r.ok ? "ok" : "mid"}"><b>${r.est ? `${r.words} palabras · unos ${Math.round(r.secs)} s dicha en voz alta` : `${r.words} palabras en ${Math.round(r.secs)} s`}${r.mul ? " · " + r.mul + " muletillas" : ""}.</b> ${r.words < 25 ? "Muy corta: agrega un dato o un ejemplo." : r.secs > 75 ? "Bien desarrollada, pero larga: en una ronda de preguntas, apunta a 30–60 segundos." : "Buen largo para una respuesta."}</div>
-               <div class="row"><button class="btn primary" data-act="psNextQ">Siguiente pregunta</button><button class="btn" data-act="${sil() ? "psQRe" : "psMicGo"}">Responder de nuevo</button></div>`
-          : sil() ? `<p class="note">Escribe tu respuesta: respuesta directa → un dato o ejemplo → conclusión.</p><label class="sr-only" for="psQEsc">Tu respuesta</label><textarea id="psQEsc" class="esc-ta" rows="5" placeholder="Mi respuesta…" ${TXT_ATTR}></textarea><div class="row"><button class="btn primary" data-act="psQEscOk">Listo</button><button class="btn" data-act="psNextQ">Saltar</button></div>`
-          : `<p class="note">Responde en voz alta: respuesta directa → un dato o ejemplo → conclusión.</p><div class="row"><button class="btn primary" data-act="psMicGo">${ICON_MIC} Responder</button><button class="btn" data-act="psNextQ">Saltar</button></div>`}
+               ${r.cl && (r.cl.si.length || r.cl.no.length) ? `<p class="note" style="margin:0">${r.cl.si.length ? `Mencionaste: <b>${r.cl.si.map(esc).join(", ")}</b>. ` : ""}${r.cl.no.length ? `De tu presentación podrías sumar: ${r.cl.no.map(k => "«" + esc(k) + "»").join(", ")}.` : "Usaste las ideas clave de tu presentación."}</p>` : ""}
+               <div class="row"><button class="btn primary" data-act="psNextQ">Siguiente pregunta</button><button class="btn" data-act="${esc2 ? "psQRe" : "psMicGo"}">Responder de nuevo</button></div>`
+          : esc2 ? `<p class="note">Escribe tu respuesta: respuesta directa → un dato o ejemplo → conclusión.</p><label class="sr-only" for="psQEsc">Tu respuesta</label><textarea id="psQEsc" class="esc-ta" rows="5" placeholder="Mi respuesta…" ${TXT_ATTR}></textarea><div class="row"><button class="btn primary" data-act="psQEscOk">Listo</button>${!sil() ? `<button class="btn" data-act="psQVoz">${ICON_MIC} Mejor por voz</button>` : ""}<button class="btn ghost" data-act="psNextQ">Saltar</button></div>`
+          : `<p class="note">Responde en voz alta o por escrito: respuesta directa → un dato o ejemplo → conclusión.</p><div class="row"><button class="btn primary" data-act="psMicGo">${ICON_MIC} Responder</button><button class="btn" data-act="psQEscribir">Escribir</button><button class="btn ghost" data-act="psNextQ">Saltar</button></div>`}
         ${P.micErr ? `<p class="note warn">${esc(P.micErr)}</p>` : ""}</div>
       ${P.i > 0 && P.phase !== "rec" ? `<button class="linkish" data-act="psPrev" style="align-self:flex-start">‹ Pregunta anterior</button>` : ""}</section>`;
   }
@@ -1555,7 +1562,9 @@ function presAct(a, el, ev) {
     case "psExit": presMicStop(); try { speechSynthesis.cancel(); } catch (e) {} S.ps = null; presGo("plan", null, "left"); return true;
     case "psDone": presDone(); return true;
     case "psSpeak": speak(presTxt(pbFind(el.dataset.bid))); return true;
-    case "psSpeakQ": speak(S.ps.qs[S.ps.i]); return true;
+    case "psSpeakQ": speak(S.ps.qs[S.ps.i].q); return true;
+    case "psQEscribir": presMicStop(); S.ps.qEsc = true; S.ps.micErr = null; render(); { const n = document.getElementById("psQEsc"); if (n) n.focus(); } return true;
+    case "psQVoz": S.ps.qEsc = false; render(); return true;
     case "fdPeek": { const w = ev && ev.target.closest(".fd-h,.fd-i"); if (w) w.classList.add("peek"); else if (S.ps.nivel >= 4) { S.ps.nivel = 3; render(); } return true; }
     case "psMicGo": {
       const P = S.ps;
@@ -1564,7 +1573,7 @@ function presAct(a, el, ev) {
         render(); if (ok) { presTimer = setInterval(presTick, 250); presTick(); }
       } else {
         const ok = presMic((text, secs) => {
-          if (P.tipo === "preguntas") { const m = M.speechMetrics(text, secs, mulList()); P.res = { words: m.words, secs, mul: m.mul.count, ok: m.words >= 25 && secs <= 75 }; }
+          if (P.tipo === "preguntas") { const m = M.speechMetrics(text, secs, mulList()); P.res = { words: m.words, secs, mul: m.mul.count, ok: m.words >= 25 && secs <= 75, cl: qClaves(P.qs[P.i], text) }; }
           else { P.oidas = []; P.aprendi = null; P.dicho = text; presEval(); }
           P.phase = "idle"; render(); });
         if (ok) render();
@@ -1586,7 +1595,7 @@ function presAct(a, el, ev) {
       const n = document.getElementById("psQEsc"), v = n ? n.value.trim() : "";
       if (!v) { if (n) n.focus(); return true; }
       const words = PR.countWords(v), secs = words / PR.PPM * 60, m = M.speechMetrics(v, secs, mulList());
-      S.ps.res = { words, secs, mul: m.mul.count, ok: words >= 25 && secs <= 75, est: true }; render(); return true; }
+      S.ps.res = { words, secs, mul: m.mul.count, ok: words >= 25 && secs <= 75, est: true, cl: qClaves(S.ps.qs[S.ps.i], v) }; render(); return true; }
     case "psQRe": S.ps.res = null; render(); return true;
     case "psOida": {   /* «Lo dije»: cuenta la palabra en este intento y aprende cómo la escribe el micrófono */
       const P = S.ps, p = pres(), w = el.dataset.w, b = pbFind(P.blocks[P.i]);
@@ -2494,16 +2503,15 @@ function vInicio() {
 function vPresHub() {
   const p = pres(), hist = (progress.presHist || []).slice().reverse(), conB = p && p.bloques && p.bloques.length;
   const RES = { bien: "Me fue bien", regular: "Más o menos", mal: "Me costó" };
-  const sim = (id, titulo, sub) => { const m = meta(id); if (!m || !m.ready) return "";
-    return `<button class="card mini ar-acad" data-act="open" data-id="${id}"><span class="s-icon">${iconFor(id, m.area)}</span><b>${titulo}</b><span class="note" style="margin:0">${sub}</span></button>`; };
   return `<section class="section">${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
     ${pilarImg("pres", "hub-img ar-acad")}
     <div class="hub-head ar-acad"><div><p class="eyebrow ar">Pilar 1</p><h2>Presentaciones</h2></div>
       ${p ? `<button class="btn primary" data-act="presNewAsk">+ Nueva</button>` : ""}</div>
     ${S.confirm === "presNueva" ? `<div class="confirm"><span>¿Empezar una nueva? «${esc(p.tema || "Tu presentación")}» pasa a tu historial.</span><button class="btn primary" data-act="presNewYes">Sí, nueva</button><button class="btn ghost" data-act="cancelConfirm">Cancelar</button></div>` : ""}
     ${presCard()}
-    <div class="stack" style="gap:8px"><div><h3>Simula frente al público</h3><p class="note" style="margin:2px 0 0">Practica las preguntas que vienen después de presentar.</p></div>
-      <div class="grid2">${sim("disertacion", "Preguntas del profesor", "Disertación en clases")}${sim("presentacion", "Defensa de proyecto", "Presentación ante comisión")}</div></div>
+    <button class="card q-card ar-acad" ${conB ? 'data-act="presSes" data-ses="libre-preguntas"' : 'data-act="presNew"'}><span class="card-head"><span class="s-icon">${SES_ICON.preguntas}</span>
+      <span class="stack" style="gap:2px"><b>Preguntas del profesor</b><span class="note" style="margin:0">${conB ? `Preguntas que te podrían hacer sobre «${esc(p.tema || "tu presentación")}». Respóndelas en voz alta o por escrito.` : "Crea tu presentación y te preparamos las preguntas que te podrían hacer."}</span></span></span>
+      <span class="pill-cta solid">${conB ? "Practicar" : "Crear mi presentación"} ${ICON_GO}</span></button>
     <div class="stack" style="gap:8px"><h3>Herramientas</h3>
       <div class="panel tools">
         <button class="tool-row" data-act="vidOpen" data-from="presentaciones"><span class="s-icon">${ICON_CAM}</span><span class="hoy-t">Grabar un video con teleprompter</span><span class="note" style="margin:0">Nuevo</span></button>
@@ -2825,7 +2833,7 @@ function vProgreso() {
   const voiced = progress.history.filter(e => e.ppm);
   const avgPpm = voiced.length ? Math.round(voiced.reduce((a, e) => a + e.ppm, 0) / voiced.length) : null;
   const avgMpm = voiced.length ? (voiced.reduce((a, e) => a + (e.mpm || 0), 0) / voiced.length).toFixed(1) : null;
-  const rows = listReady().filter(s => pilarDe(s.id) !== "progreso").map(s => {
+  const rows = listReady().filter(s => pilarDe(s.id) === "entrevistas").map(s => {
     const sp = sProg(s.id); let m = 0; for (let i = 0; i < s.n; i++) if ((progress.words[s.id + "-" + i] || 0) >= 3) m++;
     const rec = progress.sims[s.id] || {};
     return `<div class="srow ${arCls(s.area)}"><span class="s-icon">${iconFor(s.id, s.area)}</span><div class="stack" style="gap:6px;min-width:0">
@@ -2848,7 +2856,7 @@ function vProgreso() {
       <div class="panel"><div><h3>Tu semana</h3><p class="note">Los días que practicaste. Cualquier práctica mantiene tu racha (mejor racha: ${bestStreak()} días).</p></div>${weekStrip()}</div>
       ${baselineCard()}
       <div class="panel"><div><h3>Últimas simulaciones</h3><p class="note">Puntaje de cada intento (0 a 100).</p></div>${scoresChart()}</div>
-      <div class="panel"><h3>Simulaciones de tus pilares</h3>${rows}</div>
+      <div class="panel"><h3>Simulaciones de entrevista</h3>${rows}</div>
       <div class="panel"><h3>Tu voz en las simulaciones</h3>
         ${avgPpm ? `<div class="kpis two"><div class="kpi"><b>${avgPpm}</b><span>palabras por minuto (ideal ${M.PPM_RANGE[0]}–${M.PPM_RANGE[1]})</span></div><div class="kpi"><b>${avgMpm}</b><span>muletillas por minuto</span></div></div>`
         : `<p class="empty">Responde por voz en los turnos libres de una simulación para medir tu ritmo y tus muletillas.</p>`}

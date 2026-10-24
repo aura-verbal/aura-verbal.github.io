@@ -426,17 +426,38 @@
     return gap.filter(x => x.length >= 3 && !STOP.has(x) && !x.startsWith("zconn") && !T.includes(x));
   }
 
-  /* ---------- preguntas del profesor (plantillas, sin IA) ---------- */
-  function preguntas(bs, tema) {
-    const ideas = bs.filter(b => b.tipo === "idea");
-    const num = bs.map(b => (b.claves || []).find(k => /\d/.test(k))).find(Boolean);
-    const qs = [`En 30 segundos: ¿cuál es la idea principal de tu presentación${tema ? " sobre " + tema : ""}?`];
-    if (ideas[0]) qs.push(`¿Por qué es importante «${ideas[0].titulo}»?`);
-    if (num) qs.push(`Mencionaste «${num}». ¿De dónde sale ese dato y qué significa?`);
-    if (ideas[1]) qs.push(`¿Cómo se relaciona «${ideas[1].titulo}» con lo anterior?`);
-    qs.push("¿Qué conclusión sacas tú, personalmente, de este tema?");
-    qs.push("Si tuvieras que quitar una parte por tiempo, ¿cuál sería y por qué?");
-    return qs.slice(0, 4);
+  /* ---------- preguntas del profesor (plantillas, sin IA) ----------
+     Se arman con TU presentación: títulos de las ideas, palabras clave y cifras. Cada pregunta trae las
+     palabras clave del bloque del que sale, para revisar si la respuesta las menciona. */
+  function preguntasBanco(bs, tema) {
+    const ideas = bs.filter(b => b.tipo === "idea"), cierre = bs.find(b => b.tipo === "cierre"), out = [];
+    const cl = b => (b && b.claves || []).slice(0, 4), add = (q, claves, tipo, b) => out.push({ q, claves: claves || [], tipo, b: b ? b.id : null });
+    const tit = b => String(b.titulo || "").trim().replace(/^¿\s*/, "").replace(/\s*\?$/, "");   // «¿Qué es el IMACEC?» → «Qué es el IMACEC»
+    add(`En 30 segundos: ¿cuál es la idea principal de tu presentación${tema ? " sobre «" + String(tema).trim() + "»" : ""}?`, ideas.map(b => (b.claves || [])[0]).filter(Boolean).slice(0, 3), "síntesis");
+    ideas.forEach((b, i) => {
+      const t = tit(b), ks = b.claves || [], num = ks.find(k => /\d/.test(k)), con = ks.find(k => !/\d/.test(k) && k.length > 3 && k.toLowerCase() !== String(t).toLowerCase());
+      const esPreg = /^¿|\?$/.test(String(b.titulo || "").trim()), tema2 = esPreg && con ? con : t;   // título en forma de pregunta: se pregunta tal cual
+      add(esPreg ? `Respóndeme con tus palabras: ${String(b.titulo).trim().replace(/^([^¿])/, "¿$1")}` : `¿Por qué es importante «${t}»?`, cl(b), "profundizar", b);
+      if (con) add(`¿Qué entiendes por «${con}»? Explícalo con tus palabras.`, cl(b), "concepto", b);
+      if (num) add(`Mencionaste «${num}». ¿De dónde sale ese dato y qué significa?`, [num].concat(cl(b).filter(k => k !== num)).slice(0, 3), "dato", b);
+      add(`¿Puedes dar un ejemplo concreto de «${tema2}»?`, cl(b), "ejemplo", b);
+      if (i > 0) add(`¿Cómo se relaciona «${t}» con «${tit(ideas[i - 1])}»?`, cl(b).slice(0, 2).concat(cl(ideas[i - 1]).slice(0, 1)), "relación", b);
+      add(`¿Qué le responderías a alguien que dice que «${tema2}» no es tan relevante?`, cl(b), "crítica", b);
+    });
+    add("¿Qué conclusión sacas tú, personalmente, de este tema?", cl(cierre), "opinión", cierre);
+    add("¿Cuál fue tu fuente principal y por qué confías en ella?", [], "fuente");
+    add("Si tuvieras que quitar una parte por tiempo, ¿cuál sería y por qué?", [], "síntesis");
+    return out;
+  }
+  /* Elige n preguntas variadas: siempre la idea principal, después tipos y bloques distintos (al azar si rnd). */
+  function preguntas(bs, tema, n, rnd) {
+    const banco = preguntasBanco(bs, tema), sel = [banco[0]], r = rnd || (() => 0.5);
+    const resto = banco.slice(1).map(x => ({ x, k: r() })).sort((a, b) => a.k - b.k).map(o => o.x);
+    while (sel.length < (n || 4) && resto.length) {
+      const i = resto.findIndex(x => !sel.some(s => s.tipo === x.tipo) && !sel.some(s => s.b && s.b === x.b));
+      sel.push(resto.splice(i >= 0 ? i : 0, 1)[0]);
+    }
+    return sel;
   }
 
   /* ---------- puente: prompt para que la IA del usuario escriba el guion ---------- */
@@ -470,7 +491,7 @@
   }
 
   const API = { CONECTORES, SALVAVIDAS, conectores, alternativas, canonConn, sinConectores, oraciones, mapaConectores, relevoItems, puenteSugerido, PPM, SES, PLAN_TXT, words, countWords, secsFor, clean, firstSentence, keywords, stemOf, mkBlock, marcarTipos, fromGuion, fromSlides,
-    asignarTiempo, fmt, plan, diasEntre, addDays, fade, recall, revisar, escuchadoComo, huecos, checkHueco, cobertura, preguntas, promptGuion };
+    asignarTiempo, fmt, plan, diasEntre, addDays, fade, recall, revisar, escuchadoComo, huecos, checkHueco, cobertura, dijoClave, preguntas, preguntasBanco, promptGuion };
   root.AuraPres = API;
   if (typeof module !== "undefined" && module.exports) module.exports = API;
 })(typeof window !== "undefined" ? window : globalThis);

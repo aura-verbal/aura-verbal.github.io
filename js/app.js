@@ -583,7 +583,7 @@ function navTab() {
   if (S.tab === "practica") return pilarDe(S.sid);
   return S.tab;
 }
-function go(patch, anim) { Object.assign(S, patch); S.anim = anim || "up"; render(); }
+function go(patch, anim) { S.cvHecho = null; Object.assign(S, patch); S.anim = anim || "up"; render(); }
 function setTab(t) {
   if (t === S.tab && !S.sub) { if (t === "practica" && S.view !== "list") { leaveSim(); go({ view: "list" }, "left"); } return; }
   const dir = TABS.indexOf(t) >= TABS.indexOf(S.tab) ? "right" : "left";
@@ -1821,7 +1821,7 @@ function vPitch() {
       ${revs.length ? `<div class="panel"><h3>Antes de grabar</h3>${revs.map(r => `<p class="fb ${r.nivel === "no" ? "no" : r.nivel === "mid" ? "mid" : "ok"}" style="margin:0">${esc(r.txt)}</p>`).join("")}</div>` : `<p class="fb ok">Tu relato tiene las 7 partes y está dentro del tiempo.</p>`}
       ${(() => { const c = cvData(), sug = c ? cvSugerencias() : [];
         if (!c) return `<p class="note" style="margin:0">¿Tienes CV? <button class="linkish" data-act="entIr" data-v="cv" data-from="pitch">Súbelo</button> y te decimos qué tienes ahí y no estás usando en tu pitch.</p>`;
-        return sug.length ? `<div class="panel"><h3>De tu CV, y no está en tu pitch</h3>${cvSugHTML(sug)}</div>` : ""; })()}
+        return sug.length || S.cvHecho ? `<div class="panel"><h3>De tu CV, y no está en tu pitch</h3>${cvHechoHTML("pitch")}${cvSugHTML(sug, "pitch")}</div>` : ""; })()}
       <div class="field"><label for="ptGuion">Tu guion (puedes editarlo)</label><textarea id="ptGuion" class="esc-ta" rows="12">${esc(txt)}</textarea>
         ${p.editado ? `<span class="note">Lo editaste a mano. <button class="linkish" data-act="ptRegen">Volver a armarlo desde tus respuestas</button></span>` : `<span class="note">Si cambias tus respuestas, el guion se vuelve a armar solo.</span>`}</div>
       <div class="row"><button class="btn primary" data-act="vidOpen" data-from="pitch">${ICON_CAM} ${p.tipo === "video" ? "Grabar con teleprompter" : "Practicar con teleprompter"}</button>
@@ -2129,9 +2129,25 @@ function cvSugerencias() {
   const c = cvData(); if (!c) return [];
   return CVM.compararPitch(cvInfo(), pitchData(), perfil()).filter(s => !(c.descartes || []).includes(cvKey(s)));
 }
-function cvSugHTML(list) {
-  return list.map((s, i) => `<div class="cv-sug"><p>${esc(s.txt)}</p><div class="row">${s.acciones.map((a, j) => `<button class="btn sm${j ? "" : " primary"}" data-act="cvAplicar" data-i="${i}" data-j="${j}">${esc(a.lbl)}</button>`).join("")}
-    <button class="linkish" data-act="cvDescartar" data-i="${i}">No aplica</button></div></div>`).join("");
+/* Sugerencias del CV: el usuario marca lo que quiere sumar (una opción por sugerencia) y luego
+   aprieta «Actualizar mi pitch», que aplica todo junto y vuelve a armar el guion. */
+function cvSugHTML(list, ctx) {
+  const sel = S.cvSel || (S.cvSel = {}), n = list.filter(s => sel[cvKey(s)] != null).length, pp = pitchData();
+  const items = list.map((s, i) => { const cur = sel[cvKey(s)];
+    return `<div class="cv-sug${cur != null ? " on" : ""}"><p>${esc(s.txt)}</p><div class="cv-opts">${s.acciones.map((a, j) => a.k === "exp"
+      ? `<button class="btn sm" data-act="cvAplicar" data-i="${i}" data-j="${j}">${esc(a.lbl)} ›</button>`
+      : `<button class="pw-opt cv-pick${cur === j ? " on" : ""}" data-act="cvSel" data-i="${i}" data-j="${j}" aria-pressed="${cur === j}">${cur === j ? "✓ " : "+ "}${esc(a.lbl)}</button>`).join("")}
+      <button class="linkish" data-act="cvDescartar" data-i="${i}">No aplica</button></div></div>`; }).join("");
+  const barra = n ? `<div class="cv-update"><button class="btn primary wide" data-act="cvActualizar">Actualizar mi pitch (${n} ${n === 1 ? "cambio" : "cambios"})</button>
+      ${pp.editado ? `<span class="note" style="margin:0">Editaste tu guion a mano: al actualizar se vuelve a armar desde tus respuestas.</span>` : ""}</div>`
+    : list.length ? `<p class="note" style="margin:0">Marca lo que quieres sumar y después actualiza tu pitch de una vez.</p>` : "";
+  return items + barra;
+}
+function cvHechoHTML(ctx) {
+  const h = S.cvHecho; if (!h) return "";
+  const txt = [h.n ? `Tu pitch se actualizó con ${h.n} ${h.n === 1 ? "cambio" : "cambios"}.` : "", h.logros ? `Guardamos ${h.logros === 1 ? "un logro" : h.logros + " logros"} para que lo${h.logros === 1 ? "" : "s"} completes.` : ""].filter(Boolean).join(" ");
+  return `<div class="cv-done" id="cvDone"><p>${ICON_CHECK} ${esc(txt)}</p>${ctx === "pitch" ? `<button class="btn primary wide" data-act="cvVerGuion">Ver el guion actualizado</button>`
+    : `<button class="btn primary wide" data-act="ptOpen" data-fin="1">Ver mi pitch actualizado</button>`}</div>`;
 }
 function proCards(ids) {
   return ids.map(id => { const f = PRO.FUNCIONES[id]; return `<div class="pro-card lock"><span class="tag">${ICON_LOCK} Aura Pro · próximamente</span><p><b>${esc(f.nombre)}.</b> ${esc(f.desc)}</p>
@@ -2159,7 +2175,7 @@ function vCv() {
       ${cv.palabras < 60 ? `<p class="fb mid" style="margin:0">Casi no encontramos texto: tu CV parece una imagen. Expórtalo como PDF con texto (en Canva: Descargar → PDF estándar) o pega el texto.</p>` : `<p class="note" style="margin:0">Si falta algo, puede ser por el diseño del archivo. Puedes pegar el texto en su lugar.</p>`}</div>
     <h3 class="cv-h">Para tu pitch</h3>
     ${!hayPitch ? `<p class="note" style="margin:0">Arma tu pitch y aquí verás lo que tu CV tiene y tu pitch no.</p><button class="btn primary" data-act="ptOpen">Armar mi pitch</button>`
-      : sug.length ? cvSugHTML(sug) + `<button class="btn" data-act="ptOpen" data-fin="1">Ver mi pitch</button>` : `<p class="fb ok" style="margin:0">Tu pitch ya aprovecha lo principal de tu CV.</p>`}
+      : cvHechoHTML("cv") + (sug.length ? cvSugHTML(sug, "cv") : S.cvHecho ? "" : `<p class="fb ok" style="margin:0">Tu pitch ya aprovecha lo principal de tu CV.</p>`)}
     <h3 class="cv-h">Revisión de tu CV</h3>
     ${revs.length ? revs.map(r => `<div class="fb ${r.n === "no" ? "no" : r.n === "mid" ? "mid" : "ok"} cv-rev"><span>${esc(r.txt)}</span>${r.ej.length ? `<small>Por ejemplo: ${r.ej.map(x => "«" + esc(x) + "»").join(" · ")}</small>` : ""}</div>`).join("") : `<p class="fb ok" style="margin:0">No encontramos problemas con nuestras reglas. ¡Buen CV!</p>`}
     <p class="note" style="margin:0">La revisión usa reglas simples: puede equivocarse. Tú decides qué cambiar.</p>
@@ -2192,12 +2208,18 @@ function cvAct(a, el) {
       p.cv = { nombre: "CV pegado", paginas: 0, texto: v.slice(0, 30000), fecha: today(), descartes: [] }; S.ev.err = null; S.ev.pegar = false; save(); render(); return true; }
     case "cvBorrar": delete p.cv; S.ev.pegar = false; save(); render(); return true;
     case "cvVolver": S.pt = { paso: PT_PASOS.length }; leaveSim(); go({ sub: "pitch" }, "left"); return true;
-    case "cvDescartar": { const s = cvSugerencias()[+el.dataset.i]; if (s) { p.cv.descartes = (p.cv.descartes || []).concat([cvKey(s)]); save(); render(); } return true; }
-    case "cvAplicar": { const s = cvSugerencias()[+el.dataset.i], ac = s && s.acciones[+el.dataset.j]; if (!ac) return true;
-      if (ac.k === "exp") { S.pt = { paso: PT_PASOS.findIndex(x => x.k === "experiencia") }; leaveSim(); go({ sub: "pitch" }, "right"); return true; }
-      const k = CVM.aplicar(ac, pp, p); if (k === "logro") p.cv.descartes = (p.cv.descartes || []).concat([cvKey(s)]); save();
-      S.toast = k === "logro" ? "Guardado en tus logros: complétalo con el momento y el resultado." : pp.editado ? "Agregado a tus respuestas del pitch. Como editaste el guion a mano, usa «Volver a armarlo» para verlo." : "Listo, quedó en tu pitch.";
-      render(); return true; }
+    case "cvDescartar": { const s = cvSugerencias()[+el.dataset.i]; if (s) { p.cv.descartes = (p.cv.descartes || []).concat([cvKey(s)]); if (S.cvSel) delete S.cvSel[cvKey(s)]; save(); render(); } return true; }
+    case "cvAplicar": { const s = cvSugerencias()[+el.dataset.i], ac = s && s.acciones[+el.dataset.j];
+      if (ac && ac.k === "exp") { S.pt = { paso: PT_PASOS.findIndex(x => x.k === "experiencia") }; leaveSim(); go({ sub: "pitch" }, "right"); } return true; }
+    case "cvSel": { const s = cvSugerencias()[+el.dataset.i]; if (!s) return true; const sel = S.cvSel || (S.cvSel = {}), k = cvKey(s), j = +el.dataset.j;
+      sel[k] = sel[k] === j ? null : j; S.cvHecho = null; render(); return true; }
+    case "cvActualizar": { const sel = S.cvSel || {}, list = cvSugerencias(); let n = 0, logros = 0;
+      list.forEach(s => { const j = sel[cvKey(s)], ac = j != null && s.acciones[j]; if (!ac) return;
+        if (CVM.aplicar(ac, pp, p) === "logro") { logros++; p.cv.descartes = (p.cv.descartes || []).concat([cvKey(s)]); } else n++; });
+      if (n) { pp.editado = false; pp.guion = ""; }
+      S.cvSel = {}; S.cvHecho = { n, logros }; save(); render();
+      const d = document.getElementById("cvDone"); if (d) d.scrollIntoView({ block: "center", behavior: "smooth" }); return true; }
+    case "cvVerGuion": { const g = document.getElementById("ptGuion"); if (g) { g.scrollIntoView({ block: "center", behavior: "smooth" }); g.classList.add("flash"); setTimeout(() => g.classList.remove("flash"), 1600); } return true; }
     case "cvCopy": { const bl = CVM.bloques(p, pp), b = el.dataset.b, txt = b === "perfil" ? bl.perfil : b === "competencias" ? bl.competencias.join(" · ") : bl.logros.map(l => "• " + l).join("\n");
       try { navigator.clipboard.writeText(txt).then(() => { el.textContent = "¡Copiado!"; }, () => {}); } catch (e) {} return true; }
   }

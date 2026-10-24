@@ -95,7 +95,7 @@ function tx(v) { return M.L(v, paisId()); }
 function guessPais() {
   try {
     const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
-    for (const l of langs) { const m = /^es[-_]([A-Za-z]{2})/.exec(l || ""); if (m) { const id = m[1].toUpperCase(); if (DATA.paises.paises.some(p => p.id === id)) return id; } }
+    for (const l of langs) { const m = /^es[-_]([A-Za-z]{2})/.exec(l || ""); if (m) { const id = m[1].toUpperCase(); if (id !== "US" && DATA.paises.paises.some(p => p.id === id)) return id; } }
   } catch (e) {}
   return null;
 }
@@ -601,9 +601,19 @@ function setTab(t) {
 function leaveSim() { vidStop(); presMicStop(); entMicStop(); escStop(); clearTimeout(pwTimer); stopDictado(); recReset(); stopPrueba(); try { speechSynthesis.cancel(); } catch (e) {} }
 
 /* ===================== PERFIL ===================== */
-function profileForm(p, cta) {
+function paisSelect() {
+  const sel = S.paisSel || progress.pais || guessPais() || "", ps = DATA.paises.paises;
+  const opt = x => `<option value="${x.id}" ${x.id === sel ? "selected" : ""}>${x.bandera} ${esc(x.nombre)}</option>`;
+  return `<div class="field"><label for="profPais">¿De qué país eres?</label>
+    <select id="profPais" class="pais-sel"><option value="" ${sel ? "" : "selected"} disabled>Elige tu país</option>
+      <optgroup label="Con modismos locales">${ps.filter(x => x.capa !== "neutra").map(opt).join("")}</optgroup>
+      <optgroup label="Español neutro por ahora">${ps.filter(x => x.capa === "neutra").map(opt).join("")}</optgroup></select>
+    <small class="muted">Así detectamos tus muletillas y modismos, y el trato (tú, vos o usted).</small></div>`;
+}
+function profileForm(p, cta, conPais) {
   const goal = p ? p.goal : "", conf = p ? p.confNow : 3;
   return `<div class="field"><label for="profName">¿Cómo te llamas?</label><input type="text" id="profName" maxlength="30" autocomplete="given-name" placeholder="Tu nombre" value="${p ? esc(p.name) : ""}"></div>
+    ${conPais ? paisSelect() : ""}
     <div class="field"><span class="lbl">¿Qué te trae a Aura?</span>
       <div class="goal-opts">${GOALS.map(g => `<label class="goal-opt"><input type="radio" name="goal" value="${g.id}" ${g.id === goal ? "checked" : ""}><span class="s-icon">${S_ICONS[g.id]}</span><span class="stack" style="gap:2px"><b>${esc(g.label)}</b><small>${esc(g.sub)}</small></span></label>`).join("")}</div></div>
     <div class="field"><label for="profConf">¿Cuánta confianza sientes hoy al hablar?</label>
@@ -618,7 +628,10 @@ function saveProfile() {
   const conf = +document.getElementById("profConf").value;
   const err = document.getElementById("profErr");
   if (!name) { err.textContent = "Escribe tu nombre para continuar."; document.getElementById("profName").focus(); return; }
+  const ps = document.getElementById("profPais");
+  if (ps && !ps.value) { err.textContent = "Elige tu país."; ps.focus(); return; }
   if (!g) { err.textContent = "Cuéntanos qué te trae a Aura."; return; }
+  if (ps) setPais(ps.value);
   const isNew = !progress.profile;
   if (isNew) progress.profile = { name, goal: g.value, confStart: conf, confNow: conf, since: today() };
   else Object.assign(progress.profile, { name, goal: g.value, confNow: conf });
@@ -635,11 +648,9 @@ function saveProfile() {
 function vOnboarding() {
   if (S.ob === "pais") return vPais(true);
   if (S.ob === "perfil") {
-    const pa = paisObj(progress.pais || guessPais() || "CL");
     return `<section class="section"><button class="back" data-act="obBack" data-to="bienvenida">← Inicio</button>
-      <div><h2>Empecemos</h2><p class="lead">Dos preguntas y te llevamos directo a lo tuyo.</p></div>
-      <div class="panel">${profileForm(null, "Empezar")}</div>
-      <p class="note">${pa.bandera} Español de ${esc(pa.nombre)}: detectamos sus muletillas y modismos. <button class="linkish" data-act="obNext" data-to="pais">Cambiar país</button></p>
+      <div><h2>Empecemos</h2><p class="lead">Unas preguntas y te llevamos directo a lo tuyo.</p></div>
+      <div class="panel">${profileForm(null, "Empezar", true)}</div>
       <p class="note">Tu perfil se guarda solo en este celular. No pedimos correo ni contraseña. <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a></p></section>`;
   }
   if (S.ob === "prueba") return vPrueba(true);

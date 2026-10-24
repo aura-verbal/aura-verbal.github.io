@@ -16,11 +16,21 @@
   const SUG_COMP = ["Planificación y organización", "Trabajo en equipo", "Comunicación", "Orientación al cliente", "Resolución de problemas",
     "Análisis de datos", "Responsabilidad", "Adaptabilidad", "Iniciativa", "Liderazgo", "Atención al detalle", "Aprendizaje rápido",
     "Manejo de la presión", "Negociación", "Creatividad", "Anticipar problemas"];
+  /* Opciones para tocar en los campos del pitch. */
+  const OPC = {
+    etapa: ["en primer año", "a mitad de la carrera", "en el penúltimo año de la carrera", "en el último año de la carrera"],
+    rubro: ["retail", "el comercio", "la gastronomía", "una empresa de logística", "atención al cliente", "la universidad, como ayudante"],
+    que: ["en atención al público y ventas", "en bodega y control de inventario", "en reparto y logística", "en caja y cuadratura", "en reposición de productos", "en apoyo administrativo", "apoyando a estudiantes de cursos menores"],
+    motivo: ["me motiva entender por qué algo falla y mejorarlo", "me gusta trabajar con personas y resolver sus problemas", "me interesa usar datos para tomar mejores decisiones", "disfruto organizar y que las cosas funcionen", "me motiva aprender rápido en lugares exigentes", "me gusta crear cosas nuevas y emprender"],
+    bTipo: ["realizar mi práctica profesional", "encontrar mi primer empleo", "un trabajo part-time"],
+    bArea: ["logística y operaciones", "finanzas", "marketing", "recursos humanos", "tecnología", "ventas y atención a clientes", "proyectos de ingeniería"],
+    aporte: ["mi experiencia en atención a clientes", "mi capacidad de organizar y planificar", "mi manejo de datos y Excel", "mis ganas de aprender rápido", "mi experiencia en la operación"]
+  };
   const NUM = ["", "una", "dos", "tres", "cuatro", "cinco", "seis"];
 
   function t(s) { return String(s || "").replace(/\s+/g, " ").trim(); }
   /* Quita el punto final y la mayúscula inicial para encajar una respuesta dentro de una oración. */
-  function frag(s) { s = t(s).replace(/[.;,\s]+$/, ""); return s && s[0] === s[0].toUpperCase() && s[1] && s[1] === s[1].toLowerCase() ? s[0].toLowerCase() + s.slice(1) : s; }
+  function frag(s) { s = t(s).replace(/[.;,\s]+$/, ""); return s && /^(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]|[AYOE] [a-záéíóúñ])/.test(s) ? s[0].toLowerCase() + s.slice(1) : s; }
   function cap(s) { s = t(s); return s ? s[0].toUpperCase() + s.slice(1) : s; }
   function lista(xs) { xs = xs.filter(Boolean); return xs.length <= 1 ? (xs[0] || "") : xs.slice(0, -1).join(", ") + " y " + xs[xs.length - 1]; }
   function words(s) { return t(s) ? t(s).split(" ").length : 0; }
@@ -70,7 +80,7 @@
     return out;
   }
 
-  const API = { PPM, TIPOS, SUG_COMP, partes, guion, segundos, revisar, words };
+  const API = { OPC, PPM, TIPOS, SUG_COMP, partes, guion, segundos, revisar, words };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   else root.AuraPitch = API;
 })(typeof window !== "undefined" ? window : globalThis);

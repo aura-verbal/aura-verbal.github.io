@@ -1764,18 +1764,31 @@ const PT_PASOS = [
 function ptField(id, label, val, ph, path) {
   return `<div class="field"><label for="${id}">${label}</label><input type="text" id="${id}" data-pf="${path || id.replace(/^pf-/, "")}" value="${esc(val || "")}" placeholder="${esc(ph)}" maxlength="220"></div>`;
 }
+/* Campo con opciones para tocar: la opción elegida llena el cuadro, que sigue siendo editable. */
+function optList(act, path, opts, cur, attr) {
+  cur = t2(cur);
+  /* Con una opción elegida se muestra solo esa (la pantalla queda corta); «Ver otras» la suelta y vuelve a mostrar todas. */
+  if (opts.includes(cur)) return `<div class="tipo-list opt-list"><button class="pw-opt tipo-opt on" data-act="${act}" data-p="${path}" data-v="${esc(cur)}"${attr || ""}>${esc(cur)}</button>
+    <button class="linkish opt-more" data-act="${act}" data-p="${path}" data-v="${esc(cur)}"${attr || ""}>Ver otras opciones</button></div>`;
+  return opts.length ? `<div class="tipo-list opt-list">${opts.map(o => `<button class="pw-opt tipo-opt${cur === o ? " on" : ""}" data-act="${act}" data-p="${path}" data-v="${esc(o)}"${attr || ""}>${esc(o)}</button>`).join("")}</div>` : "";
+}
+function ptChoice(id, label, val, opts, ph, path) {
+  path = path || id.replace(/^pf-/, "");
+  return `<div class="field"><span class="lbl">${label}</span>${optList("ptOpt", path, opts, val)}
+    <label class="opt-own" for="${id}">${!opts.length ? "" : opts.includes(t2(val)) ? "Ajústala con un detalle tuyo si quieres" : "O escríbelo tú"}</label><input type="text" id="${id}" data-pf="${path}" value="${esc(val || "")}" placeholder="${esc(ph)}" maxlength="220"></div>`;
+}
 function ptPasoHTML(k, p) {
   if (k === "tipo") return `<div class="tipo-list">${Object.entries(PT.TIPOS).map(([id, x]) => `<button class="pw-opt tipo-opt${p.tipo === id ? " on" : ""}" data-act="ptSet" data-k="tipo" data-v="${id}"><b>${esc(x.nombre)}</b><small>${esc(x.desc)} Meta: ${PR.fmt(x.secs)}.</small></button>`).join("")}</div>
-      ${ptField("pf-audiencia", "¿Quién lo va a ver o escuchar? (opcional)", p.audiencia, "Ej: empresas que buscan practicantes de logística")}`;
+      ${ptChoice("pf-audiencia", "¿Quién lo va a ver o escuchar? (opcional)", p.audiencia, ["empresas que buscan practicantes", "reclutadores de mi área", "un profesional que admiro"], "Ej: empresas que buscan practicantes de logística")}`;
   if (k === "saludo") return `<div class="field"><span class="lbl">Saludo</span><div class="pw-opts flat">${["Buenos días", "Buenas tardes", "Hola"].map(s => chipBtn("ptSet", s, s, p.saludo === s, ' data-k="saludo"')).join("")}</div></div>
       ${ptField("pf-nombre", "Tu nombre y apellido", p.nombre, "Ej: Camila Soto")}`;
   if (k === "formacion") return ptField("pf-carrera", "¿Qué estudias o estudiaste?", p.carrera, "Ej: estudiante de Ingeniería Comercial")
       + ptField("pf-inst", "¿Dónde?", p.inst, "Ej: la Universidad de Chile")
-      + ptField("pf-etapa", "¿En qué etapa vas? (opcional)", p.etapa, "Ej: en el último año de la carrera")
+      + ptChoice("pf-etapa", "¿En qué etapa vas? (opcional)", p.etapa, PT.OPC.etapa, "Ej: en el último año de la carrera")
       + ptField("pf-enfasis", "Formación en… (opcional)", p.enfasis, "Ej: finanzas y análisis de datos");
   if (k === "experiencia") return [0, 1, 2].map(i => `<div class="pt-exp"><span class="eyebrow">Experiencia ${i + 1}${i ? " (opcional)" : ""}</span>
-      ${ptField("pf-exp" + i + "r", "Rubro o tipo de empresa", (p.exp[i] || {}).rubro, i === 0 ? "Ej: retail" : i === 1 ? "Ej: una agencia de marketing" : "Ej: el comercio", "exp." + i + ".rubro")}
-      ${ptField("pf-exp" + i + "q", "¿En qué área o rol?", (p.exp[i] || {}).que, i === 0 ? "Ej: en bodega, apoyando el control de inventario" : "Ej: en atención al público y ventas", "exp." + i + ".que")}</div>`).join("")
+      ${ptChoice("pf-exp" + i + "r", "Rubro o tipo de empresa", (p.exp[i] || {}).rubro, i && !t2((p.exp[i - 1] || {}).rubro) ? [] : PT.OPC.rubro, i === 0 ? "Ej: retail" : i === 1 ? "Ej: una agencia de marketing" : "Ej: el comercio", "exp." + i + ".rubro")}
+      ${ptChoice("pf-exp" + i + "q", "¿En qué área o rol?", (p.exp[i] || {}).que, i && !t2((p.exp[i - 1] || {}).rubro) ? [] : PT.OPC.que, i === 0 ? "Ej: en bodega, apoyando el control de inventario" : "Ej: en atención al público y ventas", "exp." + i + ".que")}</div>`).join("")
       + `<p class="note">¿Sin experiencia laboral? Usa voluntariados, ayudantías, proyectos de la universidad o un emprendimiento.</p>`;
   if (k === "competencias") {
     const sel = p.comps.map(c => c.toLowerCase()), mias = perfil().clave.map(id => EN.COMP_IDX[id] && EN.COMP_IDX[id].nombre).filter(c => c && !sel.includes(c.toLowerCase()));
@@ -1785,11 +1798,14 @@ function ptPasoHTML(k, p) {
   }
   if (k === "transicion") return (() => { const ls = perfil().logros.map(l => EN.fraseLogro(l)).filter(Boolean);
       return ls.length ? `<div class="field"><span class="lbl">Usa uno de tus logros como momento concreto</span><div class="tipo-list">${ls.map((f, i) => `<button class="pw-opt tipo-opt${p.momento && f.toLowerCase().startsWith(p.momento.slice(0, 20).toLowerCase()) ? " on" : ""}" data-act="ptLogro" data-i="${i}">${esc(f)}</button>`).join("")}</div></div>` : ""; })()
-      + ptField("pf-motivo", "¿Qué te mostró tu experiencia o qué te motiva?", p.motivo, "Ej: me motiva entender por qué un proceso falla y mejorarlo")
+      + ptChoice("pf-motivo", "¿Qué te mostró tu experiencia o qué te motiva?", p.motivo, PT.OPC.motivo, "Ej: me motiva entender por qué un proceso falla y mejorarlo")
       + ptField("pf-momento", "Un momento concreto que lo muestre (opcional)", p.momento, "Ej: rediseñé una ruta de despacho y todos los clientes recibieron a tiempo")
       + `<p class="note">Si estás cambiando de área, explica el cambio por algo tuyo («descubrí que soy bueno en…»), no por algo externo.</p>`;
-  if (k === "futuro") return ptField("pf-busco", "¿Qué buscas?", p.busco, "Ej: realizar mi práctica profesional en finanzas")
-      + ptField("pf-aporte", "¿Qué quieres aportar? (opcional)", p.aporte, "Ej: mi experiencia en atención a clientes");
+  if (k === "futuro") { const ap = EN.opcionesAporte(perfil()).concat(PT.OPC.aporte);
+    return `<div class="field"><span class="lbl">¿Qué buscas?</span><div class="pw-opts flat">${PT.OPC.bTipo.map(s => chipBtn("ptBusco", s, s, p.bTipo === s, ' data-k="bTipo"')).join("")}</div></div>
+      <div class="field"><span class="lbl">¿En qué área? (opcional)</span><div class="pw-opts flat comp-sug">${PT.OPC.bArea.map(s => chipBtn("ptBusco", s, s, p.bArea === s, ' data-k="bArea"')).join("")}</div></div>
+      ${ptField("pf-busco", "Así queda (puedes ajustarlo)", p.busco, "Ej: realizar mi práctica profesional en finanzas")}`
+      + ptChoice("pf-aporte", "¿Qué quieres aportar? (opcional)", p.aporte, ap.filter((x, i) => ap.indexOf(x) === i).slice(0, 6), "Ej: mi experiencia en atención a clientes"); }
   return "";
 }
 function vPitch() {
@@ -1833,6 +1849,9 @@ function ptAct(a, el) {
     case "ptSalir": go({ sub: null, tab: "entrevistas" }, "left"); return true;
     case "ptPaso": { const n = S.pt.paso + (+el.dataset.d); S.pt.paso = Math.max(0, Math.min(PT_PASOS.length, n)); S.anim = el.dataset.d > 0 ? "right" : "left"; render(); return true; }
     case "ptSet": p[el.dataset.k] = el.dataset.v; save(); render(); return true;
+    case "ptOpt": { const cur = el.dataset.p.split(".").reduce((o, k) => o && o[k], p); pitchSet(el.dataset.p, t2(cur) === el.dataset.v ? "" : el.dataset.v); render(); return true; }
+    case "ptBusco": { const k = el.dataset.k; p[k] = p[k] === el.dataset.v ? "" : el.dataset.v; p.busco = [p.bTipo, p.bArea ? "en " + p.bArea : ""].filter(Boolean).join(" ");
+      if (!p.bTipo && p.bArea) p.busco = "trabajar en " + p.bArea; save(); render(); return true; }
     case "ptComp": if (p.comps.length < 8) p.comps.push(el.dataset.v); save(); render(); return true;
     case "ptLogro": { const l = perfil().logros.filter(x => EN.fraseLogro(x))[+el.dataset.i]; if (l) { p.momento = EN.fraseLogro(l).replace(/\.$/, ""); p.momento = p.momento[0].toLowerCase() + p.momento.slice(1); save(); render(); } return true; }
     case "ptCompDel": p.comps.splice(+el.dataset.i, 1); save(); render(); return true;
@@ -1866,6 +1885,21 @@ function entField(path, label, val, ph, area) {
   return `<div class="field"><label for="${id}">${label}</label>${area ? `<textarea id="${id}" class="esc-ta" rows="3" data-ef="${path}" placeholder="${esc(ph)}" maxlength="400">${esc(val || "")}</textarea>`
     : `<input type="text" id="${id}" data-ef="${path}" value="${esc(val || "")}" placeholder="${esc(ph)}" maxlength="220">`}</div>`;
 }
+function entChoice(path, label, val, opts, ph, area) {
+  const id = "ef-" + path.replace(/\./g, "-");
+  return `<div class="field"><span class="lbl">${label}</span>${optList("entOpt", path, opts, val)}
+    <label class="opt-own" for="${id}">${!opts.length ? "" : opts.includes(t2(val)) ? "Ajústala con un detalle tuyo si quieres" : "O escríbelo tú"}</label>${area ? `<textarea id="${id}" class="esc-ta" rows="2" data-ef="${path}" placeholder="${esc(ph)}" maxlength="400">${esc(val || "")}</textarea>`
+    : `<input type="text" id="${id}" data-ef="${path}" value="${esc(val || "")}" placeholder="${esc(ph)}" maxlength="220">`}</div>`;
+}
+const NOTA_REAL = `<p class="note real">Toca la opción que se parezca a algo que <b>de verdad</b> te pasó y, si puedes, agrégale un detalle tuyo (dónde, con quién). El entrevistador puede pedirte más detalles.</p>`;
+/* Campos que dependen de la debilidad o fortaleza elegida: se rearman si la escribes a mano. */
+function respSubCampos(k, c, base, p) {
+  if (k === "fortaleza") return logroPicker(c, base, p) + entChoice(base + "aporte", "¿Cómo te ayudaría en el cargo? (opcional)", c.aporte, EN.opcionesFortaleza(c), "Ej: ordenar la operación desde el primer día");
+  const o = EN.opcionesDebilidad(c);
+  return entChoice(base + "ejemplo", "¿Cuándo lo notaste? Elige una situación parecida", c.ejemplo, o.ej, "Ej: acepté tres turnos extra la misma semana")
+    + entChoice(base + "accion", "¿Qué estás haciendo para mejorarlo?", c.accion, o.acc, "Ej: ahora reviso mi carga antes de comprometerme")
+    + entChoice(base + "avance", "¿Qué ha cambiado? (opcional)", c.avance, o.av, "Ej: aviso con tiempo cuando no alcanzo");
+}
 function entHead(titulo, sub, backAct, backLbl) {
   return `<button class="back" data-act="${backAct || "entSalir"}">← ${esc(backLbl || "Entrevistas")}</button><div><p class="eyebrow">${esc(sub)}</p><h2>${esc(titulo)}</h2></div>`;
 }
@@ -1894,7 +1928,7 @@ function vEstiloRes() {
   const cards = EN.tarjetasEstilo(pt), card = c => { const m = e.marca[c.id];
     return `<div class="id-card${m === "si" ? " si" : m === "no" ? " no" : ""}"><p>${esc(c.txt)}</p>
       <div class="row"><button class="chip-btn${m === "si" ? " on" : ""}" data-act="estMarca" data-id="${c.id}" data-v="si" aria-pressed="${m === "si"}">Me identifico</button><button class="chip-btn${m === "no" ? " on" : ""}" data-act="estMarca" data-id="${c.id}" data-v="no" aria-pressed="${m === "no"}">No tanto</button></div>
-      ${m === "no" ? `<div class="field"><label for="nota-${c.id}">¿Por qué no? ¿Con qué te identificas más? (opcional)</label><input type="text" id="nota-${c.id}" data-ef="estilo.nota.${c.id}" value="${esc(e.nota[c.id] || "")}" maxlength="200" placeholder="Ej: soy directo, pero cuido cómo lo digo"></div>` : ""}</div>`; };
+      ${m === "no" ? `<div class="field"><span class="lbl">¿Por qué no? (opcional)</span><div class="pw-opts flat comp-sug">${EN.OPC.nota.map(s => chipBtn("entOpt", s, s, e.nota[c.id] === s, ` data-p="estilo.nota.${c.id}"`)).join("")}</div><label class="opt-own" for="nota-${c.id}">O escríbelo tú</label><input type="text" id="nota-${c.id}" data-ef="estilo.nota.${c.id}" value="${esc(e.nota[c.id] || "")}" maxlength="200" placeholder="Ej: soy directo, pero cuido cómo lo digo"></div>` : ""}</div>`; };
   const tot = EN.PREG_ESTILO.length;
   return `<section class="section">${entHead("Tu estilo de trabajo", "Conócete · resultado")}
     <div class="panel"><p class="eyebrow">Tu estilo principal</p><h3 style="font-size:1.5rem">${esc(st.nombre)}${sec ? ` <span class="muted" style="font-size:1rem">con rasgos de ${esc(sec.nombre)}</span>` : ""}</h3>
@@ -1933,8 +1967,8 @@ function vMotiv() {
       <div class="pw-opts flat comp-sug">${EN.MOTIVADORES.map(([id, n]) => { const k = p.motiv.indexOf(id); return `<button class="pw-opt${k >= 0 ? " on" : ""}" data-act="motivTog" data-v="${id}">${k >= 0 ? `<b>${k + 1}</b> · ` : ""}${esc(n)}</button>`; }).join("")}</div></div>
     <div class="panel"><h3>Tu trabajo ideal</h3>
       ${Object.entries(EN.IDEAL).map(([k, x]) => `<div class="field"><span class="lbl">${esc(x.q)}</span><div class="pw-opts flat comp-sug">${x.ops.map(o => chipBtn("idealSet", o, o, p.ideal[k] === o, ` data-k="${k}"`)).join("")}</div></div>`).join("")}
-      ${entField("ideal.lejos", "¿Cuánto es lo máximo que viajarías al trabajo?", p.ideal.lejos, "Ej: hasta 1 hora")}
-      ${entField("ideal.no", "Algo que NO quieres en un trabajo", p.ideal.no, "Ej: que no se valore el esfuerzo")}</div>
+      ${entChoice("ideal.lejos", "¿Cuánto es lo máximo que viajarías al trabajo?", p.ideal.lejos, EN.OPC.lejos, "Ej: hasta 1 hora")}
+      ${entChoice("ideal.no", "Algo que NO quieres en un trabajo", p.ideal.no, EN.OPC.no, "Ej: que no se valore el esfuerzo")}</div>
     <button class="btn primary wide" data-act="entSalir">Listo</button></section>`;
 }
 /* ---------- Paso 2 · logros ---------- */
@@ -1948,20 +1982,25 @@ function vLogros() {
     <div class="panel"><h3>¿No se te ocurre ninguno?</h3><p class="note">Piensa en el trabajo, la universidad, un voluntariado o un emprendimiento:</p><ul class="ideas">${EN.IDEAS_LOGRO.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
   </section>`;
 }
+function logroRevsHTML(l) {
+  const revs = EN.revisarLogro(l);
+  return revs.length ? `<div class="stack" style="gap:6px">${revs.map(r => `<p class="fb mid" style="margin:0">${esc(r)}</p>`).join("")}</div>` : `<p class="fb ok">Logro completo: momento, acción con verbo, resultado medible.</p>`;
+}
 function vLogro() {
   const p = perfil(), i = S.ev.i, l = p.logros[i] || {}, revs = EN.revisarLogro(l), base = "logros." + i + ".";
   const sug = p.clave.map(id => EN.COMP_IDX[id] && EN.COMP_IDX[id].nombre).filter(Boolean).concat(["Planificación y organización", "Resolución de problemas", "Trabajo en equipo", "Orientación al cliente", "Iniciativa", "Responsabilidad"]);
   const comps = l.comps || [];
   return `<section class="section">${entHead("Un logro", "Momento · Acción · Resultado · Competencias", "logrosVolver", "Tus logros")}
     <div class="panel">
-      ${entField(base + "m", "1 · Momento: ¿cuál era el problema, desafío u oportunidad?", l.m, "Ej: la ruta de despacho no alcanzaba a cubrir a todos los clientes", true)}
-      <div class="field"><span class="lbl">2 · Acción: ¿qué hiciste tú? Empieza con un verbo</span><div class="pw-opts flat comp-sug">${EN.VERBOS.slice(0, 12).map(v => chipBtn("logroVerbo", v, v, false)).join("")}</div></div>
-      ${entField(base + "a", "Tu acción", l.a, "Ej: Rediseñé la ruta agrupando a los clientes por zona", true)}
-      ${entField(base + "r", "3 · Resultado: ¿qué cambió? Con números si puedes", l.r, "Ej: que el 100% de los clientes recibiera a tiempo")}
+      ${entChoice(base + "m", "1 · Momento: ¿cuál era el problema, desafío u oportunidad?", l.m, EN.OPC.m, "Ej: la ruta de despacho no alcanzaba a cubrir a todos los clientes", true)}
+      ${entChoice(base + "a", "2 · Acción: ¿qué hiciste tú?", l.a, EN.opcionesAccion(l.m), "Ej: Rediseñé la ruta agrupando a los clientes por zona", true)}
+      <div class="field"><span class="lbl">¿Lo escribes tú? Empieza con un verbo</span><div class="pw-opts flat comp-sug">${EN.VERBOS.slice(0, 12).map(v => chipBtn("logroVerbo", v, v, false)).join("")}</div></div>
+      ${entChoice(base + "r", "3 · Resultado: ¿qué cambió? Completa los números (__)", l.r, EN.OPC.r, "Ej: que el 100% de los clientes recibiera a tiempo")}
       <div class="field"><span class="lbl">4 · Competencias que usaste</span><div class="pw-opts flat comp-sug">${sug.filter((c, k) => sug.indexOf(c) === k).map(c => chipBtn("logroComp", c, (comps.includes(c) ? "✓ " : "+ ") + c, comps.includes(c))).join("")}</div></div>
     </div>
+    ${NOTA_REAL}
     <div class="pt-prev"><span class="eyebrow">5 · Tu logro en una frase</span><p id="entPrev">${esc(EN.fraseLogro(l) || "…")}</p></div>
-    ${revs.length ? `<div class="stack" style="gap:6px">${revs.map(r => `<p class="fb mid" style="margin:0">${esc(r)}</p>`).join("")}</div>` : `<p class="fb ok">Logro completo: momento, acción con verbo, resultado medible.</p>`}
+    <div id="logroRevs">${logroRevsHTML(l)}</div>
     <div class="row"><button class="btn primary" data-act="logrosVolver">Guardar</button><button class="btn danger" data-act="logroDel">Borrar</button></div>
   </section>`;
 }
@@ -1997,22 +2036,20 @@ function vRespEdit() {
         ${o.comps.map(id => `<button class="pw-opt tipo-opt${c.compId === id ? " on" : ""}" data-act="respComp" data-v="${id}">${esc(EN.COMP_IDX[id].nombre)}<small>${k === "fortaleza" ? "De tus competencias" : "De tus áreas de mejora"}</small></button>`).join("")}</div>`
         : `<p class="note">Haz «Conócete» para tener sugerencias, o escribe la tuya abajo.</p>`}</div>
       ${entField(base + key, "O escríbela con tus palabras", c.compId ? "" : c[key], k === "fortaleza" ? "Ej: Soy constante y cumplo lo que prometo" : "Ej: Me cuesta delegar")}`;
-    if (k === "fortaleza") campos += logroPicker(c, base, p) + entField(base + "aporte", "¿Cómo te ayudaría en el cargo? (opcional)", c.aporte, "Ej: ordenar la operación desde el primer día");
-    else campos += entField(base + "ejemplo", "¿Cuándo lo notaste? Un ejemplo", c.ejemplo, "Ej: acepté tres turnos extra la misma semana")
-      + entField(base + "accion", "¿Qué estás haciendo para mejorarlo?", c.accion, "Ej: ahora reviso mi carga antes de comprometerme")
-      + entField(base + "avance", "¿Qué ha cambiado? (opcional)", c.avance, "Ej: aviso con tiempo cuando no alcanzo");
+    campos += `<div id="respSub" class="stack">${respSubCampos(k, c, base, p)}</div>` + (k === "debilidad" ? NOTA_REAL : "");
   } else if (k === "porque") {
     campos = entField(base + "cargo", "¿A qué cargo postulas?", c.cargo, "Ej: analista de operaciones") + entField(base + "empresa", "¿En qué empresa?", c.empresa, "Ej: Ripley")
-      + entField(base + "atrae", "¿Qué te atrae de esa empresa? Algo concreto", c.atrae, "Ej: están invirtiendo en su centro de distribución")
-      + entField(base + "aporte", "¿Qué puedes aportar? (opcional)", c.aporte, "Ej: mi experiencia en la operación")
+      + entChoice(base + "atrae", "¿Qué te atrae de esa empresa?", c.atrae, EN.OPC.atrae, "Ej: están invirtiendo en su centro de distribución")
+      + `<p class="note">Si sabes algo concreto de la empresa (una noticia, un proyecto), escríbelo: muestra que la investigaste.</p>`
+      + entChoice(base + "aporte", "¿Qué puedes aportar? (opcional)", c.aporte, EN.opcionesAporte(p), "Ej: mi experiencia en la operación")
       + `<p class="note">Tus motivadores: ${p.motiv.length ? esc(p.motiv.map(id => EN.MOT_IDX[id].nombre).join(", ")) : "aún no los eliges"}. <button class="linkish" data-act="entIr" data-v="motiv">${p.motiv.length ? "Cambiar" : "Elegirlos"}</button></p>`;
   } else if (k === "logro") {
     campos = logroPicker(c, base, p);
   } else if (k === "conflicto") {
-    campos = entField(base + "sit", "¿Qué pasó? (situación)", c.sit, "Ej: un compañero y yo no estábamos de acuerdo en cómo repartir los turnos")
-      + entField(base + "acc", "¿Qué hiciste tú?", c.acc, "Ej: le propuse conversarlo con los datos de ventas de cada día")
-      + entField(base + "res", "¿Cómo terminó?", c.res, "Ej: armamos un turno rotativo que funcionó para los dos")
-      + entField(base + "apr", "¿Qué aprendiste?", c.apr, "Ej: los desacuerdos se resuelven mejor con datos que con opiniones");
+    campos = entChoice(base + "sit", "¿Qué pasó? (situación)", c.sit, EN.OPC.sit, "Ej: un compañero y yo no estábamos de acuerdo en cómo repartir los turnos")
+      + entChoice(base + "acc", "¿Qué hiciste tú?", c.acc, EN.OPC.acc, "Ej: proponerle conversarlo con los datos de ventas de cada día")
+      + entChoice(base + "res", "¿Cómo terminó?", c.res, EN.OPC.res, "Ej: armamos un turno rotativo que funcionó para los dos")
+      + entChoice(base + "apr", "¿Qué aprendiste?", c.apr, EN.OPC.apr, "Ej: los desacuerdos se resuelven mejor con datos que con opiniones") + NOTA_REAL;
   } else if (k === "preguntas") {
     const sug = EN.preguntasSugeridas(p), sel = c.sel || [];
     campos = `<div class="field"><span class="lbl">Elige 2 o 3</span>${sug.concat(sel.filter(x => !sug.includes(x))).map(q => `<label class="ck-row"><input type="checkbox" data-pq="${esc(q)}" ${sel.includes(q) ? "checked" : ""}> <span>${esc(q)}</span></label>`).join("")}</div>
@@ -2090,6 +2127,15 @@ function entMicGo() {
   if (!entDict.supported) { E.rec = false; E.micErr = micMsg("unsupported"); }
   render();
 }
+/* Al cambiar la debilidad o fortaleza, se borran las opciones elegidas que eran de la anterior (lo escrito a mano se mantiene). */
+function respOptsDe(k, c) {
+  if (k === "fortaleza") return { aporte: EN.opcionesFortaleza(c) };
+  const o = EN.opcionesDebilidad(c); return { ejemplo: o.ej, accion: o.acc, avance: o.av };
+}
+function respLimpiar(k, c, old) {
+  const nu = respOptsDe(k, c); Object.keys(old).forEach(f => { if (old[f].includes(t2(c[f])) && !nu[f].includes(t2(c[f]))) c[f] = ""; });
+}
+let respSubT = 0;
 function entAct(a, el) {
   const p = perfil();
   switch (a) {
@@ -2111,12 +2157,16 @@ function entAct(a, el) {
       if (E.ret) { const rk = E.ret; if (l && p.logros.includes(l)) { (p.resp[rk] = p.resp[rk] || {}).logro = p.logros.indexOf(l); save(); } entGo("respEdit", { k: rk }, "left"); }
       else entGo("logros", {}, "left"); return true; }
     case "logroDel": { const i = S.ev.i; p.logros.splice(i, 1); Object.values(p.resp).forEach(c => { if (c.logro === i) delete c.logro; else if (c.logro > i) c.logro--; }); save(); entGo("logros", {}, "left"); return true; }
-    case "logroVerbo": { const l = p.logros[S.ev.i], a = t2(l.a).replace(/^[A-ZÁÉÍÓÚa-záéíóúñ]+(é|í)(?=[\s,.;]|$)\s*/, ""); l.a = el.dataset.v + " " + a; save(); render(); const n = document.getElementById("ef-logros-" + S.ev.i + "-a"); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } return true; }
+    case "logroVerbo": { const l = p.logros[S.ev.i], a = t2(l.a).replace(new RegExp(EN.VERBO_RE.source + "\\s*", "i"), ""); l.a = el.dataset.v + " " + a; save(); render(); const n = document.getElementById("ef-logros-" + S.ev.i + "-a"); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } return true; }
     case "logroComp": { const l = p.logros[S.ev.i], v = el.dataset.v; l.comps = l.comps || []; const k = l.comps.indexOf(v); if (k >= 0) l.comps.splice(k, 1); else l.comps.push(v); save(); render(); return true; }
     case "respOpen": entGo("respEdit", { k: el.dataset.k }); return true;
     case "respVolver": entGo("resp", {}, "left"); return true;
-    case "respPick": { const c = p.resp[S.ev.k], key = S.ev.k === "fortaleza" ? "fort" : "deb"; c[key] = el.dataset.v; delete c.compId; c.editado = false; save(); render(); return true; }
-    case "respComp": { const c = p.resp[S.ev.k], key = S.ev.k === "fortaleza" ? "fort" : "deb"; c.compId = el.dataset.v; c[key] = ""; c.editado = false; save(); render(); return true; }
+    case "respPick": { const c = p.resp[S.ev.k], key = S.ev.k === "fortaleza" ? "fort" : "deb", old = respOptsDe(S.ev.k, c); c[key] = el.dataset.v; delete c.compId; c.editado = false; respLimpiar(S.ev.k, c, old); save(); render(); return true; }
+    case "respComp": { const c = p.resp[S.ev.k], key = S.ev.k === "fortaleza" ? "fort" : "deb", old = respOptsDe(S.ev.k, c); c.compId = el.dataset.v; c[key] = ""; c.editado = false; respLimpiar(S.ev.k, c, old); save(); render(); return true; }
+    case "entOpt": { const path = el.dataset.p, cur = path.split(".").reduce((o, k) => o && o[k], p), v = t2(cur) === el.dataset.v ? "" : el.dataset.v;
+      entSet(path, v); if (/^resp\./.test(path)) p.resp[S.ev.k].editado = false; render();
+      const n = document.getElementById("ef-" + path.replace(/\./g, "-")), i = n && n.value.indexOf("__");
+      if (n && i >= 0) { n.focus(); n.setSelectionRange(i, i + 2); } return true; }
     case "respLogro": { const c = p.resp[S.ev.k]; c.logro = +el.dataset.i; c.editado = false; save(); render(); return true; }
     case "respRegen": { const c = p.resp[S.ev.k]; c.editado = false; c.texto = ""; save(); render(); return true; }
     case "respOir": speak(entTexto(S.ev.k)); return true;
@@ -2627,9 +2677,17 @@ app.addEventListener("input", e => {
     const pv = document.getElementById("ptPrev"); if (pv && S.pt) { const st = PT_PASOS[S.pt.paso]; if (st) pv.textContent = PT.partes(pitchData())[st.k === "tipo" ? "cierre" : st.k] || "…"; }
   }
   if (tg.dataset && tg.dataset.ef && S.sub === "ent") {
+    const E = S.ev, cambiaBase = E.v === "respEdit" && /^resp\.(debilidad\.deb|fortaleza\.fort)$/.test(tg.dataset.ef);
+    const oldOpts = cambiaBase ? respOptsDe(E.k, Object.assign({}, perfil().resp[E.k])) : null;
     entSet(tg.dataset.ef, tg.value);
-    const E = S.ev, pv = document.getElementById("entPrev");
-    if (pv && E.v === "logro") pv.textContent = EN.fraseLogro(perfil().logros[E.i]) || "…";
+    const pv = document.getElementById("entPrev");
+    if (cambiaBase) {
+      const c = perfil().resp[E.k]; if (c.compId && tg.value.trim()) { delete c.compId; document.querySelectorAll('[data-act="respComp"].on').forEach(b => b.classList.remove("on")); }
+      respLimpiar(E.k, c, oldOpts); save();
+      document.querySelectorAll('[data-act="respPick"].on').forEach(b => b.classList.remove("on"));
+      clearTimeout(respSubT); respSubT = setTimeout(() => { const box = document.getElementById("respSub"); if (box && S.ev === E) box.innerHTML = respSubCampos(E.k, c, "resp." + E.k + ".", perfil()); }, 500);
+    }
+    if (pv && E.v === "logro") { const l = perfil().logros[E.i]; pv.textContent = EN.fraseLogro(l) || "…"; const rv = document.getElementById("logroRevs"); if (rv) rv.innerHTML = logroRevsHTML(l); }
     if (E.v === "respEdit" && /^resp\./.test(tg.dataset.ef)) { const c = perfil().resp[E.k]; c.editado = false; const ta = document.getElementById("entTexto"), txt = entTexto(E.k); if (ta) ta.value = txt; const inf = document.getElementById("entInfo"); if (inf) inf.textContent = txt ? `Cerca de ${EN.segundos(txt)} s en voz alta.` : ""; }
   }
   if (tg.id === "entTexto" && S.ev) { const c = perfil().resp[S.ev.k] || (perfil().resp[S.ev.k] = {}); c.texto = tg.value; c.editado = true; save(); }

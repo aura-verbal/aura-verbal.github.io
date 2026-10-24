@@ -37,4 +37,19 @@ const lg = E.respuesta("logro", {}, { logro: l }); if (!/Entonces rediseñé la 
 if (E.respuesta("preguntas", { sel: ["¿A?", "¿B?"] }) !== "Sí, me gustaría saber: ¿A? ¿B?") err("preguntas");
 if (E.preguntasSugeridas({ motiv: ["aprender"], ideal: { jefe: "Que enseñe" } }).length !== 3) err("preguntas sugeridas", E.preguntasSugeridas({ motiv: ["aprender"], ideal: { jefe: "Que enseñe" } }));
 if (E.ORDEN_PREG.some(k => !E.PREGUNTAS[k])) err("orden de preguntas");
+// Opciones para tocar: cada debilidad del estilo tiene tema, y cada opción arma frases sin dobles puntos ni mayúsculas a mitad
+Object.values(E.ESTILOS).forEach(s => s.deb.forEach(deb => { if (!E.temaDebilidad({ deb })) err("debilidad sin tema", deb);
+  const o = E.opcionesDebilidad({ deb }); if (o.ej.length < 3 || o.acc.length < 3 || o.av.length < 2) err("pocas opciones", deb);
+  o.ej.concat(o.acc, o.av).forEach(x => { const r = E.respuesta("debilidad", { deb, ejemplo: x, accion: x, avance: x }); if (/\.\.|[a-z] [A-ZÁÉ]/.test(r.replace(/Para mejorarlo|Hoy|Lo noté/g, ""))) err("frase opción", r); }); }));
+Object.keys(E.COMP_IDX).forEach(id => { const o = E.opcionesDebilidad({ compId: id }); if (o.ej.length < 3 || o.acc.length < 3) err("comp sin opciones", id); if (E.opcionesFortaleza({ compId: id }).length < 3) err("fort sin aporte", id); });
+if (E.temaDebilidad({ deb: "Soy muy desordenado" }) !== "dispersion") err("tema por palabras");
+if (E.opcionesDebilidad({ deb: "Algo raro" }).acc.length < 3) err("opciones genéricas");
+if (E.OPC.accM.length !== E.OPC.m.length) err("acciones por momento");
+E.OPC.accM.flat().forEach(a => { if (E.revisarLogro({ m: "x", a, r: "5" }).length) err("acción sin verbo en pasado", a); });
+E.VERBOS.forEach(v => { if (!E.VERBO_RE.test(v + " algo")) err("verbo no reconocido", v); });
+if (E.VERBO_RE.test("Diseño una ruta") || E.VERBO_RE.test("Soy bueno")) err("verbo en presente aceptado");
+if (!E.revisarLogro({ m: "x", a: "Mejoré", r: "que bajara un __%" }).some(r => /__/.test(r))) err("aviso de __");
+const lr = E.respuesta("logro", {}, { logro: { m: "x", a: "Mejoré algo", r: "que el tiempo bajara un 20%" } }); if (!/Como resultado, logré que el tiempo/.test(lr)) err("resultado con que", lr);
+["sit", "acc", "res", "apr", "atrae"].forEach(k => { if (E.OPC[k].length < 4) err("opciones de", k); });
+if (E.opcionesAporte({ clave: ["plan"] })[0] !== "la planificación y organización") err("aporte desde competencias clave", E.opcionesAporte({ clave: ["plan"] }));
 console.log("ERRORS", errors);

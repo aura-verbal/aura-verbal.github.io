@@ -2036,7 +2036,7 @@ function vEstiloRes() {
   const cards = EN.tarjetasEstilo(pt), card = c => { const m = e.marca[c.id];
     return `<div class="id-card${m === "si" ? " si" : m === "no" ? " no" : ""}"><p>${esc(c.txt)}</p>
       <div class="row"><button class="chip-btn${m === "si" ? " on" : ""}" data-act="estMarca" data-id="${c.id}" data-v="si" aria-pressed="${m === "si"}">Me identifico</button><button class="chip-btn${m === "no" ? " on" : ""}" data-act="estMarca" data-id="${c.id}" data-v="no" aria-pressed="${m === "no"}">No tanto</button></div>
-      ${m === "no" ? `<div class="field"><span class="lbl">¿Por qué no? (opcional)</span><div class="pw-opts flat comp-sug">${EN.OPC.nota.map(s => chipBtn("entOpt", s, s, e.nota[c.id] === s, ` data-p="estilo.nota.${c.id}"`)).join("")}</div><label class="opt-own" for="nota-${c.id}">O escríbelo tú</label><input type="text" id="nota-${c.id}" data-ef="estilo.nota.${c.id}" value="${esc(e.nota[c.id] || "")}" maxlength="200" placeholder="Ej: soy directo, pero cuido cómo lo digo"></div>` : ""}</div>`; };
+      ${m === "no" ? notaHTML(c, e.nota[c.id]) : ""}</div>`; };
   const tot = EN.PREG_ESTILO.length;
   return `<section class="section">${entHead("Tu estilo de trabajo", "Conócete · resultado")}
     <div class="panel"><p class="eyebrow">Tu estilo principal</p><h3 style="font-size:1.5rem">${esc(st.nombre)}${sec ? ` <span class="muted" style="font-size:1rem">con rasgos de ${esc(sec.nombre)}</span>` : ""}</h3>
@@ -2045,8 +2045,32 @@ function vEstiloRes() {
       <p class="note">Es una guía para reflexionar, no un test psicológico. Por eso tú decides qué te representa.</p></div>
     <div><h3>Tus posibles fortalezas</h3><p class="note" style="margin:2px 0 8px">Marca las que de verdad te representan: con esas armas tus respuestas.</p>${cards.filter(c => c.tipo === "fort").map(card).join("")}</div>
     <div><h3>Tus posibles debilidades</h3><p class="note" style="margin:2px 0 8px">Elige las reales. Una debilidad honesta, con un plan para mejorarla, convence más que una disfrazada.</p>${cards.filter(c => c.tipo === "deb").map(card).join("")}</div>
+    ${estResumenHTML(pt, e, st, sec)}
     <div class="row"><button class="btn primary" data-act="entSalir">Listo</button><button class="btn" data-act="estOtra">Responder de nuevo</button></div>
   </section>`;
+}
+/* «No tanto»: por qué no te representa, con opciones concretas y qué hacer con esa respuesta. */
+function notaHTML(c, val) {
+  const ops = EN.opcionesNota(c), tip = EN.consejoNota(c, val);
+  return `<div class="field"><span class="lbl">¿Por qué no te representa? (opcional)</span><div class="pw-opts flat comp-sug">${ops.map(s => chipBtn("entOpt", s, s, val === s, ` data-p="estilo.nota.${c.id}"`)).join("")}</div>
+    ${tip ? `<p class="fb mid nota-tip" style="margin:0">${esc(tip)}</p>` : ""}
+    <label class="opt-own" for="nota-${c.id}">${ops.includes(val) ? "Agrégale un detalle si quieres" : "O escríbelo con tus palabras"}</label><input type="text" id="nota-${c.id}" data-ef="estilo.nota.${c.id}" value="${esc(val || "")}" maxlength="200" placeholder="${c.tipo === "fort" ? "Ej: soy directo, pero cuido cómo lo digo" : "Ej: me pasa solo en trabajos grupales largos"}"></div>`;
+}
+/* Resumen final: aparece cuando el usuario marcó todas las tarjetas. */
+function estResumenHTML(pt, e, st, sec) {
+  const r = EN.resumenEstilo(pt, e.marca, e.nota);
+  if (r.pendientes) return `<div class="panel est-res pend" id="estResumen"><p class="eyebrow">Tu resumen</p><p style="margin:0">Marca ${r.pendientes === 1 ? "la tarjeta que falta" : `las ${r.pendientes} tarjetas que faltan`} («Me identifico» o «No tanto») para ver tu resumen final y tus recomendaciones.</p></div>`;
+  const lista = xs => `<ol class="recs">${xs.map(x => `<li><b>${esc(x.sobre)}</b><span>${esc(x.txt)}</span></li>`).join("")}</ol>`;
+  const pl = (n, a, b) => n === 1 ? a : b;
+  return `<div class="panel est-res" id="estResumen"><p class="eyebrow">Tu resumen</p>
+    <h3>Te identificaste con ${r.fort.si} ${pl(r.fort.si, "fortaleza", "fortalezas")} y ${r.deb.si} ${pl(r.deb.si, "debilidad", "debilidades")}</h3>
+    <div class="res-nums"><div class="res-num f"><b>${r.fort.si}</b><span>de ${r.fort.total} fortalezas</span></div><div class="res-num d"><b>${r.deb.si}</b><span>de ${r.deb.total} debilidades</span></div></div>
+    <p class="note" style="margin:0">Según tu estilo ${esc(st.nombre)}${sec ? ` con rasgos de ${esc(sec.nombre)}` : ""} y lo que marcaste.</p>
+    ${r.fortAlReves.length ? `<p class="fb mid" style="margin:0">En ${r.fortAlReves.length === 1 ? "una fortaleza" : r.fortAlReves.length + " fortalezas"} dijiste que te pasa al revés (${esc(r.fortAlReves.join(" · "))}): ${pl(r.fortAlReves.length, "puede ser un área de mejora", "pueden ser áreas de mejora")}.</p>` : ""}
+    ${r.fort.si === 0 ? `<p class="fb mid" style="margin:0">No marcaste ninguna fortaleza. Revisa Tus competencias: ahí puede aparecer lo que haces bien.</p>` : ""}
+    <h4>3 recomendaciones para tus fortalezas</h4>${lista(r.recFort)}
+    <h4>3 recomendaciones para tus debilidades</h4>${lista(r.recDeb)}
+    <p class="note" style="margin:0">Úsalas al armar tus respuestas en el paso 2. Es una guía para reflexionar, no un test psicológico.</p></div>`;
 }
 /* ---------- Paso 1 · competencias ---------- */
 function vComps() {
@@ -2398,7 +2422,11 @@ function entAct(a, el) {
       if (i < EN.PREG_ESTILO.length - 1) { E.i = i + 1; S.anim = "right"; } else { E.rehacer = false; chime(); S.anim = "up"; } render(); return true; }
     case "estPrev": S.ev.i = Math.max(0, (S.ev.i || 0) - 1); S.anim = "left"; render(); return true;
     case "estOtra": p.estilo.resp = {}; S.ev.i = 0; S.ev.rehacer = true; save(); render(); return true;
-    case "estMarca": { const id = el.dataset.id; p.estilo.marca[id] = p.estilo.marca[id] === el.dataset.v ? null : el.dataset.v; save(); render(); return true; }
+    case "estMarca": { const id = el.dataset.id, antes = EN.resumenEstilo(EN.puntajeEstilo(p.estilo.resp), p.estilo.marca).pendientes;
+      p.estilo.marca[id] = p.estilo.marca[id] === el.dataset.v ? null : el.dataset.v; save(); render();
+      // Al marcar la última tarjeta, lleva al resumen final.
+      if (antes === 1 && !EN.resumenEstilo(EN.puntajeEstilo(p.estilo.resp), p.estilo.marca).pendientes) setTimeout(() => { const r = document.getElementById("estResumen"); if (r) r.scrollIntoView({ behavior: "smooth", block: "start" }); }, 120);
+      return true; }
     case "compSet": p.comps[el.dataset.id] = +el.dataset.v; save(); render(); return true;
     case "compsRes": S.ev.res = true; S.anim = "right"; render(); return true;
     case "compsEdit": S.ev.res = false; S.anim = "left"; render(); return true;

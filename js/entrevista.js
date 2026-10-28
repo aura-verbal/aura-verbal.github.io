@@ -53,10 +53,147 @@
   }
   /* Tarjetas para confirmar: las del estilo principal completas y algunas del secundario. */
   function tarjetasEstilo(pt) {
-    const out = [], add = (k, tipo, n) => ESTILOS[k][tipo].slice(0, n).forEach((txt, i) => out.push({ id: k + "-" + tipo + i, tipo, txt, estilo: k }));
+    const out = [], add = (k, tipo, n) => ESTILOS[k][tipo].slice(0, n).forEach((txt, i) => {
+      const d = DETALLE[k], f = tipo === "fort";
+      out.push({ id: k + "-" + tipo + i, tipo, txt, estilo: k, rec: (f ? d.frec : d.drec)[i], inv: (f ? d.finv : d.dinv)[i] });
+    });
     add(pt.principal, "fort", 6); if (pt.secundario) add(pt.secundario, "fort", 3);
     add(pt.principal, "deb", 6); if (pt.secundario) add(pt.secundario, "deb", 2);
     return out;
+  }
+  /* Detalle de cada fortaleza y debilidad, en el mismo orden que ESTILOS:
+     frec/drec = recomendación concreta (cómo mostrarla en la entrevista o cómo mejorarla),
+     finv/dinv = lo contrario (para la opción «Me pasa al revés»), gf/gd = recomendaciones del estilo en general. */
+  const DETALLE = {
+    E: {
+      frec: ["Prepara un logro en que una decisión rápida tuya resolvió algo, con el resultado en números. Agrega cómo validaste antes de decidir, para que no suene impulsivo.",
+        "Cuenta tus logros con cifras (porcentaje, tiempo, plata). Es tu fuerte: que se note en cada respuesta.",
+        "Ten listo el desafío más difícil que hayas asumido y qué aprendiste. Sirve para «cuéntame de un desafío» y muestra iniciativa.",
+        "En la entrevista, di primero la idea principal y después el detalle. Así se nota que eres directo, y también respetuoso.",
+        "Busca cargos con metas claras y libertad para lograrlas, y menciona un proyecto que sacaste adelante sin supervisión.",
+        "Prepara la historia de algo que casi falló y cómo insististe hasta lograrlo. Es la respuesta ideal para «cuéntame de un fracaso»."],
+      finv: ["me tomo mi tiempo para decidir", "me importa más el proceso que el resultado", "prefiero tareas que ya sé hacer", "doy varias vueltas antes de decir algo", "trabajo mejor con instrucciones y supervisión", "si algo se complica, prefiero cambiar de plan"],
+      drec: ["Antes de presionar, pregunta qué está frenando el avance. Para la entrevista: «estoy aprendiendo a entender los tiempos de los demás antes de apurarlos».",
+        "Antes de dar una crítica, parte por lo que está bien y di «propongo» en vez de «está mal». Pide feedback a alguien de confianza sobre cómo te escuchas.",
+        "Esta semana delega una tarea pequeña y revisa el resultado sin rehacerla. Es una debilidad creíble si la cuentas con ese plan concreto.",
+        "Antes de decidir, hazte dos preguntas: ¿qué dato me falta? y ¿quién sabe más de esto? Toma 5 minutos y evita errores.",
+        "Pregunta por qué existe cada paso antes de saltártelo: muchas veces hay una razón. Si tienes una mejora, propónla con datos.",
+        "Acuerda al inicio qué se espera, para cuándo y cómo, en vez de exigir al final. Reconoce el avance, no solo el resultado."],
+      dinv: ["tengo paciencia aunque las cosas vayan lento", "cuido mucho cómo digo las cosas", "delego y pido ayuda sin problema", "reviso todo antes de decidir", "sigo los procesos al pie de la letra", "soy más bien flexible con los demás"],
+      gf: ["Busca cargos con metas medibles, como ventas, operaciones o proyectos: ahí tu estilo rinde más.",
+        "Arma un pitch al grano: 60 segundos y un logro con número.",
+        "Prepara un ejemplo en que guiaste a otros hacia una meta: muestra tu liderazgo."],
+      gd: ["En la entrevista, haz una pausa de 2 segundos antes de responder: muestra que escuchas antes de actuar.",
+        "Pide feedback a un compañero sobre cómo comunicas cuando estás apurado.",
+        "Elige una debilidad de tu estilo que de verdad estés trabajando y cuéntala con tu plan."]
+    },
+    C: {
+      frec: ["Aprovéchalo, pero ordena tus respuestas: idea, ejemplo y resultado. Hablar bien no basta si no se entiende el punto.",
+        "Prepara un ejemplo concreto: cómo mejoraste el ánimo o la coordinación de un grupo y qué cambió después.",
+        "Ten lista una idea tuya que se haya aplicado y su resultado. Una idea implementada vale más que diez propuestas.",
+        "Cuenta una vez en que convenciste a alguien con argumentos y qué se logró. Sirve para ventas, atención de clientes y liderazgo.",
+        "Menciona trabajos o grupos con gente muy diversa (clientes, edades, áreas) y cómo ajustaste tu forma de hablar.",
+        "Úsalo para buscar práctica: escribe a 3 personas del área que te interesa y pídeles 15 minutos de conversación."],
+      finv: ["me cuesta expresarme, sobre todo con desconocidos", "me concentro en lo mío más que en el ambiente", "prefiero mejorar lo que ya existe antes que inventar", "no me siento cómodo convenciendo a otros", "me cuesta conectar con gente muy distinta a mí", "me cuesta acercarme a gente nueva"],
+      drec: ["Cada mañana elige las 3 tareas más importantes y termina una antes de partir otra. Cuéntalo así en la entrevista.",
+        "Usa listas de verificación para lo repetitivo y revisa al final. Muestra que lo compensas con método.",
+        "Antes de decir que sí, revisa tu agenda y da un plazo realista con margen. Es mejor entregar antes que pedir más tiempo.",
+        "Fija tus propias metas y anota tus avances cada semana: así no dependes solo del reconocimiento de otros.",
+        "Practica respuestas de 1 a 2 minutos con cronómetro (la simulación por voz de Aura sirve) y termina con una frase de cierre clara.",
+        "Anota cada compromiso con fecha y revísalos los viernes. Una debilidad con un sistema concreto suena honesta y madura."],
+      dinv: ["me concentro bien aunque tenga muchas cosas", "disfruto el trabajo de detalle", "prometo solo lo que sé que puedo cumplir", "no necesito que me reconozcan para motivarme", "hablo poco, más bien voy al grano", "termino todo lo que empiezo"],
+      gf: ["Busca cargos con contacto con personas, como atención, ventas, comunicaciones o recursos humanos.",
+        "Conecta con quien te entrevista, pero sin perder el hilo: responde justo lo que te preguntan.",
+        "En el pitch, cuenta una historia corta en vez de una lista de cualidades."],
+      gd: ["Practica respuestas cortas: lo importante primero y en menos de 2 minutos.",
+        "Lleva un registro de tus pendientes para demostrar constancia.",
+        "Prepara cifras de tus logros: el entusiasmo convence más con números."]
+    },
+    B: {
+      frec: ["Demuéstralo con hechos: asistencia, plazos cumplidos o tiempo en un mismo trabajo. Un dato concreto pesa más que el adjetivo.",
+        "En la entrevista se nota: escucha la pregunta completa, haz una pausa y responde justo eso. Prepara un ejemplo con un cliente o un compañero.",
+        "Ten un ejemplo de equipo en que digas cuál fue tu aporte. «Lo hicimos» no basta: di qué hiciste tú.",
+        "Prepara una situación de presión real (un cierre, un cliente molesto, un plazo) y cómo la manejaste paso a paso.",
+        "Cuéntalo como compromiso: una vez en que apoyaste al equipo cuando era difícil. Sirve para «¿por qué deberíamos contratarte?».",
+        "Muéstralo como iniciativa: cuándo ayudaste sin que te lo pidieran y qué mejoró. Cuida que no te quite tiempo de lo tuyo."],
+      finv: ["me cuesta mantener el ritmo en el tiempo", "me cuesta escuchar sin interrumpir", "rindo mejor trabajando solo", "me pongo nervioso con la presión", "pienso más en mi propio avance que en el equipo", "ayudo solo cuando me lo piden"],
+      drec: ["Antes de aceptar algo, di «déjame revisar mi carga y te confirmo». Esa frase te da tiempo y es tu plan de mejora para la entrevista.",
+        "Cuando haya un cambio, pregunta qué se espera de ti y para cuándo. Muestra que te adaptas cuando entiendes el porqué.",
+        "Practica decir un desacuerdo con hechos: «vi esto, me preocupa esto, propongo esto». Parte por temas pequeños.",
+        "En la próxima reunión, aporta una opinión distinta con un dato. En la entrevista, cuenta que lo estás practicando y cómo.",
+        "Al empezar algo nuevo, pide los primeros pasos por escrito y una revisión a la semana: acelera tu adaptación con método.",
+        "Cuando veas que no alcanzas, avisa con tiempo y propón una solución. Pedir ayuda a tiempo es responsabilidad, no debilidad."],
+      dinv: ["digo que no sin problema cuando no alcanzo", "me adapto rápido a los cambios", "enfrento los conflictos cuando hace falta", "digo lo que pienso aunque nadie esté de acuerdo", "me adapto rápido a lo nuevo", "pido ayuda cuando la necesito"],
+      gf: ["Busca equipos estables y con buen clima, por ejemplo en operaciones, servicio al cliente, administración, salud o educación.",
+        "Destaca tu constancia con datos: tiempo en un trabajo, plazos cumplidos, asistencia.",
+        "Usa ejemplos de equipo, pero siempre con tu aporte personal."],
+      gd: ["Cuando en la entrevista te pidan tu opinión, da una postura clara, aunque sea distinta.",
+        "Prepara la pregunta del conflicto: un desacuerdo que resolviste conversando.",
+        "Muestra iniciativa propia, no solo apoyo a otros."]
+    },
+    A: {
+      frec: ["Prepara un ejemplo en que tu cuidado evitó un error o una pérdida, con el dato de cuánto se ahorró.",
+        "Cuenta una decisión que tomaste con datos y su resultado. Menciona las herramientas que usaste (por ejemplo, Excel o Power BI).",
+        "Úsalo en cargos de calidad, finanzas o procesos: cuenta cómo cumpliste un estándar o mejoraste un procedimiento.",
+        "Muestra algo concreto que ordenaste (una planilla, un informe, un sistema) y para qué sirvió.",
+        "Ten la historia de un error que detectaste a tiempo y qué habría pasado si no. Es un logro muy valorado.",
+        "Explica tu método de planificación (pasos, plazos, herramientas) con un proyecto real."],
+      finv: ["trabajo rápido, aunque a veces se me pasan detalles", "decido más por intuición que por análisis", "cuestiono las reglas cuando no les veo sentido", "me cuesta mantener ordenada la información", "se me pasan los errores pequeños", "prefiero improvisar sobre la marcha"],
+      drec: ["Ponle un tiempo máximo a cada tarea y entrega una primera versión antes de pulirla. Cuéntalo así: «entrego a tiempo y mejoro después».",
+        "Define antes qué información basta para decidir (por ejemplo, 3 datos clave) y decide apenas la tengas.",
+        "Cuando revises el trabajo de otros, parte por lo que está bien y da máximo 2 mejoras concretas.",
+        "En la entrevista, sonríe al saludar y haz una pregunta sobre el equipo o la empresa. La cercanía también se practica.",
+        "Prepara respuestas base para las preguntas típicas y practica la simulación con preguntas al azar.",
+        "En cada reunión aporta al menos una idea o pregunta. Cuando te pidan tu opinión, dala con un argumento."],
+      dinv: ["entrego rápido, aunque no quede perfecto", "decido aunque me falte información", "soy más bien tolerante con los errores", "conecto rápido con la gente nueva", "improviso con facilidad", "digo lo que pienso con facilidad"],
+      gf: ["Busca cargos donde la precisión importa: análisis, control de gestión, calidad, finanzas o logística.",
+        "En tus logros usa cifras exactas: es lo que mejor te representa.",
+        "Nombra las herramientas que dominas con un ejemplo de uso real."],
+      gd: ["Practica responder sin tener la respuesta perfecta: la simulación con preguntas al azar sirve para eso.",
+        "Muestra cercanía: saluda por el nombre, sonríe y haz preguntas al final.",
+        "Entrega primeras versiones a tiempo y pide feedback temprano."]
+    }
+  };
+  /* «¿Por qué no te identificas?»: opciones concretas según si es fortaleza o debilidad. */
+  const NOTA = {
+    fort: ["Solo me pasa en temas que domino o con gente de confianza", "Lo hago, pero no tengo un ejemplo real que lo demuestre", "Antes era así, ahora ya no tanto"],
+    deb: ["Solo me pasa con mucha presión o cansancio, no es lo habitual", "Me pasaba antes, pero ya lo mejoré", "Me pasa en lo personal, no en el trabajo ni en la universidad"]
+  };
+  const alReves = c => "Me pasa al revés: " + c.inv;
+  function opcionesNota(c) { return [alReves(c)].concat(NOTA[c.tipo] || []); }
+  /* Qué hacer con esa respuesta (se muestra bajo la opción elegida). */
+  function consejoNota(c, nota) {
+    nota = t(nota); if (!nota) return "";
+    if (c.tipo === "fort") {
+      if (nota === alReves(c)) return "Entonces puede ser un área de mejora tuya. Si te sirve, úsala en la pregunta de la debilidad.";
+      if (nota === NOTA.fort[0]) return "Es una fortaleza en desarrollo. Cuéntala solo si tienes un ejemplo en uno de esos temas.";
+      if (nota === NOTA.fort[1]) return "Búscale un ejemplo en el trabajo, la universidad o un proyecto. Sin ejemplo, mejor no la uses en la entrevista.";
+      if (nota === NOTA.fort[2]) return "No la uses como fortaleza principal: el entrevistador puede pedirte un ejemplo reciente.";
+    } else {
+      if (nota === alReves(c)) return "Esa puede ser una fortaleza tuya. Piensa en un ejemplo real que lo demuestre.";
+      if (nota === NOTA.deb[0]) return "Sirve igual para la entrevista si la cuentas así: cuándo te pasa y qué haces para que no te afecte.";
+      if (nota === NOTA.deb[1]) return "Muy buena candidata para «¿Cuál es tu mayor debilidad?»: algo real que ya mejoraste, con el cambio concreto.";
+      if (nota === NOTA.deb[2]) return "Entonces no la uses en la entrevista: elige una que se note en el trabajo o en la universidad.";
+    }
+    return "";
+  }
+  /* Resumen del autodiagnóstico: cuántas fortalezas y debilidades marcó y 3 recomendaciones para cada una. */
+  function resumenEstilo(pt, marca, nota) {
+    marca = marca || {}; nota = nota || {};
+    const cards = tarjetasEstilo(pt), de = tipo => cards.filter(c => c.tipo === tipo);
+    const cuenta = tipo => { const cs = de(tipo); return { total: cs.length, si: cs.filter(c => marca[c.id] === "si").length, no: cs.filter(c => marca[c.id] === "no").length }; };
+    const mejoradas = de("deb").filter(c => marca[c.id] === "no" && nota[c.id] === NOTA.deb[1]);
+    const recs = (tipo, gen) => {
+      // Una debilidad que la persona ya mejoró va primero: es la mejor respuesta a «¿cuál es tu mayor debilidad?».
+      const out = (tipo === "deb" ? mejoradas.slice(0, 1).map(c => ({ sobre: c.txt + " (ya la mejoraste)",
+        txt: "Úsala en «¿Cuál es tu mayor debilidad?»: cuenta cómo era antes, qué cambiaste y cómo es hoy. Una debilidad real con avance convence más que una disfrazada." })) : [])
+        .concat(de(tipo).filter(c => marca[c.id] === "si").map(c => ({ sobre: c.txt, txt: c.rec })));
+      [pt.principal, pt.secundario].filter(Boolean).forEach(k => DETALLE[k][gen].forEach(x => out.push({ sobre: "Tu estilo " + ESTILOS[k].nombre, txt: x })));
+      return out.slice(0, 3);
+    };
+    return { fort: cuenta("fort"), deb: cuenta("deb"), pendientes: cards.filter(c => !marca[c.id]).length, recFort: recs("fort", "gf"), recDeb: recs("deb", "gd"),
+      fortAlReves: de("fort").filter(c => marca[c.id] === "no" && nota[c.id] === alReves(c)).map(c => c.txt),
+      debMejoradas: mejoradas.map(c => c.txt) };
   }
 
   /* ---------- 2. Competencias: 24 en 4 grupos, autoevaluación de 1 a 4 ---------- */
@@ -320,7 +457,6 @@
       ["Aprendí bien los productos para recomendarlos según lo que buscaba cada cliente", "Propuse una promoción para los productos que menos se vendían"]],
     lejos: ["hasta 30 minutos", "hasta 1 hora", "hasta 1 hora y media", "no tengo problema con la distancia"],
     no: ["que no se valore el esfuerzo", "un mal ambiente de trabajo", "no tener posibilidades de aprender", "horarios que no me dejen estudiar", "que no haya orden ni procesos claros"],
-    nota: ["me pasa solo a veces", "antes era así, pero ya lo mejoré", "en mi caso es al revés", "no me pasa en el trabajo, solo en otros ámbitos"],
     r: ["que el tiempo bajara de __ a __ minutos", "que los errores bajaran en un __%", "que entregáramos __ días antes del plazo", "que el cliente volviera a comprar", "que las ventas subieran un __%", "que atendiéramos a __ clientes más por día"]
   };
   function opcionesAccion(m) {
@@ -336,7 +472,7 @@
     "me interesa el cargo de esta oportunidad porque además me atrae que y creo que puedo aportar un logro del que me siento orgulloso fue entonces como resultado ahí puse en práctica " +
     "una vez lo que hice fue al final de eso aprendí sí me gustaría saber logrando buenos días mi nombre es gusto presentarme soy he trabajado en distintos rubros competencias que me definen " +
     "esa experiencia me mostró algo que hoy guía mi carrera lo viví cuando donde pueda muchas gracias";
-  const API = { carreraFrase, nombrePropio, institucion, VERBO_RE, TEMAS, temaDebilidad, opcionesDebilidad, opcionesAccion, opcionesFortaleza, opcionesAporte, OPC, PLANTILLA, PPM, words, segundos, ESTILOS, PREG_ESTILO, opcionesEstilo, puntajeEstilo, tarjetasEstilo, COMPETENCIAS, COMP_IDX, NIVEL_COMP, resumenCompetencias, conArticulo,
+  const API = { carreraFrase, nombrePropio, institucion, VERBO_RE, TEMAS, temaDebilidad, opcionesDebilidad, opcionesAccion, opcionesFortaleza, opcionesAporte, OPC, PLANTILLA, PPM, words, segundos, ESTILOS, PREG_ESTILO, opcionesEstilo, puntajeEstilo, tarjetasEstilo, DETALLE, NOTA, opcionesNota, consejoNota, resumenEstilo, COMPETENCIAS, COMP_IDX, NIVEL_COMP, resumenCompetencias, conArticulo,
     MOTIVADORES, MOT_IDX, IDEAL, preguntasSugeridas, VERBOS, IDEAS_LOGRO, fraseLogro, revisarLogro, PREGUNTAS, ORDEN_PREG, respuesta, revisarRespuesta };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   else root.AuraEnt = API;

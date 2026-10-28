@@ -52,4 +52,23 @@ if (!E.revisarLogro({ m: "x", a: "Mejoré", r: "que bajara un __%" }).some(r => 
 const lr = E.respuesta("logro", {}, { logro: { m: "x", a: "Mejoré algo", r: "que el tiempo bajara un 20%" } }); if (!/Como resultado, logré que el tiempo/.test(lr)) err("resultado con que", lr);
 ["sit", "acc", "res", "apr", "atrae"].forEach(k => { if (E.OPC[k].length < 4) err("opciones de", k); });
 if (E.opcionesAporte({ clave: ["plan"] })[0] !== "la planificación y organización") err("aporte desde competencias clave", E.opcionesAporte({ clave: ["plan"] }));
+// Detalle de fortalezas y debilidades, opciones de «No tanto» y resumen final
+Object.entries(E.DETALLE).forEach(([k, d]) => {
+  ["frec", "finv", "drec", "dinv"].forEach(f => { if (d[f].length !== 6 || d[f].some(x => !x || x.length < 8)) err("detalle incompleto", k, f); });
+  ["gf", "gd"].forEach(f => { if (d[f].length < 3) err("recomendaciones generales", k, f); });
+});
+{ const ptE = E.puntajeEstilo({ 0: "E", 1: "E", 2: "E", 3: "A" }), cs = E.tarjetasEstilo(ptE);
+  cs.forEach(c => { const o = E.opcionesNota(c); if (o.length !== 4 || !/^Me pasa al revés: /.test(o[0])) err("opciones nota", c.id);
+    o.forEach(x => { if (!E.consejoNota(c, x)) err("consejo sin texto", c.id, x); }); if (!c.rec) err("tarjeta sin recomendación", c.id); });
+  let r = E.resumenEstilo(ptE, {}, {}); if (r.pendientes !== cs.length || r.recFort.length !== 3 || r.recDeb.length !== 3) err("resumen vacío", r);
+  const marca = {}, nota = {}; cs.forEach((c, i) => { marca[c.id] = i % 3 ? "si" : "no"; });
+  const deb0 = cs.find(c => c.tipo === "deb" && marca[c.id] === "no"); nota[deb0.id] = E.NOTA.deb[1];
+  const fort0 = cs.find(c => c.tipo === "fort" && marca[c.id] === "no"); nota[fort0.id] = E.opcionesNota(fort0)[0];
+  r = E.resumenEstilo(ptE, marca, nota);
+  const nf = cs.filter(c => c.tipo === "fort" && marca[c.id] === "si").length, nd = cs.filter(c => c.tipo === "deb" && marca[c.id] === "si").length;
+  if (r.pendientes || r.fort.si !== nf || r.deb.si !== nd || r.fort.total + r.deb.total !== cs.length) err("conteo del resumen", r.fort, r.deb);
+  if (!/ya la mejoraste/.test(r.recDeb[0].sobre)) err("la debilidad mejorada va primero", r.recDeb[0]);
+  if (r.recFort[0].sobre !== cs.find(c => c.tipo === "fort" && marca[c.id] === "si").txt) err("recomendación de fortaleza marcada", r.recFort[0]);
+  if (r.fortAlReves[0] !== fort0.txt || r.debMejoradas[0] !== deb0.txt) err("al revés / mejoradas", r.fortAlReves, r.debMejoradas);
+  const r0 = E.resumenEstilo(ptE, Object.fromEntries(cs.map(c => [c.id, "no"])), {}); if (r0.recFort.length !== 3 || !/Tu estilo/.test(r0.recFort[0].sobre)) err("relleno con el estilo", r0.recFort); }
 console.log("ERRORS", errors);

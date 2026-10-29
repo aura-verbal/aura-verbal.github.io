@@ -79,9 +79,12 @@ Object.entries(E.DETALLE).forEach(([k, d]) => {
   if (!cand.deb.some(c => c.id === mej.id)) err("la debilidad mejorada es candidata");
   if (cand.fort.some(c => marca[c.id] !== "si")) err("solo fortalezas confirmadas");
   const f = cand.fort.map(c => c.id), noF = cs.find(c => c.tipo === "fort" && marca[c.id] === "no").id;
-  const tv = E.topValido(ptE, marca, nota, { fort: [f[2], noF, f[0], f[1], f[3]], deb: "x" });
-  if (tv.fort.join() !== [f[2], f[0], f[1]].join() || tv.deb !== null) err("topValido", tv);
-  const r = E.resumenEstilo(ptE, marca, nota, { fort: [f[2]], deb: cand.deb[1].id });
+  const tv = E.topValido(ptE, marca, nota, { fort: [f[2], noF, f[0], f[1], f[3]], deb: ["x"] });
+  if (tv.fort.join() !== [f[2], f[0], f[1]].join() || tv.deb.length !== 0) err("topValido", tv);
+  const d = cand.deb.map(c => c.id), tvD = E.topValido(ptE, marca, nota, { deb: [d[3], d[0], d[1], d[2]] });
+  if (tvD.deb.join() !== [d[3], d[0], d[1]].join()) err("3 debilidades principales en orden", tvD.deb);
+  if (E.topValido(ptE, marca, nota, { deb: d[1] }).deb.join() !== d[1]) err("compatibilidad: debilidad guardada como texto");
+  const r = E.resumenEstilo(ptE, marca, nota, { fort: [f[2]], deb: [cand.deb[1].id] });
   if (r.recFort[0].sobre !== cand.fort[2].txt) err("la fortaleza principal va primero", r.recFort[0]);
   if (marca[cand.deb[1].id] === "si" && r.recDeb[0].sobre !== cand.deb[1].txt) err("la debilidad principal va primero", r.recDeb[0]); }
 console.log("ERRORS", errors);

@@ -1978,7 +1978,7 @@ function ptAct(a, el) {
 const EN = window.AuraEnt;
 function perfil() {
   const p = progress.perfil || (progress.perfil = {});
-  p.estilo = p.estilo || { resp: {}, marca: {}, nota: {} }; p.estilo.top = p.estilo.top || { fort: [], deb: null }; p.comps = p.comps || {}; p.clave = p.clave || []; p.motiv = p.motiv || [];
+  p.estilo = p.estilo || { resp: {}, marca: {}, nota: {} }; p.estilo.top = p.estilo.top || { fort: [], deb: [] }; p.comps = p.comps || {}; p.clave = p.clave || []; p.motiv = p.motiv || [];
   p.ideal = p.ideal || {}; p.logros = p.logros || []; p.resp = p.resp || {};
   return p;
 }
@@ -2073,23 +2073,27 @@ function estResumenHTML(pt, e, st, sec) {
     <p class="note" style="margin:0">Úsalas al armar tus respuestas en el paso 2. Es una guía para reflexionar, no un test psicológico.</p></div>
     ${estTopHTML(pt, e)}`;
 }
-/* Elige lo principal: 3 fortalezas y 1 debilidad, las que vas a usar en la entrevista. */
+/* Elige lo principal: 3 fortalezas y 3 debilidades, las que vas a usar en la entrevista. */
 function estTopHTML(pt, e) {
   const cand = EN.candidatasTop(pt, e.marca, e.nota), tv = EN.topValido(pt, e.marca, e.nota, e.top);
   const mejor = c => e.marca[c.id] === "no" ? " · ya la mejoraste" : "";
   const fortH = cand.fort.length ? cand.fort.map(c => { const k = tv.fort.indexOf(c.id);
       return `<button class="pw-opt tipo-opt top-opt${k >= 0 ? " on" : ""}" data-act="topFort" data-id="${c.id}" aria-pressed="${k >= 0}">${k >= 0 ? `<b class="top-n">${k + 1}</b>` : ""}${esc(c.txt)}</button>`; }).join("")
     : `<p class="empty">No confirmaste fortalezas. Marca «Me identifico» en las que te representan.</p>`;
-  const debH = cand.deb.length ? cand.deb.map(c => `<button class="pw-opt tipo-opt top-opt${tv.deb === c.id ? " on" : ""}" data-act="topDeb" data-id="${c.id}" aria-pressed="${tv.deb === c.id}">${tv.deb === c.id ? `<b class="top-n">★</b>` : ""}${esc(c.txt)}<small class="muted">${mejor(c)}</small></button>`).join("")
+  const debH = cand.deb.length ? cand.deb.map(c => { const k = tv.deb.indexOf(c.id);
+      return `<button class="pw-opt tipo-opt top-opt${k >= 0 ? " on" : ""}" data-act="topDeb" data-id="${c.id}" aria-pressed="${k >= 0}">${k >= 0 ? `<b class="top-n">${k + 1}</b>` : ""}${esc(c.txt)}<small class="muted">${mejor(c)}</small></button>`; }).join("")
     : `<p class="empty">No confirmaste debilidades. Marca «Me identifico» en alguna, o «No tanto» con «Me pasaba antes, pero ya lo mejoré».</p>`;
-  const max = Math.min(3, cand.fort.length), listo = tv.fort.length >= max && max > 0 && tv.deb;
+  const max = Math.min(3, cand.fort.length), maxD = Math.min(3, cand.deb.length), listo = max > 0 && maxD > 0 && tv.fort.length >= max && tv.deb.length >= maxD;
+  const nom = (ids, cs) => esc(ids.map(id => cs.find(c => c.id === id).txt).join(" · "));
   return `<div class="panel est-top" id="estTop"><p class="eyebrow">Elige lo principal</p><h3>¿Con qué te vas a presentar en la entrevista?</h3>
-    <p class="note" style="margin:0">Te van a preguntar por tus fortalezas y por tu debilidad. Elige las que mejor puedes respaldar con un ejemplo real.</p>
+    <p class="note" style="margin:0">Te van a preguntar por tus fortalezas y tus debilidades. Elige las que mejor puedes respaldar con un ejemplo real.</p>
     <h4>Tus 3 fortalezas principales <span class="muted">(${tv.fort.length} de ${max || 3})</span></h4>
     <p class="note" style="margin:0">Tócalas en orden de importancia.</p><div class="tipo-list">${fortH}</div>
-    ${S.topMax ? `<p class="fb mid" style="margin:0">Ya elegiste 3. Toca una elegida para quitarla y cambiarla por otra.</p>` : ""}
-    <h4>Tu debilidad principal</h4><div class="tipo-list">${debH}</div>
-    ${listo ? `<div class="fb ok top-ok" style="margin:0"><b>Listo.</b> Tus fortalezas principales: ${esc(tv.fort.map(id => cand.fort.find(c => c.id === id).txt).join(" · "))}. Tu debilidad principal: ${esc(cand.deb.find(c => c.id === tv.deb).txt)}. Aparecen primero al armar tus respuestas.</div>
+    ${S.topMax === "fort" ? `<p class="fb mid" style="margin:0">Ya elegiste 3. Toca una elegida para quitarla y cambiarla por otra.</p>` : ""}
+    <h4>Tus 3 debilidades principales <span class="muted">(${tv.deb.length} de ${maxD || 3})</span></h4>
+    <p class="note" style="margin:0">También en orden: la 1 es la que contarías primero.</p><div class="tipo-list">${debH}</div>
+    ${S.topMax === "deb" ? `<p class="fb mid" style="margin:0">Ya elegiste 3. Toca una elegida para quitarla y cambiarla por otra.</p>` : ""}
+    ${listo ? `<div class="fb ok top-ok" style="margin:0"><b>Listo.</b> Tus fortalezas principales: ${nom(tv.fort, cand.fort)}. Tus debilidades principales: ${nom(tv.deb, cand.deb)}. Aparecen primero al armar tus respuestas.</div>
       <div class="row"><button class="btn primary" data-act="respOpen" data-k="fortaleza">Armar mi respuesta de fortalezas</button><button class="btn" data-act="respOpen" data-k="debilidad">Armar la de debilidad</button></div>` : ""}</div>`;
 }
 /* ---------- Paso 1 · competencias ---------- */
@@ -2167,11 +2171,11 @@ function vResp() {
 function respOpciones(k, p) {
   const e = p.estilo, pt = EN.puntajeEstilo(e.resp), tv = EN.topValido(pt, e.marca, e.nota, e.top), cand = EN.candidatasTop(pt, e.marca, e.nota);
   const prio = (cs, ids) => cs.slice().sort((a, b) => (ids.includes(a.id) ? ids.indexOf(a.id) : 99) - (ids.includes(b.id) ? ids.indexOf(b.id) : 99));
-  const marcadas = tipo => tipo === "fort" ? prio(cand.fort, tv.fort) : prio(cand.deb, tv.deb ? [tv.deb] : []);
+  const marcadas = tipo => tipo === "fort" ? prio(cand.fort, tv.fort) : prio(cand.deb, tv.deb);
   const r = EN.resumenCompetencias(p.comps);
   const txts = ids => ids.map(id => (cand.fort.concat(cand.deb).find(c => c.id === id) || {}).txt).filter(Boolean);
   if (k === "fortaleza") return { frases: estiloListo() ? marcadas("fort").map(c => c.txt) : [], top: txts(tv.fort), comps: p.clave.length ? p.clave : r.altas.slice(0, 4).map(c => c.id) };
-  if (k === "debilidad") return { frases: estiloListo() ? marcadas("deb").map(c => c.txt) : [], top: txts(tv.deb ? [tv.deb] : []), comps: r.bajas.slice(0, 4).map(c => c.id) };
+  if (k === "debilidad") return { frases: estiloListo() ? marcadas("deb").map(c => c.txt) : [], top: txts(tv.deb), comps: r.bajas.slice(0, 4).map(c => c.id) };
   return {};
 }
 function logroPicker(c, base, p) {
@@ -2447,10 +2451,12 @@ function entAct(a, el) {
     case "estOtra": p.estilo.resp = {}; S.ev.i = 0; S.ev.rehacer = true; save(); render(); return true;
     case "topFort": { const e = p.estilo, pt = EN.puntajeEstilo(e.resp), tv = EN.topValido(pt, e.marca, e.nota, e.top), id = el.dataset.id;
       S.topMax = false;
-      if (tv.fort.includes(id)) tv.fort = tv.fort.filter(x => x !== id); else if (tv.fort.length < 3) tv.fort.push(id); else S.topMax = true;
+      if (tv.fort.includes(id)) tv.fort = tv.fort.filter(x => x !== id); else if (tv.fort.length < 3) tv.fort.push(id); else S.topMax = "fort";
       e.top = tv; save(); render(); return true; }
     case "topDeb": { const e = p.estilo, pt = EN.puntajeEstilo(e.resp), tv = EN.topValido(pt, e.marca, e.nota, e.top), id = el.dataset.id;
-      tv.deb = tv.deb === id ? null : id; e.top = tv; S.topMax = false; save(); render(); return true; }
+      S.topMax = false;
+      if (tv.deb.includes(id)) tv.deb = tv.deb.filter(x => x !== id); else if (tv.deb.length < 3) tv.deb.push(id); else S.topMax = "deb";
+      e.top = tv; save(); render(); return true; }
     case "estMarca": { const id = el.dataset.id, antes = EN.resumenEstilo(EN.puntajeEstilo(p.estilo.resp), p.estilo.marca).pendientes;
       p.estilo.marca[id] = p.estilo.marca[id] === el.dataset.v ? null : el.dataset.v; save(); render();
       // Al marcar la última tarjeta, lleva al resumen final.

@@ -178,7 +178,7 @@
     return "";
   }
   /* Resumen del autodiagnóstico: cuántas fortalezas y debilidades marcó y 3 recomendaciones para cada una. */
-  /* Candidatas a «lo principal»: fortalezas confirmadas; debilidades confirmadas y las que ya mejoró. */
+  /* Candidatas a «lo principal» (3 fortalezas y 3 debilidades): fortalezas confirmadas; debilidades confirmadas y las que ya mejoró. */
   function candidatasTop(pt, marca, nota) {
     marca = marca || {}; nota = nota || {}; const cs = tarjetasEstilo(pt);
     return { fort: cs.filter(c => c.tipo === "fort" && marca[c.id] === "si"),
@@ -187,17 +187,19 @@
   /* Lo principal válido: solo ids que siguen siendo candidatos (si desmarca una tarjeta, sale de la selección). */
   function topValido(pt, marca, nota, top) {
     const cand = candidatasTop(pt, marca, nota), ids = xs => xs.map(c => c.id); top = top || {};
-    return { fort: (top.fort || []).filter(id => ids(cand.fort).includes(id)).slice(0, 3), deb: ids(cand.deb).includes(top.deb) ? top.deb : null };
+    const deb = Array.isArray(top.deb) ? top.deb : top.deb ? [top.deb] : [];   // antes era una sola debilidad
+    return { fort: (top.fort || []).filter(id => ids(cand.fort).includes(id)).slice(0, 3), deb: deb.filter(id => ids(cand.deb).includes(id)).slice(0, 3) };
   }
   function resumenEstilo(pt, marca, nota, top) {
     marca = marca || {}; nota = nota || {};
     const cards = tarjetasEstilo(pt), de = tipo => cards.filter(c => c.tipo === tipo);
     const cuenta = tipo => { const cs = de(tipo); return { total: cs.length, si: cs.filter(c => marca[c.id] === "si").length, no: cs.filter(c => marca[c.id] === "no").length }; };
-    const tv = topValido(pt, marca, nota, top), principal = tipo => tipo === "fort" ? tv.fort : (tv.deb ? [tv.deb] : []);
+    const tv = topValido(pt, marca, nota, top), principal = tipo => tipo === "fort" ? tv.fort : tv.deb;
     // Lo que la persona eligió como principal va primero en las recomendaciones.
     const conTop = (cs, tipo) => { const ids = principal(tipo); return cs.slice().sort((a, b) => (ids.includes(a.id) ? ids.indexOf(a.id) : 99) - (ids.includes(b.id) ? ids.indexOf(b.id) : 99)); };
     let mejoradas = de("deb").filter(c => marca[c.id] === "no" && nota[c.id] === NOTA.deb[1]);
-    if (tv.deb && marca[tv.deb] === "si") mejoradas = [];   // eligió como principal una debilidad actual
+    // Si eligió debilidades principales, la «ya mejorada» solo va primero si está entre ellas.
+    if (tv.deb.length) mejoradas = mejoradas.filter(c => tv.deb.includes(c.id)).sort((a, b) => tv.deb.indexOf(a.id) - tv.deb.indexOf(b.id));
     const recs = (tipo, gen) => {
       // Una debilidad que la persona ya mejoró va primero: es la mejor respuesta a «¿cuál es tu mayor debilidad?».
       const out = (tipo === "deb" ? mejoradas.slice(0, 1).map(c => ({ sobre: c.txt + " (ya la mejoraste)",

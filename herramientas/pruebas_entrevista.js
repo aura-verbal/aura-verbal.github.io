@@ -71,4 +71,17 @@ Object.entries(E.DETALLE).forEach(([k, d]) => {
   if (r.recFort[0].sobre !== cs.find(c => c.tipo === "fort" && marca[c.id] === "si").txt) err("recomendación de fortaleza marcada", r.recFort[0]);
   if (r.fortAlReves[0] !== fort0.txt || r.debMejoradas[0] !== deb0.txt) err("al revés / mejoradas", r.fortAlReves, r.debMejoradas);
   const r0 = E.resumenEstilo(ptE, Object.fromEntries(cs.map(c => [c.id, "no"])), {}); if (r0.recFort.length !== 3 || !/Tu estilo/.test(r0.recFort[0].sobre)) err("relleno con el estilo", r0.recFort); }
+// Lo principal: 3 fortalezas y 1 debilidad
+{ const ptE = E.puntajeEstilo({ 0: "E", 1: "E", 2: "E", 3: "A" }), cs = E.tarjetasEstilo(ptE), marca = {}, nota = {};
+  cs.forEach((c, i) => { marca[c.id] = i % 3 ? "si" : "no"; });
+  const mej = cs.find(c => c.tipo === "deb" && marca[c.id] === "no"); nota[mej.id] = E.NOTA.deb[1];
+  const cand = E.candidatasTop(ptE, marca, nota);
+  if (!cand.deb.some(c => c.id === mej.id)) err("la debilidad mejorada es candidata");
+  if (cand.fort.some(c => marca[c.id] !== "si")) err("solo fortalezas confirmadas");
+  const f = cand.fort.map(c => c.id), noF = cs.find(c => c.tipo === "fort" && marca[c.id] === "no").id;
+  const tv = E.topValido(ptE, marca, nota, { fort: [f[2], noF, f[0], f[1], f[3]], deb: "x" });
+  if (tv.fort.join() !== [f[2], f[0], f[1]].join() || tv.deb !== null) err("topValido", tv);
+  const r = E.resumenEstilo(ptE, marca, nota, { fort: [f[2]], deb: cand.deb[1].id });
+  if (r.recFort[0].sobre !== cand.fort[2].txt) err("la fortaleza principal va primero", r.recFort[0]);
+  if (marca[cand.deb[1].id] === "si" && r.recDeb[0].sobre !== cand.deb[1].txt) err("la debilidad principal va primero", r.recDeb[0]); }
 console.log("ERRORS", errors);

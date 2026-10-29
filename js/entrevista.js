@@ -178,16 +178,31 @@
     return "";
   }
   /* Resumen del autodiagnóstico: cuántas fortalezas y debilidades marcó y 3 recomendaciones para cada una. */
-  function resumenEstilo(pt, marca, nota) {
+  /* Candidatas a «lo principal»: fortalezas confirmadas; debilidades confirmadas y las que ya mejoró. */
+  function candidatasTop(pt, marca, nota) {
+    marca = marca || {}; nota = nota || {}; const cs = tarjetasEstilo(pt);
+    return { fort: cs.filter(c => c.tipo === "fort" && marca[c.id] === "si"),
+      deb: cs.filter(c => c.tipo === "deb" && (marca[c.id] === "si" || (marca[c.id] === "no" && nota[c.id] === NOTA.deb[1]))) };
+  }
+  /* Lo principal válido: solo ids que siguen siendo candidatos (si desmarca una tarjeta, sale de la selección). */
+  function topValido(pt, marca, nota, top) {
+    const cand = candidatasTop(pt, marca, nota), ids = xs => xs.map(c => c.id); top = top || {};
+    return { fort: (top.fort || []).filter(id => ids(cand.fort).includes(id)).slice(0, 3), deb: ids(cand.deb).includes(top.deb) ? top.deb : null };
+  }
+  function resumenEstilo(pt, marca, nota, top) {
     marca = marca || {}; nota = nota || {};
     const cards = tarjetasEstilo(pt), de = tipo => cards.filter(c => c.tipo === tipo);
     const cuenta = tipo => { const cs = de(tipo); return { total: cs.length, si: cs.filter(c => marca[c.id] === "si").length, no: cs.filter(c => marca[c.id] === "no").length }; };
-    const mejoradas = de("deb").filter(c => marca[c.id] === "no" && nota[c.id] === NOTA.deb[1]);
+    const tv = topValido(pt, marca, nota, top), principal = tipo => tipo === "fort" ? tv.fort : (tv.deb ? [tv.deb] : []);
+    // Lo que la persona eligió como principal va primero en las recomendaciones.
+    const conTop = (cs, tipo) => { const ids = principal(tipo); return cs.slice().sort((a, b) => (ids.includes(a.id) ? ids.indexOf(a.id) : 99) - (ids.includes(b.id) ? ids.indexOf(b.id) : 99)); };
+    let mejoradas = de("deb").filter(c => marca[c.id] === "no" && nota[c.id] === NOTA.deb[1]);
+    if (tv.deb && marca[tv.deb] === "si") mejoradas = [];   // eligió como principal una debilidad actual
     const recs = (tipo, gen) => {
       // Una debilidad que la persona ya mejoró va primero: es la mejor respuesta a «¿cuál es tu mayor debilidad?».
       const out = (tipo === "deb" ? mejoradas.slice(0, 1).map(c => ({ sobre: c.txt + " (ya la mejoraste)",
         txt: "Úsala en «¿Cuál es tu mayor debilidad?»: cuenta cómo era antes, qué cambiaste y cómo es hoy. Una debilidad real con avance convence más que una disfrazada." })) : [])
-        .concat(de(tipo).filter(c => marca[c.id] === "si").map(c => ({ sobre: c.txt, txt: c.rec })));
+        .concat(conTop(de(tipo).filter(c => marca[c.id] === "si"), tipo).map(c => ({ sobre: c.txt, txt: c.rec })));
       [pt.principal, pt.secundario].filter(Boolean).forEach(k => DETALLE[k][gen].forEach(x => out.push({ sobre: "Tu estilo " + ESTILOS[k].nombre, txt: x })));
       return out.slice(0, 3);
     };
@@ -472,7 +487,7 @@
     "me interesa el cargo de esta oportunidad porque además me atrae que y creo que puedo aportar un logro del que me siento orgulloso fue entonces como resultado ahí puse en práctica " +
     "una vez lo que hice fue al final de eso aprendí sí me gustaría saber logrando buenos días mi nombre es gusto presentarme soy he trabajado en distintos rubros competencias que me definen " +
     "esa experiencia me mostró algo que hoy guía mi carrera lo viví cuando donde pueda muchas gracias";
-  const API = { carreraFrase, nombrePropio, institucion, VERBO_RE, TEMAS, temaDebilidad, opcionesDebilidad, opcionesAccion, opcionesFortaleza, opcionesAporte, OPC, PLANTILLA, PPM, words, segundos, ESTILOS, PREG_ESTILO, opcionesEstilo, puntajeEstilo, tarjetasEstilo, DETALLE, NOTA, opcionesNota, consejoNota, resumenEstilo, COMPETENCIAS, COMP_IDX, NIVEL_COMP, resumenCompetencias, conArticulo,
+  const API = { carreraFrase, nombrePropio, institucion, VERBO_RE, TEMAS, temaDebilidad, opcionesDebilidad, opcionesAccion, opcionesFortaleza, opcionesAporte, OPC, PLANTILLA, PPM, words, segundos, ESTILOS, PREG_ESTILO, opcionesEstilo, puntajeEstilo, tarjetasEstilo, DETALLE, NOTA, opcionesNota, consejoNota, resumenEstilo, candidatasTop, topValido, COMPETENCIAS, COMP_IDX, NIVEL_COMP, resumenCompetencias, conArticulo,
     MOTIVADORES, MOT_IDX, IDEAL, preguntasSugeridas, VERBOS, IDEAS_LOGRO, fraseLogro, revisarLogro, PREGUNTAS, ORDEN_PREG, respuesta, revisarRespuesta };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   else root.AuraEnt = API;

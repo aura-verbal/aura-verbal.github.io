@@ -963,6 +963,8 @@ function vReto() {
 const PR = window.AuraPres;
 const PRES_TIPO = { apertura: "Apertura", idea: "Idea", cierre: "Cierre" };
 const MIN_OPTS = [3, 5, 7, 10, 15, 20];
+const MIN_MIN = 1, MIN_MAX = 120;
+function minNota(m) { return m >= MIN_MIN && m <= MIN_MAX ? `Unas ${Math.round(m * PR.PPM).toLocaleString("es-CL")} palabras habladas a ritmo ideal.` : `Escribe un número entre ${MIN_MIN} y ${MIN_MAX} minutos.`; }
 const PLAN_NOM = { expres: "exprés", estructurado: "estructurado", espaciado: "espaciado" };
 const DIA_OPTS = [[15, "15 min"], [30, "30 min"], [60, "1 hora o más"]];
 const NIVELES = ["Léelo en voz alta", "Con huecos", "Solo primeras letras", "Solo palabras clave", "Sin ayuda"];
@@ -1078,6 +1080,7 @@ function vPresCrear() {
   const d = S.pd || (S.pd = { tema: "", fecha: addDays(2), minutos: 5, minDia: 30, formato: "vivo" });
   const quick = [["Hoy", addDays(0)], ["Mañana", addDays(1)], ["En 3 días", addDays(3)], ["En una semana", addDays(7)]];
   const isQuick = quick.some(q => q[1] === d.fecha);
+  const minOtro = d.minOtro || !MIN_OPTS.includes(d.minutos);
   return `<section class="section"><button class="back" data-act="presBack">← ${d.edit ? "Mi plan" : "Tipo de presentación"}</button>
     <div><p class="eyebrow">${d.edit ? "Editar" : "Paso 1 de 3"}</p><h2>Tu presentación</h2><p class="lead">Con esto Aura calcula cuánto debes hablar y arma tu plan.</p></div>
     <div class="panel">
@@ -1087,8 +1090,9 @@ function vPresCrear() {
       <div class="field"><span class="lbl">¿Cuándo presentas?</span><div class="pw-opts flat">${quick.map(q => chipBtn("pdSet", q[1], q[0], d.fecha === q[1], ' data-k="fecha"')).join("")}${chipBtn("pdOtra", "", "Otra fecha", d.otra || !isQuick)}</div>
         ${d.otra || !isQuick ? `<input type="date" id="pdFecha" min="${today()}" value="${esc(d.fecha)}">` : ""}
         <span class="note">${esc(fechaLarga(d.fecha))}</span></div>
-      <div class="field"><span class="lbl">¿Cuántos minutos tienes para hablar?</span><div class="pw-opts flat">${MIN_OPTS.map(m => chipBtn("pdSet", m, m + " min", d.minutos === m, ' data-k="minutos"')).join("")}</div>
-        <span class="note">Unas ${Math.round(d.minutos * PR.PPM).toLocaleString("es-CL")} palabras habladas a ritmo ideal.</span></div>
+      <div class="field"><span class="lbl">¿Cuántos minutos tienes que hablar?</span><div class="pw-opts flat">${MIN_OPTS.map(m => chipBtn("pdSet", m, m + " min", !minOtro && d.minutos === m, ' data-k="minutos"')).join("")}${chipBtn("pdMinOtro", "", "Otro", minOtro)}</div>
+        ${minOtro ? `<label class="min-otro"><input type="number" id="pdMin" min="${MIN_MIN}" max="${MIN_MAX}" step="1" inputmode="numeric" placeholder="Ej: 12" value="${d.minutos ? esc(String(d.minutos)) : ""}" aria-label="Minutos que tienes que hablar"> <span>minutos</span></label>` : ""}
+        <span class="note" id="pdMinNote">${minNota(d.minutos)}</span></div>
       <div class="field"><span class="lbl">¿Cuánto tiempo puedes practicar al día?</span><div class="pw-opts flat">${DIA_OPTS.map(o => chipBtn("pdSet", o[0], o[1], d.minDia === o[0], ' data-k="minDia"')).join("")}</div></div>
       <p class="err" id="pdErr"></p>
       <button class="btn primary wide" data-act="pdOk">${d.edit ? "Guardar cambios" : "Siguiente"}</button>
@@ -1520,12 +1524,14 @@ function presAct(a, el, ev) {
       else if (S.pv === "crear" && S.pd && !S.pd.edit) presGo("tipo", null, "left");
       else { presMicStop(); go({ sub: null, tab: S.presFrom || "presentaciones" }, "left"); }
       return true; }
-    case "pdSet": { const d = S.pd, k = el.dataset.k, v = el.dataset.v; d[k] = k === "fecha" || k === "formato" ? v : +v; if (k === "fecha") d.otra = false; render(); return true; }
+    case "pdSet": { const d = S.pd, k = el.dataset.k, v = el.dataset.v; d[k] = k === "fecha" || k === "formato" ? v : +v; if (k === "fecha") d.otra = false; if (k === "minutos") d.minOtro = false; render(); return true; }
+    case "pdMinOtro": S.pd.minOtro = true; render(); { const f = document.getElementById("pdMin"); if (f) { f.focus(); f.select(); } } return true;
     case "pdOtra": S.pd.otra = true; render(); { const f = document.getElementById("pdFecha"); if (f) f.focus(); } return true;
     case "pdOk": {
       const d = S.pd, tema = (document.getElementById("pdTema").value || "").trim();
       if (!tema) { document.getElementById("pdErr").textContent = "Escribe el tema de tu presentación."; return true; }
       if (!d.fecha || daysBetween(today(), d.fecha) < 0) { document.getElementById("pdErr").textContent = "Elige una fecha de hoy en adelante."; return true; }
+      if (!(d.minutos >= MIN_MIN && d.minutos <= MIN_MAX)) { document.getElementById("pdErr").textContent = `Escribe cuántos minutos tienes que hablar (entre ${MIN_MIN} y ${MIN_MAX}).`; const f = document.getElementById("pdMin"); if (f) f.focus(); return true; }
       if (d.edit && p) { Object.assign(p, { tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia, formato: d.formato || "vivo" }); save(); S.toast = "Plan actualizado a tu nueva fecha y duración."; presGo("plan", null, "left"); }
       else { progress.pres = { id: "p" + Date.now().toString(36), tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia, formato: d.formato === "video" ? "video" : "vivo", bloques: [], done: {}, ensayos: [], creado: today() }; save(); S.pc = null; S.perr = null; presGo("cargar"); }
       return true; }
@@ -3148,6 +3154,7 @@ app.addEventListener("input", e => {
   if (tg.id === "ptGuion") { const p = pitchData(), antes = ptSucio(p); p.guionBorrador = tg.value; if (!ptSucio(p)) delete p.guionBorrador; S.ptOk = false; save();
     if (antes !== ptSucio(p) || antes === false) { const box = document.getElementById("ptSave"); if (box) box.innerHTML = ptSaveHTML(p); } }
   if (tg.id === "pdTema" && S.pd) S.pd.tema = tg.value;
+  if (tg.id === "pdMin" && S.pd) { const n = Math.round(parseFloat(String(tg.value).replace(",", "."))); S.pd.minutos = isFinite(n) ? n : 0; const nt = document.getElementById("pdMinNote"); if (nt) nt.textContent = minNota(S.pd.minutos); }
   if (tg.id === "pcText") S.pcText = tg.value;
   if (tg.id === "pbIns" || tg.id === "pbMat") { S[tg.id] = tg.value; const pp = document.getElementById("pbPrompt"), p0 = pres(); if (pp && p0) pp.value = PR.promptGuion({ tema: p0.tema, minutos: p0.minutos, fecha: fechaLarga(p0.fecha), instrucciones: S.pbIns || "", material: S.pbMat || "", pais: paisObj().nombre }); }
   if (tg.dataset && tg.dataset.bid && tg.dataset.f) { const b = pbFind(tg.dataset.bid); if (b) { b[tg.dataset.f] = tg.value; presSave(); } }

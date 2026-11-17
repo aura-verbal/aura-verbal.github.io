@@ -41,6 +41,10 @@ function load() {
   p.settings = Object.assign({}, DEFAULT_SETTINGS, p.settings || {});
   ["words", "sims", "pers", "dismiss", "retos", "prep"].forEach(k => { if (!p[k] || typeof p[k] !== "object" || Array.isArray(p[k])) p[k] = {}; });
   ["history", "days", "baselines"].forEach(k => { if (!Array.isArray(p[k])) p[k] = []; });
+  /* Varias presentaciones a la vez: antes había una sola (p.pres); ahora una lista y cuál está abierta. */
+  if (!Array.isArray(p.presList)) p.presList = [];
+  if (p.pres && typeof p.pres === "object") { if (!p.pres.id) p.pres.id = "p" + Date.now().toString(36); if (!p.presList.some(x => x.id === p.pres.id)) p.presList.push(p.pres); p.presAct = p.pres.id; }
+  delete p.pres;
   try { if (localStorage.getItem("aura.sound") === "off") { p.settings.sound = false; localStorage.removeItem("aura.sound"); } } catch (e) {}
   return p;
 }
@@ -986,7 +990,14 @@ function conHTML(text) {
     out += esc(t.slice(last, c.start)) + `<mark class="con" title="${esc(PR.CONECTORES[c.fn].nombre + (alt ? " · también: " + alt : ""))}">${esc(t.slice(c.start, c.end))}</mark>`; last = c.end; });
   return (out + esc(t.slice(last))).replace(/\n/g, "<br>");
 }
-function pres() { return progress.pres || null; }
+function presLista() { return progress.presList || (progress.presList = []); }
+/* Orden: primero las que vienen (la más cercana arriba), al final las que ya pasaron. */
+function presOrden() {
+  return presLista().slice().sort((a, b) => { const pa = daysBetween(today(), a.fecha) < 0, pb = daysBetween(today(), b.fecha) < 0;
+    return pa !== pb ? (pa ? 1 : -1) : (a.fecha || "").localeCompare(b.fecha || ""); });
+}
+function pres() { const L = presLista(); return L.find(x => x.id === progress.presAct) || presOrden()[0] || null; }
+function presQuitar(p) { if (!p) return; progress.presList = presLista().filter(x => x !== p); if (progress.presAct === p.id) progress.presAct = null; }
 function presPlan(p) { p = p || pres(); return p && p.fecha && p.bloques && p.bloques.length ? PR.plan(p.fecha, today(), p.minDia || 30) : null; }
 function presSesiones(pl) { return pl ? pl.dias.reduce((a, d) => a.concat(d.ses.map(s => Object.assign({ dia: d }, s))), []) : []; }
 function presHoy(p) { const pl = presPlan(p); if (!pl) return null; return presSesiones(pl).filter(s => s.dia.f === today()).find(s => !p.done[s.id]) || null; }
@@ -1036,17 +1047,16 @@ function chipBtn(act, v, label, on, extra) { return `<button class="pw-opt${on ?
 function fechaLarga(iso) { try { return new Date(iso + "T12:00:00").toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long" }); } catch (e) { return iso; } }
 
 /* ---------- Inicio: tarjeta principal ---------- */
-function presCard() {
-  const p = pres();
+function presCard(p) {
   if (!p) return `<button class="card pres-hero" data-act="presNew">
       <span class="tag">Gratis</span>
       <span class="card-head"><span class="s-icon">${SES_ICON.ensayo}</span><span><h3>¿Tienes que presentar?</h3><span class="meta">Sube tu PowerPoint, PDF o guion y Aura te arma un plan para dominarla antes de la fecha, aunque sea mañana.</span></span></span>
       <span class="cta">Preparar mi presentación →</span></button>`;
-  if (!p.bloques || !p.bloques.length) return `<button class="card pres-hero" data-act="presOpen" data-pv="cargar"><span class="tag">Falta un paso</span><h3>${esc(p.tema || "Mi presentación")}</h3><span class="meta">Carga tu presentación o tu guion para crear el plan.</span><span class="cta">Continuar →</span></button>`;
+  if (!p.bloques || !p.bloques.length) return `<button class="card pres-hero" data-act="presOpen" data-pv="cargar" data-pid="${p.id}"><span class="tag">Falta un paso</span><h3>${esc(p.tema || "Mi presentación")}</h3><span class="meta">Carga tu presentación o tu guion para crear el plan.</span><span class="cta">Continuar →</span></button>`;
   const d = daysBetween(today(), p.fecha);
-  if (d < 0) return `<button class="card pres-hero" data-act="presOpen" data-pv="plan"><span class="tag">Ya presentaste</span><h3>${esc(p.tema)}</h3><span class="meta">Cuéntanos cómo te fue y prepara la siguiente.</span><span class="cta">Ver →</span></button>`;
+  if (d < 0) return `<button class="card pres-hero" data-act="presOpen" data-pv="plan" data-pid="${p.id}"><span class="tag">Ya presentaste</span><h3>${esc(p.tema)}</h3><span class="meta">Cuéntanos cómo te fue y prepara la siguiente.</span><span class="cta">Ver →</span></button>`;
   const pl = presPlan(p), all = presSesiones(pl), hechas = all.filter(s => p.done[s.id]).length, hoy = presHoy(p), pc = all.length ? Math.round(hechas / all.length * 100) : 0;
-  return `<button class="card pres-hero" data-act="presOpen" data-pv="${hoy ? "sesion" : "plan"}" ${hoy ? `data-ses="${hoy.id}"` : ""}>
+  return `<button class="card pres-hero" data-act="presOpen" data-pid="${p.id}" data-pv="${hoy ? "sesion" : "plan"}" ${hoy ? `data-ses="${hoy.id}"` : ""}>
       <span class="tag">${d === 0 ? "Hoy presentas" : d === 1 ? "Presentas mañana" : "Faltan " + d + " días"}</span>
       <span class="card-head"><span class="s-icon">${SES_ICON.ensayo}</span><span><h3>${esc(p.tema)}</h3><span class="meta">${p.minutos} min · ${p.bloques.length} bloques · plan ${esc(PLAN_NOM[pl.tipo])}</span></span></span>
       <span class="barlabel"><span>Plan</span><span class="mono">${hechas}/${all.length}</span></span><span class="bar" aria-hidden="true"><i style="width:${pc}%"></i></span>
@@ -1508,13 +1518,16 @@ function vPres() {
   return p.bloques && p.bloques.length ? vPresPlan() : vPresCargar();
 }
 function presAct(a, el, ev) {
+  if (el && el.dataset && el.dataset.pid && presLista().some(x => x.id === el.dataset.pid)) progress.presAct = el.dataset.pid;
   const p = pres();
   switch (a) {
     case "presNew": presStartNew(false); return true;
     case "pdTipo": if (!S.pd) presStartNew(false); S.pd.formato = el.dataset.v; presGo("crear"); return true;
-    case "presNewAsk": S.confirm = "presNueva"; render(); return true;
-    case "presNewYes": if (p && p.bloques && p.bloques.length) progress.presHist = (progress.presHist || []).concat([{ tema: p.tema, fecha: p.fecha, minutos: p.minutos, resultado: "", ensayos: (p.ensayos || []).length }]).slice(-30);
-      progress.pres = null; S.confirm = null; save(); presStartNew(false); return true;
+    /* Una presentación que quedó en el historial sin presentarse (versión con una sola presentación): vuelve con su tema, fecha y minutos. */
+    case "presRetomar": { const H = progress.presHist || [], i = +el.dataset.i, h = H[i]; if (!h) return true;
+      H.splice(i, 1); save(); S.pd = { tema: h.tema || "", fecha: h.fecha, minutos: h.minutos || 5, minDia: 30, formato: "vivo", otra: true }; presGo("crear"); return true; }
+    case "presSel": progress.presAct = el.dataset.v; save(); render(); return true;
+    case "presNewAsk": case "presNewYes": S.confirm = null; presStartNew(false); return true;
     case "presEdit": presStartNew(true); return true;
     case "presOpen": if (el.dataset.ses) presStartSes(el.dataset.ses); else { if (el.dataset.pv === "cargar") { S.pd = null; S.pc = null; S.perr = null; } presGo(el.dataset.pv || "plan"); } return true;
     case "presBack": {
@@ -1533,7 +1546,7 @@ function presAct(a, el, ev) {
       if (!d.fecha || daysBetween(today(), d.fecha) < 0) { document.getElementById("pdErr").textContent = "Elige una fecha de hoy en adelante."; return true; }
       if (!(d.minutos >= MIN_MIN && d.minutos <= MIN_MAX)) { document.getElementById("pdErr").textContent = `Escribe cuántos minutos tienes que hablar (entre ${MIN_MIN} y ${MIN_MAX}).`; const f = document.getElementById("pdMin"); if (f) f.focus(); return true; }
       if (d.edit && p) { Object.assign(p, { tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia, formato: d.formato || "vivo" }); save(); S.toast = "Plan actualizado a tu nueva fecha y duración."; presGo("plan", null, "left"); }
-      else { progress.pres = { id: "p" + Date.now().toString(36), tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia, formato: d.formato === "video" ? "video" : "vivo", bloques: [], done: {}, ensayos: [], creado: today() }; save(); S.pc = null; S.perr = null; presGo("cargar"); }
+      else { const np = { id: "p" + Date.now().toString(36), tema, fecha: d.fecha, minutos: d.minutos, minDia: d.minDia, formato: d.formato === "video" ? "video" : "vivo", bloques: [], done: {}, ensayos: [], creado: today() }; presLista().push(np); progress.presAct = np.id; save(); S.pc = null; S.perr = null; presGo("cargar"); }
       return true; }
     case "pcMode": S.pc = el.dataset.v; S.perr = null; render(); return true;
     case "pcBack": S.pc = null; S.perr = null; render(); return true;
@@ -1566,8 +1579,8 @@ function presAct(a, el, ev) {
       presGo("plan"); return true; }
     case "presSes": presStartSes(el.dataset.ses); return true;
     case "presDelAsk": S.confirm = "presDel"; render(); return true;
-    case "presDelYes": progress.pres = null; save(); S.confirm = null; go({ sub: null, tab: "inicio" }, "left"); return true;
-    case "presFin": progress.presHist = (progress.presHist || []).concat([{ tema: p.tema, fecha: p.fecha, minutos: p.minutos, resultado: el.dataset.v, ensayos: (p.ensayos || []).length }]).slice(-30); progress.pres = null; save(); S.toast = "Guardado. ¡A preparar la siguiente!"; go({ sub: null, tab: "inicio" }, "left"); return true;
+    case "presDelYes": presQuitar(p); save(); S.confirm = null; go({ sub: null, tab: "inicio" }, "left"); return true;
+    case "presFin": progress.presHist = (progress.presHist || []).concat([{ tema: p.tema, fecha: p.fecha, minutos: p.minutos, resultado: el.dataset.v, ensayos: (p.ensayos || []).length }]).slice(-30); presQuitar(p); save(); S.toast = presLista().length ? "Guardado. Sigue con tu otra presentación." : "Guardado. ¡A preparar la siguiente!"; go({ sub: null, tab: "inicio" }, "left"); return true;
     case "psExit": presMicStop(); try { speechSynthesis.cancel(); } catch (e) {} S.ps = null; presGo("plan", null, "left"); return true;
     case "psDone": presDone(); return true;
     case "psSpeak": speak(presTxt(pbFind(el.dataset.bid))); return true;
@@ -2516,13 +2529,20 @@ const ICON_PRES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const ICON_ENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/></svg>';
 const ICON_CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>';
 const ICON_GO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
-function presActiva() { const p = pres(); return p && p.bloques && p.bloques.length && daysBetween(today(), p.fecha) >= 0 ? p : null; }
+/* La que va en Inicio: la vigente más cercana; las demás se listan debajo. */
+function presVigente(p) { return p && p.bloques && p.bloques.length && daysBetween(today(), p.fecha) >= 0; }
+function presActiva() { return presOrden().find(presVigente) || null; }
+function presOtras(act) {
+  const ot = presOrden().filter(x => x !== act); if (!ot.length) return "";
+  return `<div class="stack" style="gap:6px"><h3>${ot.length === 1 ? "Tu otra presentación" : "Tus otras presentaciones"}</h3>${ot.map(x => { const sin = !x.bloques || !x.bloques.length;
+    return `<button class="link-card ar-acad" data-act="presOpen" data-pid="${x.id}" data-pv="${sin ? "cargar" : "plan"}"><span class="s-icon">${ICON_PRES}</span><span class="stack" style="gap:2px"><b>${esc(x.tema || "Mi presentación")}</b><span class="note" style="margin:0">${sin ? "Falta cargar tu presentación" : esc(fechaLarga(x.fecha)) + " · " + presCuenta(x)}</span></span><span class="arrow">›</span></button>`; }).join("")}</div>`;
+}
 function presBtnAttrs() {
   const p = pres();
   if (!p) return 'data-act="presNew"';
-  if (!p.bloques || !p.bloques.length) return 'data-act="presOpen" data-pv="cargar"';
+  if (!p.bloques || !p.bloques.length) return `data-act="presOpen" data-pv="cargar" data-pid="${p.id}"`;
   const hoy = presHoy(p);
-  return daysBetween(today(), p.fecha) < 0 || !hoy ? 'data-act="presOpen" data-pv="plan"' : `data-act="presOpen" data-pv="sesion" data-ses="${hoy.id}"`;
+  return daysBetween(today(), p.fecha) < 0 || !hoy ? `data-act="presOpen" data-pv="plan" data-pid="${p.id}"` : `data-act="presOpen" data-pv="sesion" data-ses="${hoy.id}" data-pid="${p.id}"`;
 }
 /* Fotos de los pilares: las dos mitades de la imagen de bienvenida (el mismo estudiante exponiendo y en una entrevista).
    Solo en los puntos de entrada (Inicio y portada de cada pilar); las pantallas de práctica quedan limpias. */
@@ -2543,7 +2563,7 @@ function pilarCards() {
 function presHomeCard(p) {
   const d = daysBetween(today(), p.fecha), pl = presPlan(p), all = presSesiones(pl), hechas = all.filter(s => p.done[s.id]).length, hoy = presHoy(p);
   const pc = all.length ? Math.round(hechas / all.length * 100) : 0;
-  return `<button class="card pres-hero home-plan ar-acad" data-act="presOpen" data-pv="${hoy ? "sesion" : "plan"}" ${hoy ? `data-ses="${hoy.id}"` : ""}>
+  return `<button class="card pres-hero home-plan ar-acad" data-act="presOpen" data-pid="${p.id}" data-pv="${hoy ? "sesion" : "plan"}" ${hoy ? `data-ses="${hoy.id}"` : ""}>
       <span class="hp-top"><span><span class="eyebrow ar">Tu próxima presentación</span><h2>${esc(p.tema)}</h2><span class="meta">${esc(fechaLarga(p.fecha))} · ${p.minutos} min</span></span>
         <span class="count-ring" aria-label="${d === 0 ? "Hoy presentas" : d === 1 ? "Presentas mañana" : "Faltan " + d + " días"}"><b>${d === 0 ? "Hoy" : d}</b>${d === 0 ? "" : `<small>${d === 1 ? "día" : "días"}</small>`}</span></span>
       <span class="barlabel"><span>Plan ${esc(PLAN_NOM[pl.tipo])}</span><span class="mono">${hechas} de ${all.length} sesiones</span></span><span class="bar" aria-hidden="true"><i style="width:${pc}%"></i></span>
@@ -2553,7 +2573,7 @@ function hoyList(p) {
   const pl = presPlan(p), dia = pl && pl.dias.find(x => x.f === today()); if (!dia) return "";
   const hoy = presHoy(p);
   return `<div class="stack" style="gap:6px"><h3>Hoy</h3>${dia.ses.map(s => { const ok = !!p.done[s.id], cur = hoy && hoy.id === s.id;
-    return `<button class="hoy-row${ok ? " ok" : ""}${cur ? " cur" : ""}" data-act="presOpen" data-ses="${s.id}"><span class="hoy-ck" aria-hidden="true">${ok ? ICON_CHECK : ""}</span><span class="hoy-t">${esc(PR.SES[s.tipo].titulo)}${s.n ? " " + s.n : ""}</span><span class="note" style="margin:0">${s.min} min</span></button>`; }).join("")}</div>`;
+    return `<button class="hoy-row${ok ? " ok" : ""}${cur ? " cur" : ""}" data-act="presOpen" data-pid="${p.id}" data-ses="${s.id}"><span class="hoy-ck" aria-hidden="true">${ok ? ICON_CHECK : ""}</span><span class="hoy-t">${esc(PR.SES[s.tipo].titulo)}${s.n ? " " + s.n : ""}</span><span class="note" style="margin:0">${s.min} min</span></button>`; }).join("")}</div>`;
 }
 function vInicio() {
   const p = progress.profile, pa = paisObj(), act = presActiva(), st = streak();
@@ -2563,6 +2583,7 @@ function vInicio() {
   if (act) return `<section class="section home">${banner}${vozBanner()}${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}${hola}
       ${presHomeCard(act)}
       ${hoyList(act)}
+      ${presOtras(act)}
       <button class="link-card ar-lab" data-act="tab" data-tab="entrevistas"><span class="s-icon">${ICON_ENT}</span><span class="stack" style="gap:2px"><b>¿También tienes una entrevista?</b><span class="note" style="margin:0">Prepárala en paralelo</span></span><span class="arrow">›</span></button>
     </section>`;
   return `<section class="section home">${banner}${vozBanner()}${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
@@ -2579,9 +2600,10 @@ function vPresHub() {
   return `<section class="section">${S.toast ? `<p class="toast">${esc(S.toast)}</p>` : ""}
     ${pilarImg("pres", "hub-img ar-acad")}
     <div class="hub-head ar-acad"><div><p class="eyebrow ar">Pilar 1</p><h2>Presentaciones</h2></div>
-      ${p ? `<button class="btn primary" data-act="presNewAsk">+ Nueva</button>` : ""}</div>
-    ${S.confirm === "presNueva" ? `<div class="confirm"><span>¿Empezar una nueva? «${esc(p.tema || "Tu presentación")}» pasa a tu historial.</span><button class="btn primary" data-act="presNewYes">Sí, nueva</button><button class="btn ghost" data-act="cancelConfirm">Cancelar</button></div>` : ""}
-    ${presCard()}
+      ${p ? `<button class="btn primary" data-act="presNew">+ Nueva</button>` : ""}</div>
+    ${presLista().length > 1 ? `<p class="note" style="margin:0">Tienes ${presLista().length} presentaciones en preparación. Toca una para abrir su plan.</p>` : ""}
+    ${presLista().length ? presOrden().map(presCard).join("") : presCard(null)}
+    ${presLista().length > 1 ? `<div class="field"><span class="lbl">Preguntas y herramientas para:</span><div class="pw-opts flat">${presOrden().map(x => chipBtn("presSel", x.id, x.tema || "Mi presentación", p && x.id === p.id)).join("")}</div></div>` : ""}
     <button class="card q-card ar-acad" ${conB ? 'data-act="presSes" data-ses="libre-preguntas"' : 'data-act="presNew"'}><span class="card-head"><span class="s-icon">${SES_ICON.preguntas}</span>
       <span class="stack" style="gap:2px"><b>Preguntas del profesor</b><span class="note" style="margin:0">${conB ? `Preguntas que te podrían hacer sobre «${esc(p.tema || "tu presentación")}». Respóndelas en voz alta o por escrito.` : "Crea tu presentación y te preparamos las preguntas que te podrían hacer."}</span></span></span>
       <span class="pill-cta solid">${conB ? "Practicar" : "Crear mi presentación"} ${ICON_GO}</span></button>
@@ -2594,7 +2616,7 @@ function vPresHub() {
         ${sw("silencio", "Modo silencioso", "Para el metro, la micro o la biblioteca: escribes en vez de hablar.")}
       </div>
       ${conB ? "" : `<p class="note" style="margin:0">Relevo y Ensayo libre se activan cuando cargas tu presentación.</p>`}</div>
-    ${hist.length ? `<div class="stack" style="gap:6px"><h3>Ya presentaste</h3>${hist.slice(0, 5).map(h => `<div class="hist-row"><span>${esc(h.tema)} · ${esc(fechaLarga(h.fecha))}</span><b class="${h.resultado === "bien" ? "good" : h.resultado === "mal" ? "warn" : ""}">${RES[h.resultado] || ""}</b></div>`).join("")}</div>` : ""}
+    ${hist.length ? `<div class="stack" style="gap:6px"><h3>Ya presentaste</h3>${hist.slice(0, 5).map(h => `<div class="hist-row"><span>${esc(h.tema)} · ${esc(fechaLarga(h.fecha))}</span>${!h.resultado && h.fecha && daysBetween(today(), h.fecha) >= 0 ? `<button class="linkish" data-act="presRetomar" data-i="${progress.presHist.indexOf(h)}">Retomar</button>` : `<b class="${h.resultado === "bien" ? "good" : h.resultado === "mal" ? "warn" : ""}">${RES[h.resultado] || ""}</b>`}</div>`).join("")}</div>` : ""}
   </section>`;
 }
 function vEntrevistas() {
@@ -2914,7 +2936,7 @@ function vProgreso() {
       <span class="barlabel"><span style="color:var(--fg);font-weight:700">${esc(tx(s.name))}</span><span class="mono">${sp}%</span></span>
       <span class="bar" aria-hidden="true"><i style="width:${sp}%"></i></span>
       <span class="barlabel"><span>${m}/${s.n} palabras</span><span>${rec.best ? "mejor: " + rec.best + (rec.lastFin ? " · último: " + FIN_NAME[rec.lastFin].toLowerCase() : "") : "sin simular"}</span></span></div></div>`; }).join("");
-  const pr = pres(), hist = progress.presHist || [], nPres = hist.length + (pr && pr.bloques && pr.bloques.length ? 1 : 0);
+  const pr = pres(), hist = progress.presHist || [], nPres = hist.length + presLista().filter(x => x.bloques && x.bloques.length).length;
   const ens = (pr && pr.ensayos || []).slice(-5).reverse();
   const nEnt = ["entrevista", "practica"].reduce((a, id) => a + ((progress.sims[id] || {}).attempts || 0), 0) + (progress.simsEnt || 0);
   const extra = listReady().filter(s => pilarDe(s.id) === "progreso");
